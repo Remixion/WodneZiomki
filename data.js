@@ -1,6 +1,16 @@
-// rift-draft — game data & initial state
-// Edit this file to update match history, players, champions etc.
-
+// =====================================================================
+// GITHUB SYNC CONFIG — uzupełnij przed deployem
+// =====================================================================
+const GH_CONFIG = {
+  owner:  'TWOJ_GITHUB_NICK',   // np. 'arek123'
+  repo:   'rift-draft',          // nazwa repozytorium
+  branch: 'main',
+  path:   'data.js'              // ścieżka do tego pliku w repo
+};
+// Raw URL skąd aplikacja ładuje dane przy starcie
+const GH_RAW_URL = `https://raw.githubusercontent.com/${GH_CONFIG.owner}/${GH_CONFIG.repo}/${GH_CONFIG.branch}/${GH_CONFIG.path}`;
+// Token przechowywany tylko w localStorage przeglądarki osoby zapisującej
+const LS_GH_TOKEN = 'rd_gh_token';
 
 // =====================================================================
 // CONSTANTS
@@ -18,7 +28,7 @@ const PC={Arek:'#C8AA6E',Resek:'#5DADE2',Kosior:'#1DE9B6',Songo:'#E84855',Radio:
 const ini=n=>n?n.slice(0,2).toUpperCase():'??';
 
 // =====================================================================
-// MATCH HISTORY — all 38 matches with imgUrl
+// MATCH HISTORY
 // =====================================================================
 let MH=[
   {gid:'1',patch:'25.24',date:'2025-12-23',win:'PRAWA',blue:{top:'Kosior',jng:'Resek',mid:'Radio',adc:'Limcia',supp:'Jusko'},red:{top:'Pajfu',jng:'Songo',mid:'Jagoda',adc:'Toffic',supp:'Arek'},imgUrl:'https://i.imgur.com/NAyASin.png'},
@@ -62,15 +72,14 @@ let MH=[
 ];
 
 // =====================================================================
-// PERSISTENCE — localStorage
+// PERSISTENCE — localStorage (per-device: scan results, UI prefs)
 // =====================================================================
 const LS_ALIASES='rd_aliases';
-const LS_PLAYERS='rd_players';   // {name: color} — all colors incl custom
-const LS_EXTRA='rd_extra';       // [name, ...] — players added manually (not in MH)
-const LS_SCAN='rd_scan';         // {gid: scanResult}
-const LS_RESTR='rd_restr';       // restrictions array
+const LS_PLAYERS='rd_players';
+const LS_EXTRA  ='rd_extra';
+const LS_SCAN   ='rd_scan';
+const LS_RESTR  ='rd_restr';
 
-// Extra players added via UI (persisted across reloads)
 let EXTRA_PLAYERS=[];
 
 function lsSave(){
@@ -94,10 +103,7 @@ function lsLoad(){
     const ex=localStorage.getItem(LS_EXTRA);
     if(ex){ const arr=JSON.parse(ex); EXTRA_PLAYERS.splice(0,EXTRA_PLAYERS.length,...arr); }
     const s=localStorage.getItem(LS_SCAN);
-    if(s){
-      const scans=JSON.parse(s);
-      MH.forEach(m=>{if(scans[m.gid])m.scanResult=scans[m.gid];});
-    }
+    if(s){ const scans=JSON.parse(s); MH.forEach(m=>{if(scans[m.gid])m.scanResult=scans[m.gid];}); }
     const r=localStorage.getItem(LS_RESTR);
     if(r){ const loaded=JSON.parse(r); restr.splice(0,restr.length,...loaded); }
   }catch(e){console.warn('localStorage load failed',e);}
@@ -107,7 +113,6 @@ function lsLoad(){
 // ALIASES: appName -> gameNick
 // =====================================================================
 let ALIASES = {Resek:'Cytrusia'};
-// Reverse map: gameNick -> appName
 function getAppName(gameNick) {
   for(const [app,game] of Object.entries(ALIASES)) {
     if(game.toLowerCase()===gameNick.toLowerCase()) return app;
