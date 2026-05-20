@@ -2,10 +2,10 @@
 // GITHUB SYNC CONFIG — uzupełnij przed deployem
 // =====================================================================
 const GH_CONFIG = {
-  owner:  'TWOJ_GITHUB_NICK',   // np. 'arek123'
-  repo:   'rift-draft',          // nazwa repozytorium
+  owner:  'Remixion',
+  repo:   'WodneZiomki',
   branch: 'main',
-  path:   'data.js'              // ścieżka do tego pliku w repo
+  path:   'data.js'
 };
 // Raw URL skąd aplikacja ładuje dane przy starcie
 const GH_RAW_URL = `https://raw.githubusercontent.com/${GH_CONFIG.owner}/${GH_CONFIG.repo}/${GH_CONFIG.branch}/${GH_CONFIG.path}`;
