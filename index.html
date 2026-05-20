@@ -2212,7 +2212,7 @@ function ghLog(msg,color='var(--silver)'){
 async function ghRefreshStatus(){
   const statusEl=document.getElementById('ghStatusText');
   if(!statusEl)return;
-  const configOk=GH_CONFIG.owner!=='TWOJ_GITHUB_NICK';
+  const configOk=!!(GH_CONFIG.owner && GH_CONFIG.repo);
   const hasToken=!!localStorage.getItem(LS_GH_TOKEN);
 
   if(!configOk){
@@ -2247,7 +2247,7 @@ async function ghRefreshStatus(){
 
 // ── FETCH (read from GitHub raw) ──────────────────────────────────────
 async function ghFetchData(silent=false){
-  if(GH_CONFIG.owner==='TWOJ_GITHUB_NICK'){
+  if(!GH_CONFIG.owner || !GH_CONFIG.repo){
     if(!silent) toast('Skonfiguruj GH_CONFIG w data.js!');
     return false;
   }
@@ -2307,7 +2307,7 @@ async function ghFetchData(silent=false){
 async function ghPushData(reason='save'){
   const token=localStorage.getItem(LS_GH_TOKEN);
   if(!token){ toast('Brak tokena GitHub — wejdź w ⚙ GitHub żeby go dodać'); return false; }
-  if(GH_CONFIG.owner==='TWOJ_GITHUB_NICK'){ toast('Skonfiguruj GH_CONFIG w data.js!'); return false; }
+  if(!GH_CONFIG.owner || !GH_CONFIG.repo){ toast('Skonfiguruj GH_CONFIG w data.js!'); return false; }
 
   ghLog('Przygotowuję data.js do wysłania...');
 
@@ -2382,7 +2382,7 @@ async function ghPushData(reason='save'){
 
 // ── AUTO FETCH ON STARTUP ─────────────────────────────────────────────
 async function ghAutoFetch(){
-  if(GH_CONFIG.owner==='TWOJ_GITHUB_NICK') return; // not configured
+  if(!GH_CONFIG.owner || !GH_CONFIG.repo) return; // not configured
   const indicator=document.getElementById('ghSyncBtn');
   if(indicator){ indicator.textContent='⏳ GitHub'; indicator.style.opacity='0.6'; }
   const ok=await ghFetchData(true);
