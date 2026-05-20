@@ -51,8 +51,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
 .toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:var(--silver);border-radius:50%;transition:all 0.3s}
 .toggle.on::after{left:22px;background:var(--teal);box-shadow:0 0 6px rgba(11,196,227,0.5)}
 /* MAIN LAYOUT */
-.main-grid{display:grid;grid-template-columns:250px 1fr 250px;gap:14px;align-items:start}
-@media(max-width:1150px){.main-grid{grid-template-columns:220px 1fr}.rcol{display:none}}
+.main-grid{display:grid;grid-template-columns:270px 1fr;gap:14px;align-items:start}
+@media(max-width:900px){.main-grid{grid-template-columns:220px 1fr}}
 @media(max-width:800px){.main-grid{grid-template-columns:1fr}}
 /* PLAYER LIST */
 .pi{display:flex;align-items:center;gap:9px;padding:8px 12px;border-bottom:1px solid rgba(200,170,110,0.06);cursor:pointer;transition:all 0.15s}
@@ -341,11 +341,27 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
         <div style="padding:7px 10px;border-bottom:1px solid var(--border)">
           <input id="plSearch" class="ss" style="width:100%;padding:5px 9px 5px 28px;font-size:12px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0B4C8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:8px center" placeholder="Szukaj gracza..." oninput="renderPL()">
         </div>
-        <div id="playerList" style="max-height:450px;overflow-y:auto"></div>
+        <div id="playerList" style="max-height:370px;overflow-y:auto"></div>
         <!-- DRAFT MODE HINT -->
         <div id="draftHint" style="display:none;padding:10px 12px;font-size:11px;color:var(--teal);border-top:1px solid var(--border);line-height:1.6">
           ✋ Przeciągnij gracza na slot drużyny.<br>
           <span style="color:var(--silver)">Rola zostanie wylosowana automatycznie.</span>
+        </div>
+      </div>
+      <!-- BLOKADY przeniesione na lewą stronę -->
+      <div class="panel" style="margin-top:12px">
+        <div class="panel-header">Blokady</div>
+        <div id="rside" style="padding:9px;max-height:160px;overflow-y:auto"><div style="font-size:11px;color:var(--silver)">Brak.</div></div>
+      </div>
+      <!-- LOSOWANIE RÓL przeniesione na lewą stronę -->
+      <div class="panel" style="margin-top:12px">
+        <div class="panel-header">Losowanie ról</div>
+        <div style="padding:9px;display:flex;flex-direction:column;gap:5px">
+          <div class="rtr"><span class="rlbl">⚔ Top</span><div class="toggle on" id="tog-top" onclick="toggleRole('top')"></div></div>
+          <div class="rtr"><span class="rlbl">🌿 Jungle</span><div class="toggle on" id="tog-jng" onclick="toggleRole('jng')"></div></div>
+          <div class="rtr"><span class="rlbl">⚡ Mid</span><div class="toggle on" id="tog-mid" onclick="toggleRole('mid')"></div></div>
+          <div class="rtr"><span class="rlbl">🏹 ADC</span><div class="toggle on" id="tog-adc" onclick="toggleRole('adc')"></div></div>
+          <div class="rtr"><span class="rlbl">🛡 Support</span><div class="toggle on" id="tog-supp" onclick="toggleRole('supp')"></div></div>
         </div>
       </div>
     </div>
@@ -379,20 +395,6 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
         </div>
         <div class="cg" id="redTeam"></div>
       </div>
-    </div>
-    <div class="rcol" style="display:flex;flex-direction:column;gap:12px">
-      <div class="panel">
-        <div class="panel-header">Losowanie ról</div>
-        <div style="padding:9px;display:flex;flex-direction:column;gap:5px">
-          <div class="rtr"><span class="rlbl">⚔ Top</span><div class="toggle on" id="tog-top" onclick="toggleRole('top')"></div></div>
-          <div class="rtr"><span class="rlbl">🌿 Jungle</span><div class="toggle on" id="tog-jng" onclick="toggleRole('jng')"></div></div>
-          <div class="rtr"><span class="rlbl">⚡ Mid</span><div class="toggle on" id="tog-mid" onclick="toggleRole('mid')"></div></div>
-          <div class="rtr"><span class="rlbl">🏹 ADC</span><div class="toggle on" id="tog-adc" onclick="toggleRole('adc')"></div></div>
-          <div class="rtr"><span class="rlbl">🛡 Support</span><div class="toggle on" id="tog-supp" onclick="toggleRole('supp')"></div></div>
-        </div>
-      </div>
-      <div class="panel"><div class="panel-header">Blokady</div><div id="rside" style="padding:9px;max-height:180px;overflow-y:auto"><div style="font-size:11px;color:var(--silver)">Brak.</div></div></div>
-      <div class="panel"><div class="panel-header">Role</div><div id="rap" style="padding:9px;font-size:11px;color:var(--silver)">Wciśnij "Losuj drużyny"</div></div>
     </div>
   </div>
 </div>
