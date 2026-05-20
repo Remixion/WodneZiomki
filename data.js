@@ -1,12 +1,13 @@
 // =====================================================================
-// GITHUB SYNC CONFIG — uzupełnij przed deployem
+// GITHUB SYNC CONFIG
 // =====================================================================
-const GH_CONFIG = {
+window.GH_CONFIG = {
   owner:  'Remixion',
   repo:   'WodneZiomki',
   branch: 'main',
   path:   'data.js'
 };
+const GH_CONFIG = window.GH_CONFIG;
 // Raw URL skąd aplikacja ładuje dane przy starcie
 const GH_RAW_URL = `https://raw.githubusercontent.com/${GH_CONFIG.owner}/${GH_CONFIG.repo}/${GH_CONFIG.branch}/${GH_CONFIG.path}`;
 // Token przechowywany tylko w localStorage przeglądarki osoby zapisującej

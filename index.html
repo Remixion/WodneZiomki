@@ -596,7 +596,16 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
 
 <div class="toast" id="toast"></div>
 
-<script src="data.js"></script>
+<script>
+// Fallback config — nadpisywane przez data.js jeśli załaduje się poprawnie
+window.GH_CONFIG = window.GH_CONFIG || {
+  owner:  'Remixion',
+  repo:   'WodneZiomki',
+  branch: 'main',
+  path:   'data.js'
+};
+</script>
+<script src="data.js?v=2"></script>
 <script>
 
 function buildPS(){
