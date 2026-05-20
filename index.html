@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Rift Draft — narzędzie do losowania drużyn i postaci w League of Legends custom meczach">
+<meta property="og:title" content="Rift Draft">
+<meta property="og:description" content="Losowanie drużyn, tryb draft, statystyki graczy i historia meczy — wszystko w przeglądarce.">
+<meta property="og:type" content="website">
+<title>Rift Draft — Custom Mecze</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C8AA6E;--gold-light:#F0E6D3;--gold-dark:#785A28;--blue-deep:#050E1A;--blue-mid:#0F2044;--blue-bright:#0BC4E3;--teal:#00BCD4;--silver:#A0B4C8;--white:#EEF0F3;--danger:#E84855;--success:#1DE9B6;--warn:#F39C12;--panel:rgba(8,18,36,0.93);--border:rgba(200,170,110,0.28);--border-bright:rgba(200,170,110,0.65)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Rajdhani',sans-serif;background:var(--blue-deep);color:var(--white);min-height:100vh;overflow-x:hidden}
+.wave-bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:linear-gradient(180deg,#030A14 0%,#080F20 45%,#0A1830 100%)}
+.wave{position:absolute;bottom:-2px;left:-100%;width:300%;border-radius:50%;animation:wv 10s linear infinite}
+.w1{height:220px;background:rgba(12,28,55,0.55)}.w2{height:190px;background:rgba(9,38,64,0.4);bottom:30px;animation-duration:15s;animation-delay:-5s}.w3{height:160px;background:rgba(11,196,227,0.04);bottom:55px;animation-duration:20s;animation-delay:-10s}
+@keyframes wv{0%{transform:translateX(0) scaleY(1)}50%{transform:translateX(25%) scaleY(1.08)}100%{transform:translateX(50%) scaleY(1)}}
+.hex-bg{position:fixed;inset:0;z-index:0;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpolygon points='30,2 58,17 58,35 30,50 2,35 2,17' fill='none' stroke='%23C8AA6E' stroke-width='1'/%3E%3C/svg%3E");background-size:60px 52px}
+.app{position:relative;z-index:1;min-height:100vh}
+nav{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(3,8,18,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;gap:12px;flex-wrap:wrap}
+.nav-logo{font-family:'Cinzel',serif;font-size:17px;font-weight:700;color:var(--gold);letter-spacing:3px;display:flex;align-items:center;gap:9px}
+.nav-logo svg{width:24px;height:24px}
+.nav-tabs{display:flex;gap:2px;flex-wrap:wrap}
+.nav-tab{padding:6px 14px;background:transparent;border:1px solid transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s}
+.nav-tab:hover{color:var(--gold);border-color:var(--border)}
+.nav-tab.active{color:var(--gold);border-color:var(--border-bright);background:rgba(200,170,110,0.07)}
+.nav-right{display:flex;gap:6px;align-items:center}
+.dev-badge{padding:4px 12px;background:rgba(232,72,85,0.12);border:1px solid rgba(232,72,85,0.35);color:var(--danger);font-size:11px;letter-spacing:2px;border-radius:20px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Rajdhani',sans-serif}
+.dev-badge.active{background:rgba(232,72,85,0.28);box-shadow:0 0 14px rgba(232,72,85,0.35)}
+.ai-badge{padding:4px 12px;background:rgba(11,196,227,0.1);border:1px solid rgba(11,196,227,0.35);color:var(--teal);font-size:11px;letter-spacing:2px;border-radius:20px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Rajdhani',sans-serif}
+.ai-badge:hover{background:rgba(11,196,227,0.2)}
+.page{display:none;padding:20px 24px;max-width:1420px;margin:0 auto}
+.page.active{display:block}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;backdrop-filter:blur(10px);overflow:hidden}
+.panel-header{padding:12px 18px;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.btn{padding:8px 20px;border:1px solid var(--border);background:transparent;color:var(--gold);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:rgba(200,170,110,0.1);border-color:var(--gold)}
+.btn.primary{background:rgba(200,170,110,0.13);border-color:var(--gold)}
+.btn.primary:hover{background:rgba(200,170,110,0.22);box-shadow:0 0 18px rgba(200,170,110,0.25)}
+.btn.dbtn{border-color:rgba(232,72,85,0.45);color:var(--danger)}
+.btn.dbtn:hover{background:rgba(232,72,85,0.1)}
+.btn.sbtn{border-color:rgba(29,233,182,0.45);color:var(--success)}
+.btn.sbtn:hover{background:rgba(29,233,182,0.08)}
+.btn.tbtn{border-color:rgba(11,196,227,0.45);color:var(--teal)}
+.btn.tbtn:hover{background:rgba(11,196,227,0.08)}
+.btn:disabled{opacity:0.35;cursor:not-allowed}
+.toggle{width:40px;height:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:pointer;position:relative;transition:all 0.3s;flex-shrink:0}
+.toggle.on{background:rgba(11,196,227,0.25);border-color:var(--teal)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:var(--silver);border-radius:50%;transition:all 0.3s}
+.toggle.on::after{left:22px;background:var(--teal);box-shadow:0 0 6px rgba(11,196,227,0.5)}
+/* MAIN LAYOUT */
+.main-grid{display:grid;grid-template-columns:250px 1fr 250px;gap:14px;align-items:start}
+@media(max-width:1150px){.main-grid{grid-template-columns:220px 1fr}.rcol{display:none}}
+@media(max-width:800px){.main-grid{grid-template-columns:1fr}}
+/* PLAYER LIST */
+.pi{display:flex;align-items:center;gap:9px;padding:8px 12px;border-bottom:1px solid rgba(200,170,110,0.06);cursor:pointer;transition:all 0.15s}
+.pi:hover{background:rgba(200,170,110,0.05)}
+.pi.sel{background:rgba(11,196,227,0.07);border-left:2px solid var(--teal)}
+.av{border-radius:50%;background:var(--blue-mid);border:1.5px solid;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;overflow:hidden}
+.av32{width:32px;height:32px;font-size:11px}
+.av26{width:26px;height:26px;font-size:9px}
+.av72{width:72px;height:72px;font-size:24px}
+.pname{font-size:13px;font-weight:600;flex:1;line-height:1.2}
+.psub{font-size:10px;color:var(--silver)}
+.pgame{font-size:10px;color:var(--teal);opacity:0.8}
+/* TEAMS */
+.team-display{border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.team-hdr{padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.team-title{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px}
+.tb{background:rgba(5,18,45,0.92)}.tr{background:rgba(28,5,14,0.92)}
+.tb .team-title{color:#5DADE2}.tr .team-title{color:#E84855}
+.cg{display:grid;grid-template-columns:repeat(5,1fr)}
+.cs{position:relative;aspect-ratio:3/4;overflow:hidden;border-right:1px solid rgba(200,170,110,0.07)}
+.cs:last-child{border-right:none}
+.cb{position:absolute;inset:0;background-size:cover;background-position:center top;transition:transform 0.4s;background-color:#0A1830}
+.cs:hover .cb{transform:scale(1.05)}
+.co{position:absolute;inset:0;background:linear-gradient(0deg,rgba(3,8,20,0.92) 0%,rgba(3,8,20,0.25) 55%,transparent 100%)}
+.ci{position:absolute;bottom:0;left:0;right:0;padding:7px 4px;text-align:center}
+.cri{font-size:16px;margin-bottom:3px}
+.cn{font-size:13px;font-weight:700;color:var(--gold-light);line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,0.8)}
+.cp{font-size:12px;color:var(--silver);margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,0.9);font-weight:600}
+.ckda{font-size:11px;color:rgba(160,180,200,0.8);margin-top:1px;text-shadow:0 1px 3px rgba(0,0,0,0.9)}
+.crb{position:absolute;top:2px;right:2px;background:rgba(3,8,20,0.82);border:1px solid var(--border);border-radius:3px;padding:2px 4px;font-size:8px;cursor:pointer;color:var(--gold);transition:all 0.2s;display:none;font-family:'Rajdhani',sans-serif;font-weight:700}
+.cs:hover .crb{display:block}
+.crb:hover{background:rgba(200,170,110,0.18)}
+/* WATERFALL REVEAL ANIMATION */
+.cs-waterfall{animation:wf-reveal 0.7s ease forwards}
+@keyframes wf-reveal{
+  0%{clip-path:inset(0 0 100% 0);opacity:0;transform:translateY(-8px)}
+  30%{opacity:1}
+  60%{clip-path:inset(0 0 0% 0);transform:translateY(0)}
+  75%{clip-path:inset(0 0 0% 0)}
+  100%{clip-path:inset(0 0 0% 0);opacity:1;transform:translateY(0)}
+}
+/* WATERFALL WATER LAYER — cascades down over the slot */
+.cs-water{
+  position:absolute;inset:0;z-index:10;pointer-events:none;
+  background:linear-gradient(180deg,
+    rgba(11,196,227,0.55) 0%,
+    rgba(11,196,227,0.35) 18%,
+    rgba(11,196,227,0.18) 40%,
+    rgba(0,150,200,0.08) 65%,
+    transparent 100%);
+  opacity:0;
+  transform:translateY(-100%);
+  animation:none;
+}
+.cs-water.flowing{animation:wf-water 0.85s cubic-bezier(0.22,0.61,0.36,1) forwards}
+@keyframes wf-water{
+  0%{opacity:0;transform:translateY(-100%)}
+  15%{opacity:1;transform:translateY(-15%)}
+  55%{opacity:0.7;transform:translateY(30%)}
+  100%{opacity:0;transform:translateY(110%)}
+}
+/* water droplet shimmer */
+.cs-drops{
+  position:absolute;inset:0;z-index:11;pointer-events:none;
+  overflow:hidden;opacity:0;
+}
+.cs-drops.flowing{animation:drops-fade 0.85s ease forwards}
+@keyframes drops-fade{0%{opacity:0}20%{opacity:1}75%{opacity:0.4}100%{opacity:0}}
+.drop{
+  position:absolute;width:2px;border-radius:1px;
+  background:linear-gradient(180deg,rgba(11,196,227,0.9),rgba(11,196,227,0));
+  animation:drop-fall linear forwards;
+}
+@keyframes drop-fall{from{transform:translateY(-20px);opacity:1}to{transform:translateY(110%);opacity:0}}
+/* monster bg tint */
+.cb-monster{background-position:center center!important;background-size:cover!important;opacity:0.88}
+/* CENTER */
+.cctrl{display:flex;flex-direction:column;align-items:center;gap:9px;padding:8px 0}
+.vs{font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:var(--gold);text-shadow:0 0 25px rgba(200,170,110,0.4)}
+.ctr{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.rtr{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(0,0,0,0.18);border:1px solid var(--border);border-radius:4px;gap:9px}
+.rlbl{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
+.rchip{display:flex;align-items:center;gap:6px;padding:5px 9px;background:rgba(232,72,85,0.08);border:1px solid rgba(232,72,85,0.2);border-radius:4px;font-size:11px;color:#f08090;margin-bottom:4px}
+.rx{margin-left:auto;cursor:pointer;color:var(--danger);font-size:14px;opacity:0.7;transition:opacity 0.2s}.rx:hover{opacity:1}
+/* PROFILE */
+.profile-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.profile-layout{grid-template-columns:1fr}}
+.pcard{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.phero{position:relative;height:165px;overflow:hidden}
+.phbg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(3px) brightness(0.35);transform:scale(1.1)}
+.phov{position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,14,26,1) 0%,rgba(5,14,26,0.1) 100%)}
+.pavl{position:absolute;bottom:-24px;left:18px;border:2.5px solid var(--gold);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 16px rgba(200,170,110,0.22)}
+.pinfo{padding:34px 18px 14px}
+.pn{font-family:'Cinzel',serif;font-size:19px;color:var(--gold)}
+.pm{font-size:11px;color:var(--silver);margin-top:2px}
+.pgame-nick{font-size:12px;color:var(--teal);margin-top:2px;letter-spacing:1px}
+.sg4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 18px 14px}
+.sb{background:rgba(0,0,0,0.28);border:1px solid var(--border);border-radius:6px;padding:9px;text-align:center}
+.sv{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold)}
+.sl{font-size:9px;color:var(--silver);margin-top:1px;letter-spacing:1px;text-transform:uppercase}
+.slbl{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--silver);padding:8px 18px 5px;opacity:0.65}
+.ror{display:flex;align-items:center;gap:9px;padding:6px 18px;border-bottom:1px solid rgba(200,170,110,0.05)}
+.ror:last-child{border-bottom:none}
+.rbt{flex:1;height:4px;background:rgba(255,255,255,0.09);border-radius:2px;overflow:hidden}
+.rbf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--blue-bright));transition:width 0.8s}
+.wv{font-size:12px;font-weight:700;min-width:36px;text-align:right}
+.gs{font-size:10px;color:var(--silver);min-width:48px}
+.syr{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,0,0,0.18);border-radius:4px;margin-bottom:4px}
+.syb{flex:1;height:3px;background:rgba(255,255,255,0.09);border-radius:2px;overflow:hidden}
+.wp{padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;min-width:36px;text-align:center}
+.wg{background:rgba(29,233,182,0.13);color:var(--success);border:1px solid rgba(29,233,182,0.28)}
+.wb{background:rgba(232,72,85,0.13);color:var(--danger);border:1px solid rgba(232,72,85,0.28)}
+.fr{display:flex;align-items:center;gap:8px;padding:7px 11px;background:rgba(232,72,85,0.06);border:1px solid rgba(232,72,85,0.16);border-radius:4px;margin-bottom:4px}
+.mr{display:flex;align-items:center;gap:9px;padding:7px 18px;border-bottom:1px solid rgba(200,170,110,0.04);font-size:11px}
+.mb{width:26px;height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.mw{background:rgba(29,233,182,0.13);color:var(--success);border:1px solid rgba(29,233,182,0.28)}
+.ml{background:rgba(232,72,85,0.13);color:var(--danger);border:1px solid rgba(232,72,85,0.28)}
+/* KDA champion card */
+.champ-card{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:4px;padding:5px 8px;display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.champ-card-img{width:28px;height:28px;border-radius:3px;background:var(--blue-mid);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--silver)}
+.champ-card-img img{width:100%;height:100%;object-fit:cover}
+/* STATS */
+.bsc{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center}
+.bv{font-family:'Cinzel',serif;font-size:32px;font-weight:700;color:var(--gold)}
+.bl{font-size:10px;color:var(--silver);margin-top:4px;letter-spacing:2px;text-transform:uppercase}
+.lbr{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid rgba(200,170,110,0.05);transition:background 0.15s}
+.lbr:hover{background:rgba(200,170,110,0.03)}
+.lbn{font-family:'Cinzel',serif;font-size:14px;font-weight:700;width:24px;text-align:center}
+.r1{color:#FFD700}.r2{color:#C0C0C0}.r3{color:#CD7F32}
+.lbav{width:26px;height:26px;border-radius:50%;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.lbbt{width:90px;height:4px;background:rgba(255,255,255,0.09);border-radius:2px;overflow:hidden}
+.lbbf{height:100%;border-radius:2px}
+.lbw{font-size:12px;font-weight:700;min-width:42px;text-align:right}
+/* HISTORY */
+.hr{border-bottom:1px solid rgba(200,170,110,0.06)}
+.hi{display:flex;align-items:center;gap:12px;padding:9px 14px}
+/* AI SCAN MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center}
+.modal-box{background:rgba(8,18,36,0.98);border:1px solid var(--border-bright);border-radius:10px;padding:24px;width:min(700px,95vw);max-height:85vh;overflow-y:auto}
+.scan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:12px}
+.scan-card{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:6px;overflow:hidden;font-size:11px}
+.scan-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:rgba(0,0,0,0.5)}
+.scan-info{padding:8px}
+.scan-status{padding:3px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:1px;display:inline-block;margin-bottom:6px}
+.ss-pending{background:rgba(160,180,200,0.15);color:var(--silver)}
+.ss-scanning{background:rgba(11,196,227,0.15);color:var(--teal)}
+.ss-done{background:rgba(29,233,182,0.15);color:var(--success)}
+.ss-error{background:rgba(232,72,85,0.15);color:var(--danger)}
+.scan-champs{font-size:10px;color:var(--white);line-height:1.6;white-space:pre-wrap}
+/* ALIASES PAGE */
+.alias-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;padding:16px}
+.alias-card{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:6px;padding:12px;display:flex;align-items:center;gap:10px}
+.alias-input{background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--white);padding:5px 9px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:12px;width:110px}
+.alias-input:focus{outline:none;border-color:var(--teal)}
+/* DEV */
+.dev-panel{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(4,4,10,0.97);border-top:1px solid rgba(232,72,85,0.35);padding:12px 24px;transform:translateY(100%);transition:transform 0.3s;max-height:48vh;overflow-y:auto}
+.dev-panel.open{transform:translateY(0)}
+.dg{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.ds{background:rgba(232,72,85,0.04);border:1px solid rgba(232,72,85,0.16);border-radius:4px;padding:7px}
+.ds label{font-size:9px;color:var(--silver);display:block;margin-bottom:3px;letter-spacing:1px;text-transform:uppercase}
+.ds select{width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);color:var(--white);padding:3px 5px;font-size:10px;border-radius:3px;font-family:'Rajdhani',sans-serif}
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;z-index:300;background:rgba(11,196,227,0.13);border:1px solid var(--teal);color:var(--teal);padding:9px 16px;border-radius:6px;font-size:12px;font-weight:600;letter-spacing:1px;transform:translateX(130%);transition:transform 0.3s;backdrop-filter:blur(8px)}
+.toast.show{transform:translateX(0)}
+/* PROGRESS */
+.progress-bar{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue-bright));border-radius:2px;transition:width 0.3s}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:rgba(0,0,0,0.18)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.ss{background:rgba(0,0,0,0.42);border:1px solid var(--border);color:var(--white);padding:5px 9px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:12px}
+/* ADD PLAYER */
+.color-picker-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.color-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.2s;flex-shrink:0}
+.color-dot.picked{border-color:var(--white);transform:scale(1.2)}
+.pi-del{margin-left:auto;color:rgba(232,72,85,0.5);cursor:pointer;font-size:14px;line-height:1;transition:color 0.2s;padding:2px 4px;flex-shrink:0}
+.pi-del:hover{color:var(--danger)}
+/* DRAFT MODE */
+.mode-switch{display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.15)}
+.mode-btn{flex:1;padding:6px 0;border:1px solid var(--border);background:transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s;text-align:center}
+.mode-btn.active{background:rgba(200,170,110,0.12);border-color:var(--gold);color:var(--gold)}
+/* draggable player chip */
+.pi[draggable=true]{cursor:grab}
+.pi[draggable=true]:active{cursor:grabbing;opacity:0.7}
+.pi.dragging{opacity:0.4;background:rgba(11,196,227,0.08)}
+/* draft drop zones on team header + slots */
+.draft-drop-zone{
+  border:2px dashed rgba(200,170,110,0.3);border-radius:6px;
+  transition:all 0.2s;position:relative;
+}
+.draft-drop-zone.drag-over{
+  border-color:var(--teal)!important;
+  background:rgba(11,196,227,0.08)!important;
+  box-shadow:inset 0 0 16px rgba(11,196,227,0.12);
+}
+/* draft team panels with drop zone feeling */
+.team-display.draft-target{border:2px dashed rgba(200,170,110,0.3);transition:all 0.2s}
+.team-display.draft-target.drag-over{border-color:var(--teal);box-shadow:0 0 20px rgba(11,196,227,0.18)}
+/* draft slot drop targets */
+.draft-slot{
+  border:2px dashed rgba(200,170,110,0);transition:all 0.2s;
+  border-radius:3px;
+}
+.draft-slot.drag-over{border-color:var(--teal)!important;background:rgba(11,196,227,0.12)!important;}
+/* draft bench area */
+.draft-bench{
+  display:flex;flex-wrap:wrap;gap:6px;padding:10px;
+  min-height:48px;border:2px dashed rgba(200,170,110,0.15);border-radius:6px;
+  background:rgba(0,0,0,0.12);transition:all 0.2s;
+}
+.draft-bench.drag-over{border-color:rgba(200,170,110,0.45);background:rgba(200,170,110,0.05)}
+/* compact player chip for draft */
+.player-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 9px;border-radius:4px;cursor:grab;
+  border:1px solid;font-size:12px;font-weight:600;
+  transition:all 0.18s;user-select:none;
+  background:rgba(0,0,0,0.3);
+}
+.player-chip:hover{filter:brightness(1.15)}
+.player-chip:active{cursor:grabbing;opacity:0.6}
+.player-chip.dragging{opacity:0.35}
+/* draft mode team grid — larger drop targets */
+.draft-cs{
+  position:relative;aspect-ratio:3/4;overflow:hidden;
+  border-right:1px solid rgba(200,170,110,0.07);
+  transition:all 0.2s;
+}
+.draft-cs.drag-over::after{
+  content:'UPUŚĆ';position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;
+  color:var(--teal);background:rgba(11,196,227,0.15);
+  border:2px dashed rgba(11,196,227,0.5);
+  pointer-events:none;
+}
+.draft-cs .remove-player{
+  position:absolute;top:3px;left:3px;z-index:12;
+  width:18px;height:18px;background:rgba(232,72,85,0.8);
+  border-radius:50%;display:none;align-items:center;justify-content:center;
+  font-size:10px;cursor:pointer;color:white;font-weight:700;
+  border:1px solid var(--danger);
+}
+.draft-cs:hover .remove-player{display:flex}
+/* KDA table */
+.kda-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.kda-tbl th{padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.kda-tbl td{padding:5px 8px;border-bottom:1px solid rgba(200,170,110,0.04)}
+.kda-tbl tr:hover td{background:rgba(200,170,110,0.03)}
+</style>
+</head>
+<body>
+<div class="wave-bg"><div class="wave w1"></div><div class="wave w2"></div><div class="wave w3"></div></div>
+<div class="hex-bg"></div>
+<div class="app">
+<nav>
+  <div class="nav-logo">
+    <svg viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="11" stroke="#C8AA6E" stroke-width="1.2"/><path d="M13 3L16.5 9L23 10.5L18.5 15.5L19.5 22L13 19L6.5 22L7.5 15.5L3 10.5L9.5 9Z" fill="#C8AA6E" opacity="0.65"/><circle cx="13" cy="13" r="3" fill="#C8AA6E"/></svg>
+    RIFT&nbsp;DRAFT
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('randomizer',this)">Losowanie</button>
+    <button class="nav-tab" onclick="showPage('profiles',this)">Profile</button>
+    <button class="nav-tab" onclick="showPage('stats',this)">Statystyki</button>
+    <button class="nav-tab" onclick="showPage('history',this)">Historia</button>
+    <button class="nav-tab" onclick="showPage('aliases',this)">Aliasy</button>
+  </div>
+  <div class="nav-right">
+    <button class="ai-badge" onclick="openScanModal()">🤖 AI Scan</button>
+    <button class="dev-badge" id="devBtn" onclick="toggleDev()">⚙ DEV</button>
+  </div>
+</nav>
+
+<!-- RANDOMIZER -->
+<div class="page active" id="page-randomizer">
+  <div class="main-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-header">Gracze <span id="sc" style="font-size:10px;color:var(--silver)">0/10</span>
+          <button class="btn sbtn" style="padding:2px 10px;font-size:10px;margin-left:auto" onclick="openAddPlayer()">+ Dodaj</button>
+        </div>
+        <!-- MODE SWITCH -->
+        <div class="mode-switch">
+          <button class="mode-btn active" id="modeRandom" onclick="setMode('random')">🎲 Losowanie</button>
+          <button class="mode-btn" id="modeDraft" onclick="setMode('draft')">✋ Draft</button>
+        </div>
+        <div style="padding:7px 10px;border-bottom:1px solid var(--border)">
+          <input id="plSearch" class="ss" style="width:100%;padding:5px 9px 5px 28px;font-size:12px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0B4C8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:8px center" placeholder="Szukaj gracza..." oninput="renderPL()">
+        </div>
+        <div id="playerList" style="max-height:450px;overflow-y:auto"></div>
+        <!-- DRAFT MODE HINT -->
+        <div id="draftHint" style="display:none;padding:10px 12px;font-size:11px;color:var(--teal);border-top:1px solid var(--border);line-height:1.6">
+          ✋ Przeciągnij gracza na slot drużyny.<br>
+          <span style="color:var(--silver)">Rola zostanie wylosowana automatycznie.</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="team-display tb" id="blueTeamWrap">
+        <div class="team-hdr">
+          <span class="team-title">◆ DRUŻYNA LEWA</span>
+          <span id="blueCount" style="font-size:10px;color:var(--silver)"></span>
+        </div>
+        <div class="cg" id="blueTeam"></div>
+      </div>
+      <div class="cctrl">
+        <div class="vs">VS</div>
+        <div id="ctrlRandom" class="ctr">
+          <button class="btn primary" onclick="randomizeTeams()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>Losuj drużyny</button>
+          <button class="btn" onclick="randomizeChamps()">🎲 Losuj postacie</button>
+        </div>
+        <div id="ctrlDraft" class="ctr" style="display:none">
+          <button class="btn" onclick="randomizeDraftRoles()">🎲 Losuj role</button>
+          <button class="btn dbtn" onclick="clearDraft()">✕ Wyczyść</button>
+        </div>
+        <div class="ctr">
+          <button class="btn sbtn" onclick="copyToDiscord()">📋 Kopiuj Discord</button>
+          <button class="btn" onclick="openSave()">💾 Zapisz wynik</button>
+        </div>
+      </div>
+      <div class="team-display tr" id="redTeamWrap">
+        <div class="team-hdr">
+          <span class="team-title">◆ DRUŻYNA PRAWA</span>
+          <span id="redCount" style="font-size:10px;color:var(--silver)"></span>
+        </div>
+        <div class="cg" id="redTeam"></div>
+      </div>
+    </div>
+    <div class="rcol" style="display:flex;flex-direction:column;gap:12px">
+      <div class="panel">
+        <div class="panel-header">Losowanie ról</div>
+        <div style="padding:9px;display:flex;flex-direction:column;gap:5px">
+          <div class="rtr"><span class="rlbl">⚔ Top</span><div class="toggle on" id="tog-top" onclick="toggleRole('top')"></div></div>
+          <div class="rtr"><span class="rlbl">🌿 Jungle</span><div class="toggle on" id="tog-jng" onclick="toggleRole('jng')"></div></div>
+          <div class="rtr"><span class="rlbl">⚡ Mid</span><div class="toggle on" id="tog-mid" onclick="toggleRole('mid')"></div></div>
+          <div class="rtr"><span class="rlbl">🏹 ADC</span><div class="toggle on" id="tog-adc" onclick="toggleRole('adc')"></div></div>
+          <div class="rtr"><span class="rlbl">🛡 Support</span><div class="toggle on" id="tog-supp" onclick="toggleRole('supp')"></div></div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-header">Blokady</div><div id="rside" style="padding:9px;max-height:180px;overflow-y:auto"><div style="font-size:11px;color:var(--silver)">Brak.</div></div></div>
+      <div class="panel"><div class="panel-header">Role</div><div id="rap" style="padding:9px;font-size:11px;color:var(--silver)">Wciśnij "Losuj drużyny"</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILES -->
+<div class="page" id="page-profiles">
+  <div class="profile-layout">
+    <div><div class="panel">
+      <div class="panel-header">Gracze</div>
+      <div style="padding:7px 10px;border-bottom:1px solid var(--border)">
+        <input id="prSearch" class="ss" style="width:100%;padding:5px 9px 5px 28px;font-size:12px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0B4C8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:8px center" placeholder="Szukaj gracza..." oninput="renderProfileList()">
+      </div>
+      <div id="profileList" style="max-height:620px;overflow-y:auto"></div>
+    </div></div>
+    <div id="profileContent"><div style="display:flex;align-items:center;justify-content:center;height:380px;color:var(--silver);font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:0.45">Wybierz gracza z listy</div></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="page" id="page-stats">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px" id="stop"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="panel"><div class="panel-header">Ranking winrate</div><div id="lbwr"></div></div>
+    <div class="panel"><div class="panel-header">Ranking aktywności</div><div id="lbg"></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="panel"><div class="panel-header">Najlepsze synergię (≥2G razem)</div><div id="syt" style="padding:14px"></div></div>
+    <div class="panel"><div class="panel-header">Top KDA (z analizy screenów)</div><div id="kdaTop" style="padding:14px"></div></div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="page-history">
+  <div class="panel">
+    <div class="panel-header" id="histhdr">Historia meczy
+      <button class="btn" style="padding:4px 12px;font-size:10px" onclick="exportCSV()">↓ CSV</button>
+    </div>
+    <div id="histList"></div>
+  </div>
+</div>
+
+<!-- ALIASES -->
+<div class="page" id="page-aliases">
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-header">
+      Aliasy graczy (nick w aplikacji → nick w grze)
+      <button class="btn sbtn" style="padding:4px 12px;font-size:10px" onclick="saveAliases()">💾 Zapisz</button>
+    </div>
+    <div style="padding:12px;font-size:11px;color:var(--silver);border-bottom:1px solid var(--border)">
+      Wpisz nick z gry (Riot ID) żeby przy skanowaniu AI mógł dopasować gracza. Np. Resek → Cytrusia
+    </div>
+    <div class="alias-grid" id="aliasGrid"></div>
+  </div>
+</div>
+</div><!-- /app -->
+
+<!-- ADD PLAYER MODAL -->
+<div id="addPlayerModal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="width:min(400px,95vw)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px" id="addPlayerTitle">Dodaj nowego gracza</div>
+      <button class="btn dbtn" style="padding:3px 10px;font-size:10px" onclick="closeAddPlayer()">✕</button>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Nick w aplikacji *</div>
+      <input id="apName" class="ss" style="width:100%" placeholder="np. Janusz" oninput="updateAddPreview()">
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Nick w grze (Riot ID)</div>
+      <input id="apGameNick" class="ss" style="width:100%" placeholder="np. Janusz#EUW">
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Kolor gracza</div>
+      <div class="color-picker-row" id="colorPickerRow"></div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+        <div id="apPreviewAv" style="width:40px;height:40px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">??</div>
+        <div>
+          <div id="apPreviewName" style="font-size:14px;font-weight:600;color:var(--white)">Podgląd</div>
+          <div style="font-size:10px;color:var(--silver)">0 meczy · 0% WR</div>
+        </div>
+        <input type="color" id="apCustomColor" value="#C8AA6E" style="margin-left:auto;width:32px;height:32px;border:none;background:transparent;cursor:pointer;border-radius:4px" oninput="pickCustomColor(this.value)" title="Własny kolor">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button class="btn primary" style="flex:1;justify-content:center" onclick="confirmAddPlayer()">✓ Dodaj gracza</button>
+      <button class="btn dbtn" style="flex:1;justify-content:center" onclick="closeAddPlayer()">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEV PANEL -->
+<div class="dev-panel" id="devPanel">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <span style="font-family:'Cinzel',serif;font-size:12px;color:var(--danger);letter-spacing:2px">⚠ TRYB DEVELOPERSKI</span>
+    <button class="btn dbtn" style="padding:3px 10px;font-size:10px;margin-left:auto" onclick="toggleDev()">Zamknij</button>
+  </div>
+  <div style="font-size:10px;color:#5DADE2;letter-spacing:2px;margin-bottom:7px">— LEWA —</div>
+  <div class="dg" id="devB"></div>
+  <div style="font-size:10px;color:#E84855;letter-spacing:2px;margin:10px 0 7px">— PRAWA —</div>
+  <div class="dg" id="devR"></div>
+  <div style="margin-top:12px"><button class="btn primary" onclick="applyDev()">Zastosuj zmiany</button></div>
+</div>
+
+<!-- AI SCAN MODAL -->
+<div id="scanModal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--teal);letter-spacing:2px">🤖 AI — Skanowanie Screenów</div>
+      <button class="btn dbtn" style="padding:3px 10px;font-size:10px" onclick="closeScanModal()">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--silver);margin-bottom:12px;line-height:1.6">
+      AI przeanalizuje każdy screenshot meczu i wyodrębni: <span style="color:var(--teal)">graną postać</span> i <span style="color:var(--gold)">KDA</span> dla każdego gracza. Upewnij się, że aliasy (np. Resek→Cytrusia) są ustawione na stronie Aliasy.
+    </div>
+    <div id="scanApiKeyRow" style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
+      <input id="scanApiKey" class="ss" style="flex:1" placeholder="Klucz API Anthropic (opcjonalnie — aplikacja używa wbudowanego)" type="password">
+      <button class="btn tbtn" style="padding:5px 14px;font-size:11px" onclick="startScan()">▶ Skanuj wszystko</button>
+    </div>
+    <div id="scanProgress" style="display:none">
+      <div style="font-size:11px;color:var(--silver)" id="scanProgressText">Skanowanie 0/0...</div>
+      <div class="progress-bar"><div class="progress-fill" id="scanProgressFill" style="width:0%"></div></div>
+    </div>
+    <div class="scan-grid" id="scanGrid"></div>
+  </div>
+</div>
+
+<!-- SAVE MODAL -->
+<div id="saveModal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="width:min(340px,95vw)">
+    <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px;margin-bottom:14px">Zapisz wynik meczu</div>
+    <div style="margin-bottom:11px">
+      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Kto wygrał?</div>
+      <div style="display:flex;gap:7px">
+        <button id="wbB" class="btn" style="flex:1;justify-content:center" onclick="setW('LEWA')">◆ LEWA</button>
+        <button id="wbR" class="btn" style="flex:1;justify-content:center" onclick="setW('PRAWA')">◆ PRAWA</button>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Patch</div>
+      <input id="pi" class="ss" style="width:100%" value="26.02">
+    </div>
+    <div style="display:flex;gap:7px">
+      <button class="btn sbtn" style="flex:1;justify-content:center" onclick="saveGame()">Zapisz</button>
+      <button class="btn dbtn" style="flex:1;justify-content:center" onclick="closeSave()">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script>
+
+function buildPS(){
+  const ps={};
+  MH.forEach(m=>{
+    const bw=m.win==='LEWA',rw=m.win==='PRAWA';
+    ROLES.forEach(r=>{
+      [[m.blue[r],bw],[m.red[r],rw]].forEach(([n,w])=>{
+        if(!n)return;
+        if(!ps[n])ps[n]={name:n,roles:{top:0,jng:0,mid:0,adc:0,supp:0},wins:{top:0,jng:0,mid:0,adc:0,supp:0},champs:{},kda:{}};
+        ps[n].roles[r]++;if(w)ps[n].wins[r]++;
+      });
+    });
+  });
+  // inject champ + KDA data from scanned results
+  MH.forEach(m=>{
+    if(!m.scanResult)return;
+    const sr=m.scanResult; // {playerName: {champ,k,d,a}}
+    Object.entries(sr).forEach(([appName,data])=>{
+      if(!ps[appName])return;
+      const {champ,k,d,a}=data;
+      if(champ){
+        if(!ps[appName].champs[champ])ps[appName].champs[champ]={g:0,w:0,k:0,d:0,a:0};
+        const inBlue=Object.values(m.blue).includes(appName);
+        const won=(inBlue&&m.win==='LEWA')||(!inBlue&&m.win==='PRAWA');
+        ps[appName].champs[champ].g++;
+        if(won)ps[appName].champs[champ].w++;
+        if(k!==undefined){ps[appName].champs[champ].k+=k;ps[appName].champs[champ].d+=d;ps[appName].champs[champ].a+=a;}
+      }
+    });
+  });
+  // ensure manually-added players always appear even with 0 games
+  EXTRA_PLAYERS.forEach(n=>{
+    if(!ps[n])ps[n]={name:n,roles:{top:0,jng:0,mid:0,adc:0,supp:0},wins:{top:0,jng:0,mid:0,adc:0,supp:0},champs:{},kda:{}};
+  });
+  return ps;
+}
+
+let PS=buildPS();
+let AP=Object.keys(PS).sort();
+let restr=[];
+let roleOn={top:true,jng:true,mid:true,adc:true,supp:true};
+let sel=[];
+let CT={blue:[],red:[],bR:{},rR:{}};
+let CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
+let RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};
+const MXR=3;
+let PW=null,selPr=null,devMode=false;
+// Draft mode state
+let draftMode=false;
+// draftTeams: {blue: [{name, role},...], red: [{name, role},...]}
+let draftTeams={blue:[],red:[]};
+let draggedPlayer=null; // name being dragged
+
+// =====================================================================
+// INIT
+// =====================================================================
+function init(){
+  lsLoad();
+  PS=buildPS();
+  AP=Object.keys(PS).sort();
+  assignMonsters();
+  renderPL();renderProfileList();renderTS('blue');renderTS('red');renderRS();renderStats();renderHist();renderAliases();buildScanGrid();
+  updateDraftCounts();
+}
+
+// =====================================================================
+// PLAYER LIST
+// =====================================================================
+function renderPL(){
+  const el=document.getElementById('playerList');
+  const q=(document.getElementById('plSearch')?.value||'').toLowerCase().trim();
+  const list=q ? AP.filter(n=>n.toLowerCase().includes(q)||getGameNick(n).toLowerCase().includes(q)) : AP;
+
+  if(draftMode){
+    // In draft mode: show who is already placed
+    const placed=[...draftTeams.blue,...draftTeams.red].map(p=>p.name);
+    el.innerHTML=list.map(n=>{
+      const inBlue=draftTeams.blue.some(p=>p.name===n);
+      const inRed=draftTeams.red.some(p=>p.name===n);
+      const isPlaced=inBlue||inRed;
+      const c=PC[n]||'#C8AA6E';
+      const s=PS[n];const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const wr=g>0?Math.round(Object.values(s.wins).reduce((a,b)=>a+b,0)/g*100):0;
+      return `<div class="pi ${isPlaced?'sel':''}"
+        draggable="${!isPlaced}"
+        ondragstart="onDragStart(event,'${n}')"
+        ondragend="onDragEnd(event)"
+        style="${isPlaced?'opacity:0.45;cursor:default':''}"
+      >
+        <div class="av av32" style="border-color:${c}55;color:${c};background:${c}15">${ini(n)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="pname">${n}</div>
+          <div class="psub">${g}G · ${wr}%WR</div>
+        </div>
+        ${inBlue?`<span style="font-size:10px;color:#5DADE2;font-weight:700;letter-spacing:1px">LEWA</span>`:''}
+        ${inRed?`<span style="font-size:10px;color:#E84855;font-weight:700;letter-spacing:1px">PRAWA</span>`:''}
+      </div>`;
+    }).join('');
+    document.getElementById('sc').textContent=`${draftTeams.blue.length+draftTeams.red.length}/10`;
+  } else {
+    el.innerHTML=list.map(n=>{
+      const s=PS[n];const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const w=Object.values(s.wins).reduce((a,b)=>a+b,0);
+      const wr=g>0?Math.round(w/g*100):0;const isSel=sel.includes(n);const c=PC[n]||'#C8AA6E';
+      const gn=getGameNick(n);const showAlias=gn!==n;
+      return `<div class="pi ${isSel?'sel':''}" onclick="toggleSel('${n}')">
+        <div class="av av32" style="border-color:${c}55;color:${c};background:${c}15">${ini(n)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="pname">${n}</div>
+          ${showAlias?`<div class="pgame">${gn}</div>`:''}
+          <div class="psub">${g}G · ${wr}%WR</div>
+        </div>
+        ${isSel?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`:''}
+        <span title="Edytuj" style="color:rgba(200,170,110,0.45);cursor:pointer;font-size:13px;padding:2px 3px;flex-shrink:0;transition:color 0.2s" onmouseenter="this.style.color='var(--gold)'" onmouseleave="this.style.color='rgba(200,170,110,0.45)'" onclick="event.stopPropagation();openAddPlayer('${n}')">✎</span>
+        <span class="pi-del" title="Usuń" onclick="deletePlayer('${n}',event)">✕</span>
+      </div>`;
+    }).join('');
+    document.getElementById('sc').textContent=`${sel.length}/10`;
+  }
+}
+
+function toggleSel(n){if(draftMode)return;const i=sel.indexOf(n);if(i>=0)sel.splice(i,1);else if(sel.length<10)sel.push(n);renderPL();}
+
+// =====================================================================
+// TEAM SLOTS
+// =====================================================================
+function renderTS(t, animate){
+  const el=document.getElementById(t+'Team');
+  el.innerHTML=ROLES.map((role,i)=>{
+    const pid=CT[t][i];const ch=CC[t][i];const rc=RR[t][i];const c=pid?(PC[pid]||'#C8AA6E'):'#4A6A8A';
+    // background: champ splash OR jungle monster (no champ label shown)
+    let bgStyle='';
+    let isMonster=false;
+    if(ch){
+      const key=ch.replace(/[' ]/g,'').replace(/\./g,'');
+      bgStyle=`background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${key}_0.jpg')`;
+    } else if(pid){
+      const key=slotMonsters[t][i]||MONSTER_KEYS[0];
+      bgStyle=`background-image:url('${pickMonsterUrl(key)}')`;
+      isMonster=true;
+    }
+    // KDA from scan
+    let kdaTxt='';
+    if(pid && ch){
+      for(let mi=MH.length-1;mi>=0;mi--){
+        const m=MH[mi];if(!m.scanResult)continue;
+        const sr=m.scanResult[pid];
+        if(sr&&sr.champ===ch&&sr.k!==undefined){kdaTxt=`${sr.k}/${sr.d}/${sr.a}`;break;}
+      }
+    }
+    const delay=animate?(i*0.09+0.05)+'s':'0s';
+    return `<div class="cs ${animate?'cs-waterfall':''}" style="${animate?`animation-delay:${delay}`:''}" data-t="${t}" data-i="${i}">
+      <div class="cb ${isMonster?'cb-monster':''}" style="${bgStyle}"></div>
+      <div class="co"></div>
+      <div class="cs-water ${animate?'flowing':''}" style="${animate?`animation-delay:${delay}`:''}"></div>
+      <div class="cs-drops ${animate?'flowing':''}" style="${animate?`animation-delay:${delay}`:''}">
+        ${animate?genDrops():''}
+      </div>
+      <div class="ci">
+        <div class="cri" style="color:${c}">${RI[role]}</div>
+        <div class="cn">${ch||role.toUpperCase()}</div>
+        <div class="cp" style="color:${c}">${pid||'—'}</div>
+        ${kdaTxt?`<div class="ckda">${kdaTxt}</div>`:''}
+      </div>
+      <div class="crb" onclick="rerollC('${t}',${i},'${role}',event)">↺ ${MXR-rc}x</div>
+    </div>`;
+  }).join('');
+}
+
+// =====================================================================
+// JUNGLE MONSTERS — SVG art rendered as data-URIs
+// Each monster is drawn in LoL-inspired style
+// =====================================================================
+function svgUri(svg){ return 'data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg))); }
+
+const JUNGLE_MONSTERS_SVG = {
+  baron: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="60%" r="60%"><stop offset="0%" stop-color="#1a0a2e"/><stop offset="100%" stop-color="#05030d"/></radialGradient>
+      <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#7c3aed" stop-opacity="0.6"/><stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <ellipse cx="150" cy="240" rx="100" ry="80" fill="url(#glow)"/>
+    <!-- tentacles -->
+    <path d="M80 320 Q40 260 70 200 Q90 170 80 140" stroke="#6d28d9" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <path d="M100 330 Q60 280 85 230 Q105 200 95 160" stroke="#7c3aed" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <path d="M220 320 Q260 260 230 200 Q210 170 220 140" stroke="#6d28d9" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <path d="M200 330 Q240 280 215 230 Q195 200 205 160" stroke="#7c3aed" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <!-- body -->
+    <ellipse cx="150" cy="220" rx="75" ry="90" fill="#1e1035"/>
+    <ellipse cx="150" cy="220" rx="70" ry="85" fill="none" stroke="#6d28d9" stroke-width="2"/>
+    <!-- segments -->
+    <path d="M82 200 Q150 210 218 200" stroke="#6d28d9" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M78 230 Q150 242 222 230" stroke="#6d28d9" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M85 260 Q150 272 215 260" stroke="#6d28d9" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <!-- head -->
+    <ellipse cx="150" cy="155" rx="55" ry="45" fill="#16082a"/>
+    <ellipse cx="150" cy="155" rx="52" ry="42" fill="none" stroke="#7c3aed" stroke-width="2"/>
+    <!-- eyes — 6 eyes -->
+    <circle cx="120" cy="148" r="9" fill="#0f0520"/><circle cx="120" cy="148" r="7" fill="#a855f7"/><circle cx="120" cy="148" r="3" fill="#e9d5ff"/>
+    <circle cx="150" cy="140" r="9" fill="#0f0520"/><circle cx="150" cy="140" r="7" fill="#a855f7"/><circle cx="150" cy="140" r="3" fill="#e9d5ff"/>
+    <circle cx="180" cy="148" r="9" fill="#0f0520"/><circle cx="180" cy="148" r="7" fill="#a855f7"/><circle cx="180" cy="148" r="3" fill="#e9d5ff"/>
+    <circle cx="128" cy="165" r="6" fill="#0f0520"/><circle cx="128" cy="165" r="5" fill="#7c3aed"/>
+    <circle cx="150" cy="168" r="6" fill="#0f0520"/><circle cx="150" cy="168" r="5" fill="#7c3aed"/>
+    <circle cx="172" cy="165" r="6" fill="#0f0520"/><circle cx="172" cy="165" r="5" fill="#7c3aed"/>
+    <!-- void particles -->
+    <circle cx="110" cy="300" r="3" fill="#a855f7" opacity="0.6"/>
+    <circle cx="190" cy="280" r="2" fill="#7c3aed" opacity="0.5"/>
+    <circle cx="60" cy="180" r="2.5" fill="#c4b5fd" opacity="0.4"/>
+    <circle cx="240" cy="190" r="2" fill="#c4b5fd" opacity="0.4"/>
+    <!-- claws -->
+    <path d="M90 290 L70 310 M90 290 L75 325 M90 290 L95 325" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/>
+    <path d="M210 290 L230 310 M210 290 L225 325 M210 290 L205 325" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/>
+  </svg>`),
+
+  dragon_infernal: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="70%" r="70%"><stop offset="0%" stop-color="#2d0a00"/><stop offset="100%" stop-color="#080200"/></radialGradient>
+      <radialGradient id="fireglow" cx="50%" cy="50%" r="55%"><stop offset="0%" stop-color="#f97316" stop-opacity="0.5"/><stop offset="100%" stop-color="#f97316" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <ellipse cx="150" cy="280" rx="120" ry="60" fill="url(#fireglow)"/>
+    <!-- wings -->
+    <path d="M150 200 L40 100 L80 200 Z" fill="#7f1d1d" opacity="0.8"/>
+    <path d="M150 200 L260 100 L220 200 Z" fill="#7f1d1d" opacity="0.8"/>
+    <path d="M150 200 L40 100 L80 200 Z" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.5"/>
+    <path d="M150 200 L260 100 L220 200 Z" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.5"/>
+    <!-- wing membrane veins -->
+    <path d="M150 200 L55 115" stroke="#dc2626" stroke-width="1" opacity="0.4"/>
+    <path d="M150 200 L65 145" stroke="#dc2626" stroke-width="1" opacity="0.4"/>
+    <path d="M150 200 L245 115" stroke="#dc2626" stroke-width="1" opacity="0.4"/>
+    <path d="M150 200 L235 145" stroke="#dc2626" stroke-width="1" opacity="0.4"/>
+    <!-- body -->
+    <path d="M100 200 Q150 170 200 200 Q230 240 210 300 Q185 350 150 360 Q115 350 90 300 Q70 240 100 200Z" fill="#450a0a"/>
+    <path d="M100 200 Q150 170 200 200 Q230 240 210 300 Q185 350 150 360 Q115 350 90 300 Q70 240 100 200Z" fill="none" stroke="#ef4444" stroke-width="2"/>
+    <!-- scales -->
+    <path d="M110 230 Q130 222 150 230 Q170 222 190 230" stroke="#dc2626" stroke-width="1.5" fill="none" opacity="0.7"/>
+    <path d="M105 260 Q130 250 150 260 Q170 250 195 260" stroke="#dc2626" stroke-width="1.5" fill="none" opacity="0.7"/>
+    <path d="M110 290 Q130 280 150 290 Q170 280 190 290" stroke="#dc2626" stroke-width="1.5" fill="none" opacity="0.7"/>
+    <!-- neck -->
+    <path d="M125 200 Q130 160 150 140 Q170 160 175 200" fill="#450a0a"/>
+    <!-- head -->
+    <ellipse cx="150" cy="130" rx="45" ry="35" fill="#3b0a0a"/>
+    <ellipse cx="150" cy="130" rx="42" ry="32" fill="none" stroke="#ef4444" stroke-width="2"/>
+    <!-- horns -->
+    <path d="M128 110 L112 75 L125 112" fill="#7f1d1d"/>
+    <path d="M172 110 L188 75 L175 112" fill="#7f1d1d"/>
+    <!-- snout -->
+    <ellipse cx="150" cy="143" rx="22" ry="12" fill="#2d0808"/>
+    <!-- nostrils glow -->
+    <circle cx="142" cy="142" r="3" fill="#f97316" opacity="0.8"/>
+    <circle cx="158" cy="142" r="3" fill="#f97316" opacity="0.8"/>
+    <!-- eyes -->
+    <ellipse cx="133" cy="124" rx="10" ry="8" fill="#1a0000"/><ellipse cx="133" cy="124" rx="8" ry="6" fill="#f97316"/><circle cx="133" cy="124" r="3" fill="#fef3c7"/>
+    <ellipse cx="167" cy="124" rx="10" ry="8" fill="#1a0000"/><ellipse cx="167" cy="124" rx="8" ry="6" fill="#f97316"/><circle cx="167" cy="124" r="3" fill="#fef3c7"/>
+    <!-- fire breath -->
+    <path d="M140 150 Q135 175 120 185 Q115 190 110 195" stroke="#f97316" stroke-width="3" fill="none" opacity="0.7" stroke-linecap="round"/>
+    <path d="M150 152 Q148 178 140 192" stroke="#fbbf24" stroke-width="2" fill="none" opacity="0.6" stroke-linecap="round"/>
+    <!-- tail -->
+    <path d="M150 360 Q130 380 100 370 Q80 360 90 340" stroke="#7f1d1d" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <!-- ember particles -->
+    <circle cx="90" cy="170" r="2" fill="#f97316" opacity="0.7"/>
+    <circle cx="210" cy="165" r="2.5" fill="#fbbf24" opacity="0.6"/>
+    <circle cx="75" cy="210" r="1.5" fill="#ef4444" opacity="0.5"/>
+    <circle cx="225" cy="220" r="2" fill="#f97316" opacity="0.5"/>
+  </svg>`),
+
+  dragon_mountain: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="70%" r="70%"><stop offset="0%" stop-color="#1c1a0a"/><stop offset="100%" stop-color="#070601"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <!-- wings -->
+    <path d="M150 200 L35 90 L75 200 Z" fill="#44403c" opacity="0.85"/>
+    <path d="M150 200 L265 90 L225 200 Z" fill="#44403c" opacity="0.85"/>
+    <path d="M150 200 L35 90" stroke="#78716c" stroke-width="2" opacity="0.5"/>
+    <path d="M150 200 L265 90" stroke="#78716c" stroke-width="2" opacity="0.5"/>
+    <!-- body -->
+    <path d="M95 205 Q150 175 205 205 Q235 245 215 305 Q190 355 150 365 Q110 355 85 305 Q65 245 95 205Z" fill="#292524"/>
+    <path d="M95 205 Q150 175 205 205 Q235 245 215 305 Q190 355 150 365 Q110 355 85 305 Q65 245 95 205Z" fill="none" stroke="#78716c" stroke-width="2.5"/>
+    <!-- stone armour plates -->
+    <path d="M115 215 L145 205 L175 215 L160 235 L140 238 L120 235Z" fill="#57534e"/>
+    <path d="M110 250 L145 238 L180 250 L165 272 L135 275 L115 272Z" fill="#57534e"/>
+    <path d="M115 285 L148 273 L178 285 L162 305 L138 308 L118 305Z" fill="#57534e"/>
+    <!-- neck -->
+    <path d="M128 205 Q133 162 150 142 Q167 162 172 205" fill="#292524"/>
+    <path d="M128 205 Q133 162 150 142 Q167 162 172 205" fill="none" stroke="#78716c" stroke-width="1.5"/>
+    <!-- head -->
+    <ellipse cx="150" cy="128" rx="48" ry="38" fill="#1c1917"/>
+    <ellipse cx="150" cy="128" rx="45" ry="35" fill="none" stroke="#78716c" stroke-width="2.5"/>
+    <!-- stone crown spikes -->
+    <polygon points="118,108 112,80 126,110" fill="#57534e"/>
+    <polygon points="140,103 137,72 150,105" fill="#78716c"/>
+    <polygon points="160,103 163,72 150,105" fill="#78716c"/>
+    <polygon points="182,108 188,80 174,110" fill="#57534e"/>
+    <!-- snout -->
+    <path d="M125 138 Q150 150 175 138 Q170 125 150 120 Q130 125 125 138Z" fill="#292524"/>
+    <!-- eyes -->
+    <ellipse cx="132" cy="122" rx="11" ry="9" fill="#0c0a09"/><ellipse cx="132" cy="122" rx="9" ry="7" fill="#d97706"/><circle cx="132" cy="122" r="4" fill="#fef3c7"/>
+    <ellipse cx="168" cy="122" rx="11" ry="9" fill="#0c0a09"/><ellipse cx="168" cy="122" rx="9" ry="7" fill="#d97706"/><circle cx="168" cy="122" r="4" fill="#fef3c7"/>
+    <!-- rock particles -->
+    <circle cx="85" cy="180" r="3" fill="#78716c" opacity="0.6"/>
+    <circle cx="215" cy="175" r="4" fill="#57534e" opacity="0.5"/>
+  </svg>`),
+
+  dragon_ocean: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="70%" r="70%"><stop offset="0%" stop-color="#0a1e2d"/><stop offset="100%" stop-color="#020709"/></radialGradient>
+      <radialGradient id="ag" cx="50%" cy="50%" r="55%"><stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.4"/><stop offset="100%" stop-color="#0ea5e9" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <ellipse cx="150" cy="280" rx="120" ry="65" fill="url(#ag)"/>
+    <!-- fins / wings -->
+    <path d="M150 200 L30 120 L85 205 Z" fill="#0c4a6e" opacity="0.9"/>
+    <path d="M150 200 L270 120 L215 205 Z" fill="#0c4a6e" opacity="0.9"/>
+    <path d="M150 200 L30 120" stroke="#38bdf8" stroke-width="2" opacity="0.5"/>
+    <path d="M150 200 L270 120" stroke="#38bdf8" stroke-width="2" opacity="0.5"/>
+    <!-- body -->
+    <path d="M98 205 Q150 175 202 205 Q232 244 212 304 Q187 355 150 365 Q113 355 88 304 Q68 244 98 205Z" fill="#0c2744"/>
+    <path d="M98 205 Q150 175 202 205 Q232 244 212 304 Q187 355 150 365 Q113 355 88 304 Q68 244 98 205Z" fill="none" stroke="#38bdf8" stroke-width="2"/>
+    <!-- scales -->
+    <path d="M112 225 Q150 215 188 225" stroke="#0ea5e9" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M108 255 Q150 243 192 255" stroke="#0ea5e9" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M112 285 Q150 273 188 285" stroke="#0ea5e9" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <!-- neck -->
+    <path d="M126 205 Q131 160 150 140 Q169 160 174 205" fill="#0c2744"/>
+    <!-- head -->
+    <ellipse cx="150" cy="128" rx="47" ry="37" fill="#082030"/>
+    <ellipse cx="150" cy="128" rx="44" ry="34" fill="none" stroke="#38bdf8" stroke-width="2"/>
+    <!-- fin spines on head -->
+    <path d="M125 105 Q120 82 130 108" fill="#0c4a6e" opacity="0.8"/>
+    <path d="M142 100 Q138 72 148 103" fill="#0369a1" opacity="0.8"/>
+    <path d="M158 100 Q162 72 152 103" fill="#0369a1" opacity="0.8"/>
+    <path d="M175 105 Q180 82 170 108" fill="#0c4a6e" opacity="0.8"/>
+    <!-- snout -->
+    <ellipse cx="150" cy="143" rx="22" ry="11" fill="#041a28"/>
+    <!-- eyes -->
+    <ellipse cx="132" cy="122" rx="11" ry="9" fill="#020c14"/><ellipse cx="132" cy="122" rx="9" ry="7" fill="#0ea5e9"/><circle cx="132" cy="122" r="4" fill="#e0f2fe"/>
+    <ellipse cx="168" cy="122" rx="11" ry="9" fill="#020c14"/><ellipse cx="168" cy="122" rx="9" ry="7" fill="#0ea5e9"/><circle cx="168" cy="122" r="4" fill="#e0f2fe"/>
+    <!-- water sparkles -->
+    <circle cx="88" cy="175" r="2" fill="#38bdf8" opacity="0.7"/>
+    <circle cx="212" cy="170" r="2.5" fill="#7dd3fc" opacity="0.6"/>
+    <circle cx="72" cy="220" r="1.5" fill="#38bdf8" opacity="0.5"/>
+    <circle cx="228" cy="235" r="2" fill="#0ea5e9" opacity="0.5"/>
+  </svg>`),
+
+  dragon_cloud: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="60%" r="65%"><stop offset="0%" stop-color="#1e1b2e"/><stop offset="100%" stop-color="#07060f"/></radialGradient>
+      <radialGradient id="ag" cx="50%" cy="45%" r="55%"><stop offset="0%" stop-color="#a78bfa" stop-opacity="0.35"/><stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <ellipse cx="150" cy="210" rx="130" ry="80" fill="url(#ag)"/>
+    <!-- cloud wisps -->
+    <ellipse cx="80" cy="160" rx="40" ry="20" fill="#312e81" opacity="0.4"/>
+    <ellipse cx="220" cy="155" rx="38" ry="18" fill="#312e81" opacity="0.4"/>
+    <ellipse cx="150" cy="145" rx="55" ry="22" fill="#3730a3" opacity="0.3"/>
+    <!-- wings — large graceful -->
+    <path d="M150 190 L20 80 L90 195 Z" fill="#3730a3" opacity="0.75"/>
+    <path d="M150 190 L280 80 L210 195 Z" fill="#3730a3" opacity="0.75"/>
+    <path d="M150 190 L20 80" stroke="#a78bfa" stroke-width="2.5" opacity="0.6"/>
+    <path d="M150 190 L280 80" stroke="#a78bfa" stroke-width="2.5" opacity="0.6"/>
+    <!-- extra wing feather lines -->
+    <path d="M90 195 L40 115" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
+    <path d="M90 195 L60 135" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
+    <path d="M210 195 L260 115" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
+    <path d="M210 195 L240 135" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
+    <!-- body -->
+    <path d="M100 195 Q150 168 200 195 Q228 232 210 292 Q186 342 150 352 Q114 342 90 292 Q72 232 100 195Z" fill="#1e1b4b"/>
+    <path d="M100 195 Q150 168 200 195 Q228 232 210 292 Q186 342 150 352 Q114 342 90 292 Q72 232 100 195Z" fill="none" stroke="#a78bfa" stroke-width="2"/>
+    <!-- neck -->
+    <path d="M128 195 Q133 152 150 133 Q167 152 172 195" fill="#1e1b4b"/>
+    <!-- head -->
+    <ellipse cx="150" cy="122" rx="46" ry="36" fill="#16134a"/>
+    <ellipse cx="150" cy="122" rx="43" ry="33" fill="none" stroke="#a78bfa" stroke-width="2"/>
+    <!-- elegant swept horns -->
+    <path d="M122 104 Q105 72 115 68 Q122 85 128 106" fill="#4338ca"/>
+    <path d="M178 104 Q195 72 185 68 Q178 85 172 106" fill="#4338ca"/>
+    <!-- eyes -->
+    <ellipse cx="133" cy="116" rx="11" ry="9" fill="#08061f"/><ellipse cx="133" cy="116" rx="9" ry="7" fill="#a78bfa"/><circle cx="133" cy="116" r="4" fill="#ede9fe"/>
+    <ellipse cx="167" cy="116" rx="11" ry="9" fill="#08061f"/><ellipse cx="167" cy="116" rx="9" ry="7" fill="#a78bfa"/><circle cx="167" cy="116" r="4" fill="#ede9fe"/>
+    <!-- wind sparkles -->
+    <circle cx="85" cy="168" r="2" fill="#c4b5fd" opacity="0.7"/>
+    <circle cx="215" cy="162" r="2" fill="#a78bfa" opacity="0.6"/>
+    <circle cx="230" cy="200" r="1.5" fill="#818cf8" opacity="0.5"/>
+  </svg>`),
+
+  rift_herald: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="65%" r="65%"><stop offset="0%" stop-color="#1a0a2e"/><stop offset="100%" stop-color="#060210"/></radialGradient>
+      <radialGradient id="eyeglow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#d946ef" stop-opacity="0.6"/><stop offset="100%" stop-color="#d946ef" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <!-- massive body — crab-like -->
+    <ellipse cx="150" cy="270" rx="110" ry="80" fill="#1e1035"/>
+    <ellipse cx="150" cy="270" rx="108" ry="78" fill="none" stroke="#9333ea" stroke-width="2.5"/>
+    <!-- shell segments -->
+    <path d="M55 250 Q150 230 245 250 Q245 270 150 285 Q55 270 55 250Z" fill="#2d1050" stroke="#7c3aed" stroke-width="1.5"/>
+    <path d="M60 285 Q150 268 240 285 Q238 305 150 318 Q62 305 60 285Z" fill="#1e1035" stroke="#7c3aed" stroke-width="1.5"/>
+    <!-- legs -->
+    <path d="M75 260 L35 225 M75 280 L30 270 M75 300 L40 330" stroke="#6d28d9" stroke-width="7" stroke-linecap="round"/>
+    <path d="M225 260 L265 225 M225 280 L270 270 M225 300 L260 330" stroke="#6d28d9" stroke-width="7" stroke-linecap="round"/>
+    <!-- smaller legs -->
+    <path d="M90 255 L65 215" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/>
+    <path d="M210 255 L235 215" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/>
+    <!-- neck -->
+    <path d="M118 235 Q125 185 150 165 Q175 185 182 235" fill="#1e1035"/>
+    <!-- head -->
+    <ellipse cx="150" cy="155" rx="52" ry="44" fill="#12082a"/>
+    <ellipse cx="150" cy="155" rx="49" ry="41" fill="none" stroke="#9333ea" stroke-width="2.5"/>
+    <!-- THE EYE — on back exposed -->
+    <ellipse cx="150" cy="270" rx="28" ry="22" fill="url(#eyeglow)"/>
+    <ellipse cx="150" cy="270" rx="22" ry="17" fill="#1a0030"/>
+    <ellipse cx="150" cy="270" rx="17" ry="13" fill="#d946ef"/>
+    <ellipse cx="150" cy="270" rx="10" ry="8" fill="#fce7f3"/>
+    <ellipse cx="150" cy="270" rx="5" ry="4" fill="#1a0030"/>
+    <!-- face eyes -->
+    <ellipse cx="130" cy="148" rx="12" ry="10" fill="#0a0020"/><ellipse cx="130" cy="148" rx="10" ry="8" fill="#d946ef"/><circle cx="130" cy="148" r="4" fill="#fce7f3"/>
+    <ellipse cx="170" cy="148" rx="12" ry="10" fill="#0a0020"/><ellipse cx="170" cy="148" rx="10" ry="8" fill="#d946ef"/><circle cx="170" cy="148" r="4" fill="#fce7f3"/>
+    <!-- horns -->
+    <path d="M120 125 L108 90 L126 128" fill="#581c87"/>
+    <path d="M180 125 L192 90 L174 128" fill="#581c87"/>
+    <!-- void particles -->
+    <circle cx="70" cy="200" r="2.5" fill="#d946ef" opacity="0.5"/>
+    <circle cx="230" cy="195" r="2" fill="#a21caf" opacity="0.5"/>
+    <circle cx="100" cy="350" r="2" fill="#d946ef" opacity="0.4"/>
+  </svg>`),
+
+  scuttler: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="70%" r="70%"><stop offset="0%" stop-color="#052e3d"/><stop offset="100%" stop-color="#010a10"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <!-- river shimmer -->
+    <ellipse cx="150" cy="320" rx="140" ry="55" fill="#0e4c6a" opacity="0.3"/>
+    <path d="M30 310 Q80 295 150 310 Q220 295 270 310" stroke="#38bdf8" stroke-width="2" fill="none" opacity="0.3"/>
+    <!-- shell / carapace — top view crab -->
+    <ellipse cx="150" cy="235" rx="95" ry="75" fill="#164e63"/>
+    <ellipse cx="150" cy="235" rx="92" ry="72" fill="none" stroke="#0ea5e9" stroke-width="2.5"/>
+    <!-- shell markings -->
+    <ellipse cx="150" cy="228" rx="60" ry="48" fill="none" stroke="#38bdf8" stroke-width="1.2" opacity="0.5"/>
+    <ellipse cx="150" cy="225" rx="35" ry="28" fill="#0c4a6e" opacity="0.8"/>
+    <!-- vision shrine symbol on shell -->
+    <path d="M150 210 L150 245 M133 222 L167 222 M138 213 L162 236 M162 213 L138 236" stroke="#7dd3fc" stroke-width="2" opacity="0.7"/>
+    <!-- legs — 8 legs crab style -->
+    <path d="M78 215 L42 190 M72 235 L28 225 M75 255 L35 260 M82 275 L50 295" stroke="#0369a1" stroke-width="6" stroke-linecap="round"/>
+    <path d="M222 215 L258 190 M228 235 L272 225 M225 255 L265 260 M218 275 L250 295" stroke="#0369a1" stroke-width="6" stroke-linecap="round"/>
+    <!-- small claw tips -->
+    <circle cx="42" cy="190" r="5" fill="#38bdf8"/>
+    <circle cx="28" cy="225" r="5" fill="#38bdf8"/>
+    <circle cx="258" cy="190" r="5" fill="#38bdf8"/>
+    <circle cx="272" cy="225" r="5" fill="#38bdf8"/>
+    <!-- pincers (front) -->
+    <path d="M110 195 Q85 165 70 155" stroke="#0369a1" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <path d="M70 155 L58 145 M70 155 L65 140" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round"/>
+    <path d="M190 195 Q215 165 230 155" stroke="#0369a1" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <path d="M230 155 L242 145 M230 155 L235 140" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round"/>
+    <!-- head / face -->
+    <ellipse cx="150" cy="175" rx="42" ry="32" fill="#0c4a6e"/>
+    <ellipse cx="150" cy="175" rx="40" ry="30" fill="none" stroke="#0ea5e9" stroke-width="2"/>
+    <!-- stalked eyes -->
+    <line x1="133" y1="162" x2="125" y2="145" stroke="#0369a1" stroke-width="3"/>
+    <circle cx="125" cy="142" r="7" fill="#0c4a6e"/>
+    <circle cx="125" cy="142" r="6" fill="#38bdf8" opacity="0.9"/>
+    <circle cx="125" cy="142" r="3" fill="#e0f2fe"/>
+    <line x1="167" y1="162" x2="175" y2="145" stroke="#0369a1" stroke-width="3"/>
+    <circle cx="175" cy="142" r="7" fill="#0c4a6e"/>
+    <circle cx="175" cy="142" r="6" fill="#38bdf8" opacity="0.9"/>
+    <circle cx="175" cy="142" r="3" fill="#e0f2fe"/>
+    <!-- antennae -->
+    <path d="M138 158 Q128 135 115 118" stroke="#7dd3fc" stroke-width="1.5" fill="none"/>
+    <path d="M162 158 Q172 135 185 118" stroke="#7dd3fc" stroke-width="1.5" fill="none"/>
+    <!-- water sparkles -->
+    <circle cx="95" cy="310" r="3" fill="#38bdf8" opacity="0.5"/>
+    <circle cx="205" cy="305" r="2.5" fill="#7dd3fc" opacity="0.5"/>
+    <circle cx="60" cy="295" r="2" fill="#38bdf8" opacity="0.4"/>
+  </svg>`),
+
+  gromp: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="65%" r="65%"><stop offset="0%" stop-color="#0a1f0a"/><stop offset="100%" stop-color="#020702"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <!-- swamp atmosphere -->
+    <ellipse cx="150" cy="330" rx="130" ry="40" fill="#064e3b" opacity="0.25"/>
+    <!-- massive body -->
+    <ellipse cx="150" cy="260" rx="100" ry="85" fill="#14532d"/>
+    <ellipse cx="150" cy="260" rx="97" ry="82" fill="none" stroke="#22c55e" stroke-width="2"/>
+    <!-- bumpy warts -->
+    <circle cx="110" cy="240" r="8" fill="#166534"/><circle cx="110" cy="240" r="6" fill="none" stroke="#22c55e" stroke-width="1"/>
+    <circle cx="180" cy="235" r="10" fill="#166534"/><circle cx="180" cy="235" r="8" fill="none" stroke="#22c55e" stroke-width="1"/>
+    <circle cx="130" cy="280" r="7" fill="#166534"/>
+    <circle cx="165" cy="290" r="9" fill="#15803d"/>
+    <circle cx="200" cy="265" r="6" fill="#166534"/>
+    <circle cx="95" cy="270" r="7" fill="#15803d"/>
+    <!-- toxic spots -->
+    <circle cx="145" cy="250" r="4" fill="#4ade80" opacity="0.6"/>
+    <circle cx="170" cy="270" r="3" fill="#86efac" opacity="0.5"/>
+    <!-- short thick legs -->
+    <ellipse cx="100" cy="330" rx="28" ry="18" fill="#14532d" stroke="#22c55e" stroke-width="1.5"/>
+    <ellipse cx="200" cy="330" rx="28" ry="18" fill="#14532d" stroke="#22c55e" stroke-width="1.5"/>
+    <ellipse cx="115" cy="345" rx="20" ry="12" fill="#15803d"/>
+    <ellipse cx="185" cy="345" rx="20" ry="12" fill="#15803d"/>
+    <!-- head — massive wide frog head -->
+    <ellipse cx="150" cy="175" rx="80" ry="58" fill="#0f3d20"/>
+    <ellipse cx="150" cy="175" rx="77" ry="55" fill="none" stroke="#22c55e" stroke-width="2.5"/>
+    <!-- massive mouth -->
+    <path d="M78 185 Q150 210 222 185" stroke="#22c55e" stroke-width="3" fill="none"/>
+    <path d="M78 185 Q150 215 222 185 Q200 230 150 235 Q100 230 78 185Z" fill="#0a2e12" opacity="0.7"/>
+    <!-- eyes — bulging frog eyes -->
+    <ellipse cx="108" cy="152" rx="22" ry="18" fill="#0f3d20" stroke="#22c55e" stroke-width="2"/>
+    <ellipse cx="108" cy="152" rx="18" ry="15" fill="#16a34a"/>
+    <ellipse cx="108" cy="152" rx="10" ry="9" fill="#052e16"/>
+    <circle cx="108" cy="152" r="5" fill="#86efac"/>
+    <ellipse cx="192" cy="152" rx="22" ry="18" fill="#0f3d20" stroke="#22c55e" stroke-width="2"/>
+    <ellipse cx="192" cy="152" rx="18" ry="15" fill="#16a34a"/>
+    <ellipse cx="192" cy="152" rx="10" ry="9" fill="#052e16"/>
+    <circle cx="192" cy="152" r="5" fill="#86efac"/>
+    <!-- toxic drool -->
+    <path d="M130 215 Q128 230 125 240" stroke="#4ade80" stroke-width="2" fill="none" opacity="0.6"/>
+    <path d="M150 218 Q150 235 148 245" stroke="#86efac" stroke-width="1.5" fill="none" opacity="0.5"/>
+    <!-- tiny front arms -->
+    <path d="M80 230 Q55 250 50 270" stroke="#14532d" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <path d="M220 230 Q245 250 250 270" stroke="#14532d" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <!-- fly (gromp eats insects) -->
+    <circle cx="65" cy="135" r="3" fill="#4ade80" opacity="0.7"/>
+  </svg>`),
+
+  blue_sentinel: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="60%" r="65%"><stop offset="0%" stop-color="#0f1a3d"/><stop offset="100%" stop-color="#03070f"/></radialGradient>
+      <radialGradient id="bgl" cx="50%" cy="50%" r="55%"><stop offset="0%" stop-color="#3b82f6" stop-opacity="0.4"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <ellipse cx="150" cy="260" rx="115" ry="85" fill="url(#bgl)"/>
+    <!-- body — massive stone golem -->
+    <rect x="88" y="195" width="124" height="155" rx="20" fill="#1e3a8a"/>
+    <rect x="88" y="195" width="124" height="155" rx="20" fill="none" stroke="#60a5fa" stroke-width="2.5"/>
+    <!-- body runes -->
+    <path d="M115 225 L120 215 L125 225 L120 235Z" fill="#93c5fd" opacity="0.6"/>
+    <path d="M145 225 L150 215 L155 225 L150 235Z" fill="#93c5fd" opacity="0.6"/>
+    <path d="M175 225 L180 215 L185 225 L180 235Z" fill="#93c5fd" opacity="0.6"/>
+    <path d="M110 265 L185 265" stroke="#60a5fa" stroke-width="1.5" opacity="0.5"/>
+    <path d="M115 285 L180 285" stroke="#60a5fa" stroke-width="1.5" opacity="0.4"/>
+    <!-- blue gem chest -->
+    <polygon points="150,252 165,262 165,280 150,290 135,280 135,262" fill="#1d4ed8"/>
+    <polygon points="150,252 165,262 165,280 150,290 135,280 135,262" fill="none" stroke="#93c5fd" stroke-width="2"/>
+    <ellipse cx="150" cy="270" rx="10" ry="12" fill="#3b82f6"/>
+    <ellipse cx="150" cy="270" rx="6" ry="7" fill="#bfdbfe"/>
+    <!-- arms / shoulder pads -->
+    <rect x="55" y="195" width="38" height="85" rx="12" fill="#1d4ed8"/>
+    <rect x="55" y="195" width="38" height="85" rx="12" fill="none" stroke="#60a5fa" stroke-width="2"/>
+    <rect x="207" y="195" width="38" height="85" rx="12" fill="#1d4ed8"/>
+    <rect x="207" y="195" width="38" height="85" rx="12" fill="none" stroke="#60a5fa" stroke-width="2"/>
+    <!-- fists -->
+    <ellipse cx="73" cy="295" rx="22" ry="18" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/>
+    <ellipse cx="226" cy="295" rx="22" ry="18" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/>
+    <!-- head -->
+    <rect x="108" y="135" width="84" height="68" rx="15" fill="#1e3a8a"/>
+    <rect x="108" y="135" width="84" height="68" rx="15" fill="none" stroke="#60a5fa" stroke-width="2.5"/>
+    <!-- visor / eyes -->
+    <rect x="118" y="152" width="64" height="18" rx="8" fill="#0c1d5e"/>
+    <ellipse cx="138" cy="161" rx="10" ry="7" fill="#3b82f6"/>
+    <circle cx="138" cy="161" r="5" fill="#bfdbfe"/>
+    <ellipse cx="162" cy="161" rx="10" ry="7" fill="#3b82f6"/>
+    <circle cx="162" cy="161" r="5" fill="#bfdbfe"/>
+    <!-- crest on head -->
+    <polygon points="150,135 140,108 150,115 160,108" fill="#1d4ed8" stroke="#60a5fa" stroke-width="1.5"/>
+    <!-- blue mana energy legs -->
+    <rect x="110" y="348" width="30" height="40" rx="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.5"/>
+    <rect x="160" y="348" width="30" height="40" rx="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.5"/>
+    <!-- energy particles -->
+    <circle cx="72" cy="165" r="3" fill="#60a5fa" opacity="0.7"/>
+    <circle cx="228" cy="170" r="2.5" fill="#93c5fd" opacity="0.6"/>
+    <circle cx="150" cy="108" r="3" fill="#bfdbfe" opacity="0.5"/>
+  </svg>`),
+
+  red_brambleback: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="65%" r="65%"><stop offset="0%" stop-color="#2a0a05"/><stop offset="100%" stop-color="#080201"/></radialGradient>
+      <radialGradient id="rgl" cx="50%" cy="50%" r="55%"><stop offset="0%" stop-color="#ef4444" stop-opacity="0.4"/><stop offset="100%" stop-color="#ef4444" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <ellipse cx="150" cy="265" rx="115" ry="85" fill="url(#rgl)"/>
+    <!-- body — thorny bramble beast -->
+    <ellipse cx="150" cy="265" rx="95" ry="80" fill="#450a0a"/>
+    <ellipse cx="150" cy="265" rx="92" ry="77" fill="none" stroke="#ef4444" stroke-width="2.5"/>
+    <!-- thorns/spikes on body -->
+    <polygon points="150,185 144,205 156,205" fill="#dc2626"/>
+    <polygon points="125,192 118,213 132,213" fill="#b91c1c"/>
+    <polygon points="175,192 168,213 182,213" fill="#b91c1c"/>
+    <polygon points="95,230 85,252 105,252" fill="#dc2626"/>
+    <polygon points="205,230 195,252 215,252" fill="#dc2626"/>
+    <polygon points="82,270 70,292 94,292" fill="#b91c1c"/>
+    <polygon points="218,270 206,292 230,292" fill="#b91c1c"/>
+    <!-- bramble vines -->
+    <path d="M90 260 Q68 240 58 220" stroke="#7f1d1d" stroke-width="3" fill="none"/>
+    <path d="M210 260 Q232 240 242 220" stroke="#7f1d1d" stroke-width="3" fill="none"/>
+    <!-- burning red gem in chest -->
+    <polygon points="150,242 167,253 163,272 150,278 137,272 133,253" fill="#7f1d1d" stroke="#ef4444" stroke-width="2"/>
+    <ellipse cx="150" cy="260" rx="10" ry="12" fill="#dc2626"/>
+    <ellipse cx="150" cy="260" rx="6" ry="7" fill="#fee2e2"/>
+    <!-- arms -->
+    <rect x="52" y="200" width="42" height="90" rx="14" fill="#7f1d1d"/>
+    <rect x="52" y="200" width="42" height="90" rx="14" fill="none" stroke="#ef4444" stroke-width="2"/>
+    <rect x="206" y="200" width="42" height="90" rx="14" fill="#7f1d1d"/>
+    <rect x="206" y="200" width="42" height="90" rx="14" fill="none" stroke="#ef4444" stroke-width="2"/>
+    <!-- spiked fists -->
+    <ellipse cx="72" cy="303" rx="24" ry="19" fill="#450a0a" stroke="#ef4444" stroke-width="2"/>
+    <ellipse cx="228" cy="303" rx="24" ry="19" fill="#450a0a" stroke="#ef4444" stroke-width="2"/>
+    <polygon points="72,283 68,270 76,270" fill="#dc2626"/>
+    <polygon points="228,283 224,270 232,270" fill="#dc2626"/>
+    <!-- head -->
+    <rect x="106" y="130" width="88" height="75" rx="16" fill="#450a0a"/>
+    <rect x="106" y="130" width="88" height="75" rx="16" fill="none" stroke="#ef4444" stroke-width="2.5"/>
+    <!-- head spikes -->
+    <polygon points="130,130 124,100 136,130" fill="#dc2626"/>
+    <polygon points="150,130 145,95 155,95 160,130" fill="#b91c1c"/>
+    <polygon points="170,130 164,100 176,130" fill="#dc2626"/>
+    <!-- eyes burning red -->
+    <rect x="116" y="150" width="68" height="20" rx="8" fill="#2d0808"/>
+    <ellipse cx="138" cy="160" rx="11" ry="8" fill="#dc2626"/>
+    <circle cx="138" cy="160" r="5" fill="#fee2e2"/>
+    <ellipse cx="162" cy="160" rx="11" ry="8" fill="#dc2626"/>
+    <circle cx="162" cy="160" r="5" fill="#fee2e2"/>
+    <!-- legs -->
+    <rect x="112" y="343" width="30" height="42" rx="9" fill="#450a0a" stroke="#ef4444" stroke-width="1.5"/>
+    <rect x="158" y="343" width="30" height="42" rx="9" fill="#450a0a" stroke="#ef4444" stroke-width="1.5"/>
+    <!-- ember -->
+    <circle cx="75" cy="170" r="3" fill="#ef4444" opacity="0.7"/>
+    <circle cx="225" cy="168" r="2.5" fill="#fca5a5" opacity="0.6"/>
+  </svg>`),
+
+  murk_wolf: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="40%" cy="55%" r="65%"><stop offset="0%" stop-color="#111827"/><stop offset="100%" stop-color="#030508"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <!-- two-headed wolf body -->
+    <ellipse cx="150" cy="280" rx="90" ry="70" fill="#1f2937"/>
+    <ellipse cx="150" cy="280" rx="87" ry="67" fill="none" stroke="#6b7280" stroke-width="1.5"/>
+    <!-- fur texture lines -->
+    <path d="M80 260 Q100 252 120 260" stroke="#374151" stroke-width="2" fill="none"/>
+    <path d="M180 260 Q200 252 220 260" stroke="#374151" stroke-width="2" fill="none"/>
+    <path d="M90 285 Q120 275 150 280 Q180 275 210 285" stroke="#4b5563" stroke-width="1.5" fill="none"/>
+    <!-- haunches / hind legs -->
+    <ellipse cx="100" cy="340" rx="30" ry="22" fill="#111827" stroke="#6b7280" stroke-width="1.5"/>
+    <ellipse cx="200" cy="340" rx="30" ry="22" fill="#111827" stroke="#6b7280" stroke-width="1.5"/>
+    <!-- paws -->
+    <path d="M82 355 L74 370 M92 358 L88 372 M102 358 L102 372" stroke="#374151" stroke-width="4" stroke-linecap="round"/>
+    <path d="M182 355 L174 370 M192 358 L188 372 M202 358 L202 372" stroke="#374151" stroke-width="4" stroke-linecap="round"/>
+    <!-- forelegs -->
+    <ellipse cx="108" cy="300" rx="18" ry="35" fill="#1f2937" stroke="#6b7280" stroke-width="1.5" transform="rotate(-15,108,300)"/>
+    <ellipse cx="192" cy="300" rx="18" ry="35" fill="#1f2937" stroke="#6b7280" stroke-width="1.5" transform="rotate(15,192,300)"/>
+    <!-- TWO NECKS -->
+    <path d="M115 218 Q108 175 118 148" stroke="#1f2937" stroke-width="28" stroke-linecap="round" fill="none"/>
+    <path d="M185 218 Q192 175 182 148" stroke="#1f2937" stroke-width="28" stroke-linecap="round" fill="none"/>
+    <!-- LEFT HEAD -->
+    <ellipse cx="108" cy="132" rx="40" ry="32" fill="#111827" stroke="#6b7280" stroke-width="2"/>
+    <path d="M88 116 L80 92 L96 118" fill="#1f2937"/>
+    <path d="M110 112 L108 88 L118 115" fill="#374151"/>
+    <!-- left snout -->
+    <ellipse cx="90" cy="138" rx="18" ry="12" fill="#0d1117"/>
+    <!-- left eye -->
+    <ellipse cx="105" cy="124" rx="11" ry="9" fill="#0d1117"/><ellipse cx="105" cy="124" rx="9" ry="7" fill="#f59e0b"/><circle cx="105" cy="124" r="4" fill="#fef3c7"/>
+    <!-- RIGHT HEAD -->
+    <ellipse cx="192" cy="132" rx="40" ry="32" fill="#111827" stroke="#6b7280" stroke-width="2"/>
+    <path d="M212 116 L220 92 L204 118" fill="#1f2937"/>
+    <path d="M190 112 L192 88 L182 115" fill="#374151"/>
+    <!-- right snout -->
+    <ellipse cx="210" cy="138" rx="18" ry="12" fill="#0d1117"/>
+    <!-- right eye -->
+    <ellipse cx="195" cy="124" rx="11" ry="9" fill="#0d1117"/><ellipse cx="195" cy="124" rx="9" ry="7" fill="#f59e0b"/><circle cx="195" cy="124" r="4" fill="#fef3c7"/>
+    <!-- glowing eyes at night -->
+    <circle cx="104" cy="124" r="2" fill="#fef3c7" opacity="0.5"/>
+    <circle cx="194" cy="124" r="2" fill="#fef3c7" opacity="0.5"/>
+    <!-- tail -->
+    <path d="M150 345 Q175 360 185 350 Q195 338 175 330" stroke="#374151" stroke-width="8" fill="none" stroke-linecap="round"/>
+  </svg>`),
+
+  krug: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="65%" r="65%"><stop offset="0%" stop-color="#1a1008"/><stop offset="100%" stop-color="#060401"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <!-- rocky ground hints -->
+    <ellipse cx="150" cy="360" rx="120" ry="30" fill="#292524" opacity="0.5"/>
+    <!-- body — stone beetle -->
+    <ellipse cx="150" cy="260" rx="100" ry="85" fill="#292524"/>
+    <ellipse cx="150" cy="260" rx="97" ry="82" fill="none" stroke="#d97706" stroke-width="2.5"/>
+    <!-- stone plates / segments -->
+    <path d="M60 240 Q150 218 240 240 Q240 260 150 272 Q60 260 60 240Z" fill="#3d3830" stroke="#a16207" stroke-width="1.5"/>
+    <path d="M65 272 Q150 256 235 272 Q232 292 150 302 Q68 292 65 272Z" fill="#292524" stroke="#a16207" stroke-width="1.5"/>
+    <!-- crystal eyes in shell — blue gems -->
+    <ellipse cx="120" cy="245" rx="10" ry="9" fill="#1e1b10"/><ellipse cx="120" cy="245" rx="8" ry="7" fill="#d97706"/><circle cx="120" cy="245" r="3" fill="#fef3c7"/>
+    <ellipse cx="180" cy="245" rx="10" ry="9" fill="#1e1b10"/><ellipse cx="180" cy="245" rx="8" ry="7" fill="#d97706"/><circle cx="180" cy="245" r="3" fill="#fef3c7"/>
+    <!-- rock legs — stubby -->
+    <ellipse cx="85" cy="325" rx="28" ry="18" fill="#3d3830" stroke="#a16207" stroke-width="1.5"/>
+    <ellipse cx="150" cy="335" rx="25" ry="15" fill="#3d3830" stroke="#a16207" stroke-width="1.5"/>
+    <ellipse cx="215" cy="325" rx="28" ry="18" fill="#3d3830" stroke="#a16207" stroke-width="1.5"/>
+    <!-- smaller rock legs -->
+    <ellipse cx="68" cy="305" rx="20" ry="14" fill="#292524"/>
+    <ellipse cx="232" cy="305" rx="20" ry="14" fill="#292524"/>
+    <!-- head — angular stone -->
+    <path d="M88 195 L105 150 L195 150 L212 195 Z" fill="#292524" stroke="#d97706" stroke-width="2.5"/>
+    <!-- rocky brow protrusions -->
+    <polygon points="108,152 100,125 120,154" fill="#3d3830"/>
+    <polygon points="150,148 145,118 155,118 160,148" fill="#57534e"/>
+    <polygon points="192,152 200,125 180,154" fill="#3d3830"/>
+    <!-- face eyes — glowing amber -->
+    <ellipse cx="122" cy="172" rx="14" ry="11" fill="#1c1917"/><ellipse cx="122" cy="172" rx="12" ry="9" fill="#d97706"/><circle cx="122" cy="172" r="5" fill="#fef3c7"/>
+    <ellipse cx="178" cy="172" rx="14" ry="11" fill="#1c1917"/><ellipse cx="178" cy="172" rx="12" ry="9" fill="#d97706"/><circle cx="178" cy="172" r="5" fill="#fef3c7"/>
+    <!-- cracked stone lines on face -->
+    <path d="M150 152 L150 195 M130 165 L168 165" stroke="#78716c" stroke-width="1" opacity="0.4"/>
+    <!-- fangs -->
+    <polygon points="135,192 130,208 140,208" fill="#57534e"/>
+    <polygon points="160,192 155,208 165,208" fill="#57534e"/>
+    <!-- small crack glow -->
+    <path d="M140 230 L155 220 L165 235" stroke="#d97706" stroke-width="1.5" opacity="0.5"/>
+  </svg>`),
+
+  raptor: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <defs>
+      <radialGradient id="bg" cx="55%" cy="55%" r="65%"><stop offset="0%" stop-color="#1a100a"/><stop offset="100%" stop-color="#060302"/></radialGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#bg)"/>
+    <!-- Crimson Raptor — large aggressive bird -->
+    <!-- tail feathers -->
+    <path d="M80 280 L50 320 M88 275 L55 308 M96 270 L72 305" stroke="#dc2626" stroke-width="6" stroke-linecap="round"/>
+    <!-- body -->
+    <ellipse cx="155" cy="255" rx="85" ry="70" fill="#450a0a"/>
+    <ellipse cx="155" cy="255" rx="82" ry="67" fill="none" stroke="#ef4444" stroke-width="2"/>
+    <!-- crimson feather markings -->
+    <path d="M100 240 Q130 228 160 235 Q185 228 210 240" stroke="#dc2626" stroke-width="2" fill="none" opacity="0.7"/>
+    <path d="M105 268 Q130 255 160 262 Q185 255 208 268" stroke="#b91c1c" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <!-- wings folded -->
+    <path d="M90 240 Q75 200 85 165 Q95 185 108 225Z" fill="#7f1d1d"/>
+    <path d="M90 240 Q75 200 85 165" stroke="#ef4444" stroke-width="1.5" fill="none" opacity="0.5"/>
+    <path d="M218 240 Q232 200 222 165 Q212 185 200 225Z" fill="#7f1d1d"/>
+    <path d="M218 240 Q232 200 222 165" stroke="#ef4444" stroke-width="1.5" fill="none" opacity="0.5"/>
+    <!-- legs — powerful raptor legs -->
+    <path d="M125 310 Q118 340 108 360" stroke="#450a0a" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <path d="M185 310 Q192 340 202 360" stroke="#450a0a" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <!-- feet / talons -->
+    <path d="M108 360 L95 375 M108 360 L105 378 M108 360 L118 372" stroke="#7f1d1d" stroke-width="5" stroke-linecap="round"/>
+    <path d="M202 360 L215 375 M202 360 L205 378 M202 360 L192 372" stroke="#7f1d1d" stroke-width="5" stroke-linecap="round"/>
+    <!-- neck -->
+    <path d="M138 195 Q145 158 155 135 Q162 158 168 195" fill="#450a0a"/>
+    <!-- head -->
+    <ellipse cx="155" cy="122" rx="42" ry="35" fill="#3b0909"/>
+    <ellipse cx="155" cy="122" rx="39" ry="32" fill="none" stroke="#ef4444" stroke-width="2"/>
+    <!-- crest feathers -->
+    <path d="M140 95 Q135 68 145 92" fill="#dc2626"/>
+    <path d="M155 90 Q153 60 162 90" fill="#ef4444"/>
+    <path d="M170 95 Q178 70 168 92" fill="#dc2626"/>
+    <!-- beak -->
+    <path d="M120 125 L155 132 L155 145 L122 138 Z" fill="#1c0707"/>
+    <path d="M120 125 L155 132 L155 135 L122 130Z" fill="#2d0c0c"/>
+    <!-- eyes — intelligent aggressive -->
+    <ellipse cx="142" cy="115" rx="12" ry="10" fill="#1a0000"/><ellipse cx="142" cy="115" rx="10" ry="8" fill="#dc2626"/><circle cx="142" cy="115" r="4" fill="#fef2f2"/>
+    <ellipse cx="168" cy="115" rx="12" ry="10" fill="#1a0000"/><ellipse cx="168" cy="115" rx="10" ry="8" fill="#dc2626"/><circle cx="168" cy="115" r="4" fill="#fef2f2"/>
+    <!-- small raptors hints in background -->
+    <ellipse cx="55" cy="310" rx="12" ry="9" fill="#450a0a" opacity="0.6"/>
+    <ellipse cx="255" cy="315" rx="10" ry="8" fill="#450a0a" opacity="0.6"/>
+  </svg>`),
+};
+
+// Named list for random picking
+const MONSTER_KEYS=Object.keys(JUNGLE_MONSTERS_SVG);
+
+// preassign per-slot so it stays stable until next randomize
+let slotMonsters={blue:[],red:[]};
+
+function assignMonsters(){
+  ['blue','red'].forEach(t=>{
+    slotMonsters[t]=ROLES.map(()=>MONSTER_KEYS[Math.floor(Math.random()*MONSTER_KEYS.length)]);
+  });
+}
+
+function pickMonsterUrl(key){
+  return JUNGLE_MONSTERS_SVG[key]?.() || JUNGLE_MONSTERS_SVG.scuttler();
+}
+
+function genDrops(){
+  let html='';
+  const count=14+Math.floor(Math.random()*10);
+  for(let i=0;i<count;i++){
+    const left=5+Math.random()*90;
+    const h=6+Math.random()*18;
+    const dur=0.25+Math.random()*0.45;
+    const del=Math.random()*0.7;
+    html+=`<div class="drop" style="left:${left}%;height:${h}px;animation-duration:${dur}s;animation-delay:${del}s"></div>`;
+  }
+  return html;
+}
+
+// =====================================================================
+// RANDOMIZE
+// =====================================================================
+function randomizeTeams(){
+  if(sel.length!==10){toast('Wybierz dokładnie 10 graczy!');return;}
+  let pool=[...sel];shuf(pool);let b=pool.slice(0,5),r=pool.slice(5,10);
+  for(let a=0;a<100;a++){
+    let ok=true;
+    for(const rx of restr){if(rx.type==='teammate'&&((b.includes(rx.playerA)&&b.includes(rx.playerB))||(r.includes(rx.playerA)&&r.includes(rx.playerB)))){ok=false;break;}}
+    if(ok)break;shuf(pool);b=pool.slice(0,5);r=pool.slice(5,10);
+  }
+  CT.blue=b;CT.red=r;CT.bR=assignR(b);CT.rR=assignR(r);
+  RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};
+  CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
+  assignMonsters();
+  renderTS('blue',true);renderTS('red',true);renderRAP();toast('Drużyny wylosowane!');
+}
+
+function assignR(players){
+  const avail=[...ROLES];const res={};
+  players.forEach((n,i)=>{
+    const s=PS[n]||{roles:{},wins:{}};
+    const sorted=[...avail].sort((a,b)=>{
+      const ar=restr.find(rx=>rx.type==='role'&&rx.player===n&&rx.role===a);
+      const br=restr.find(rx=>rx.type==='role'&&rx.player===n&&rx.role===b);
+      if(ar&&!br)return 1;if(!ar&&br)return -1;
+      return (s.roles[b]||0)-(s.roles[a]||0);
+    });
+    const pick=sorted[0]||avail[0];res[i]=pick;const ri=avail.indexOf(pick);if(ri>=0)avail.splice(ri,1);
+  });
+  return res;
+}
+
+function renderRAP(){
+  let h='<div style="margin-bottom:5px;font-size:9px;color:#5DADE2;letter-spacing:2px">LEWA</div>';
+  CT.blue.forEach((n,i)=>{const role=CT.bR[i]||ROLES[i];const c=PC[n]||'#C8AA6E';h+=`<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(200,170,110,0.05)"><span style="color:${c};font-size:12px;font-weight:600">${n}</span><span style="color:var(--silver);font-size:10px">${RI[role]} ${role.toUpperCase()}</span></div>`;});
+  h+='<div style="margin:6px 0 4px;font-size:9px;color:#E84855;letter-spacing:2px">PRAWA</div>';
+  CT.red.forEach((n,i)=>{const role=CT.rR[i]||ROLES[i];const c=PC[n]||'#C8AA6E';h+=`<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(200,170,110,0.05)"><span style="color:${c};font-size:12px;font-weight:600">${n}</span><span style="color:var(--silver);font-size:10px">${RI[role]} ${role.toUpperCase()}</span></div>`;});
+  document.getElementById('rap').innerHTML=h;
+}
+
+function randomizeChamps(){
+  RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};const used=[];
+  ROLES.forEach((role,i)=>{
+    if(roleOn[role]){const bc=pch(role,used);used.push(bc);CC.blue[i]=bc;const rc=pch(role,used);used.push(rc);CC.red[i]=rc;}
+    else{CC.blue[i]=null;CC.red[i]=null;}
+  });
+  if(CT.blue.length){renderTS('blue');renderTS('red');}toast('Postacie wylosowane!');
+}
+
+function pch(role,exc){const pool=CHAMPS[role].filter(c=>!exc.includes(c));return pool[Math.floor(Math.random()*pool.length)]||CHAMPS[role][0];}
+
+function rerollC(t,i,role,e){
+  e.stopPropagation();if(RR[t][i]>=MXR){toast('Brak rerollów!');return;}if(!roleOn[role]){toast('Rola wyłączona!');return;}
+  RR[t][i]++;const all=[...CC.blue,...CC.red].filter(c=>c);CC[t][i]=pch(role,all);renderTS(t);toast(`Reroll ${RR[t][i]}/${MXR}`);
+}
+
+function toggleRole(r){roleOn[r]=!roleOn[r];document.getElementById('tog-'+r).classList.toggle('on',roleOn[r]);}
+
+function renderRS(){
+  const el=document.getElementById('rside');
+  if(!restr.length){el.innerHTML='<div style="font-size:11px;color:var(--silver)">Brak.</div>';return;}
+  el.innerHTML=restr.map((r,i)=>`<div class="rchip"><span>${r.type==='teammate'?'👥':'🚫'}</span><span>${r.type==='teammate'?`${r.playerA} ≠ ${r.playerB}`:`${r.player}: nie ${RI[r.role]}${r.role}`}</span><span class="rx" onclick="removeR(${i})">×</span></div>`).join('');
+}
+
+function removeR(i){restr.splice(i,1);renderRS();if(selPr)renderProfile(selPr);lsSave();}
+
+function copyToDiscord(){
+  if(!CT.blue.length){toast('Najpierw wylosuj drużyny!');return;}
+
+  // Build role→player maps sorted by ROLES order
+  const blueByRole={}, redByRole={};
+  CT.blue.forEach((n,i)=>{ const role=CT.bR[i]||ROLES[i]; blueByRole[role]={name:n,champ:CC.blue[i]}; });
+  CT.red.forEach((n,i)=>{ const role=CT.rR[i]||ROLES[i]; redByRole[role]={name:n,champ:CC.red[i]}; });
+
+  let txt='🔵 **DRUŻYNA LEWA**\n';
+  ROLES.forEach(role=>{
+    const p=blueByRole[role]; if(!p)return;
+    txt+=`${RI[role]} **${role.toUpperCase()}** ${p.name}${p.champ?' — '+p.champ:''}\n`;
+  });
+  txt+='\nvs\n\n🔴 **DRUŻYNA PRAWA**\n';
+  ROLES.forEach(role=>{
+    const p=redByRole[role]; if(!p)return;
+    txt+=`${RI[role]} **${role.toUpperCase()}** ${p.name}${p.champ?' — '+p.champ:''}\n`;
+  });
+
+  navigator.clipboard.writeText(txt).then(()=>toast('Skopiowano!')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Skopiowano!');});
+}
+
+function openSave(){if(!CT.blue.length){toast('Najpierw wylosuj drużyny!');return;}PW=null;document.getElementById('wbB').style.borderColor='var(--border)';document.getElementById('wbR').style.borderColor='var(--border)';document.getElementById('saveModal').style.display='flex';}
+function closeSave(){document.getElementById('saveModal').style.display='none';}
+function setW(s){PW=s;document.getElementById('wbB').style.borderColor=s==='LEWA'?'var(--teal)':'var(--border)';document.getElementById('wbR').style.borderColor=s==='PRAWA'?'var(--danger)':'var(--border)';}
+
+function saveGame(){
+  if(!PW){toast('Wybierz zwycięzcę!');return;}
+  const patch=document.getElementById('pi').value||'?';
+  const date=new Date().toISOString().split('T')[0];
+  const blue={},red={};
+  ROLES.forEach((role,i)=>{blue[CT.bR[i]||role]=CT.blue[i];red[CT.rR[i]||role]=CT.red[i];});
+  MH.push({gid:String(MH.length+1),patch,date,win:PW,blue,red});
+  PS=buildPS();AP=Object.keys(PS).sort();
+  closeSave();renderHist();renderStats();renderPL();if(selPr)renderProfile(selPr);toast('Mecz zapisany!');
+}
+
+function exportCSV(){
+  const h='GID,Patch,Data,WIN,Top_L,Jng_L,Mid_L,Adc_L,Supp_L,Top_P,Jng_P,Mid_P,Adc_P,Supp_P';
+  const rows=MH.map(m=>[m.gid,m.patch,m.date,m.win,m.blue.top||'',m.blue.jng||'',m.blue.mid||'',m.blue.adc||'',m.blue.supp||'',m.red.top||'',m.red.jng||'',m.red.mid||'',m.red.adc||'',m.red.supp||''].join(','));
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h,...rows].join('\n'));a.download='mecze.csv';a.click();toast('Eksportowano!');
+}
+
+// =====================================================================
+// ALIASES PAGE
+// =====================================================================
+function renderAliases(){
+  const el=document.getElementById('aliasGrid');
+  el.innerHTML=AP.map(n=>{
+    const gn=ALIASES[n]||'';const c=PC[n]||'#C8AA6E';
+    return `<div class="alias-card">
+      <div class="av av32" style="border-color:${c}55;color:${c};background:${c}15">${ini(n)}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">${n}</div>
+        <input class="alias-input" id="alias_${n}" value="${gn}" placeholder="Nick w grze...">
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveAliases(){
+  AP.forEach(n=>{const el=document.getElementById('alias_'+n);if(el){const v=el.value.trim();if(v)ALIASES[n]=v;else delete ALIASES[n];}});
+  renderPL();renderProfileList();buildScanGrid();toast('Aliasy zapisane!');lsSave();
+}
+
+// =====================================================================
+// PROFILE PAGE
+// =====================================================================
+function renderProfileList(){
+  const el=document.getElementById('profileList');
+  const q=(document.getElementById('prSearch')?.value||'').toLowerCase().trim();
+  const list=q ? AP.filter(n=>n.toLowerCase().includes(q)||getGameNick(n).toLowerCase().includes(q)) : AP;
+  el.innerHTML=list.map(n=>{
+    const s=PS[n];const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const w=Object.values(s.wins).reduce((a,b)=>a+b,0);
+    const wr=g>0?Math.round(w/g*100):0;const c=PC[n]||'#C8AA6E';const gn=getGameNick(n);
+    return `<div class="pi ${selPr===n?'sel':''}" onclick="selProfile('${n}')">
+      <div class="av av32" style="border-color:${c}55;color:${c};background:${c}15">${ini(n)}</div>
+      <div><div class="pname">${n}${gn!==n?` <span style="color:var(--teal);font-size:10px">(${gn})</span>`:''}</div><div class="psub">${g}G · ${wr}%WR</div></div>
+    </div>`;
+  }).join('');
+}
+
+function selProfile(n){selPr=n;renderProfileList();renderProfile(n);}
+
+function renderProfile(n){
+  const s=PS[n];if(!s)return;
+  const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const w=Object.values(s.wins).reduce((a,b)=>a+b,0);const wr=g>0?Math.round(w/g*100):0;
+  const c=PC[n]||'#C8AA6E';const gn=getGameNick(n);
+  const matches=MH.filter(m=>Object.values(m.blue).includes(n)||Object.values(m.red).includes(n));
+  const symM={},enmM={};
+  matches.forEach(m=>{
+    const inB=Object.values(m.blue).includes(n);const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
+    Object.values(inB?m.blue:m.red).filter(x=>x!==n).forEach(x=>{if(!symM[x])symM[x]={g:0,w:0};symM[x].g++;if(won)symM[x].w++;});
+    Object.values(inB?m.red:m.blue).forEach(x=>{if(!enmM[x])enmM[x]={g:0,w:0};enmM[x].g++;if(won)enmM[x].w++;});
+  });
+  const symA=Object.entries(symM).map(([x,v])=>({n:x,wr:v.g?Math.round(v.w/v.g*100):0,g:v.g})).sort((a,b)=>b.wr-a.wr);
+  const enmA=Object.entries(enmM).map(([x,v])=>({n:x,wr:v.g?Math.round(v.w/v.g*100):0,g:v.g})).sort((a,b)=>a.wr-b.wr);
+  const myR=restr.filter(r=>(r.type==='teammate'&&(r.playerA===n||r.playerB===n))||(r.type==='role'&&r.player===n));
+  // Champ stats from scan
+  const champArr=Object.entries(s.champs||{}).map(([ch,v])=>({ch,g:v.g,w:v.w,wr:v.g?Math.round(v.w/v.g*100):0,k:v.g>0?+(v.k/v.g).toFixed(1):0,d:v.g>0?+(v.d/v.g).toFixed(1):0,a:v.g>0?+(v.a/v.g).toFixed(1):0})).sort((a,b)=>b.g-a.g);
+  const el=document.getElementById('profileContent');
+  el.innerHTML=`<div class="pcard">
+    <div class="phero">
+      <div class="phbg" style="background:radial-gradient(ellipse at 30% 50%,${c}55,#030810)"></div>
+      <div class="phov"></div>
+      <div class="pavl av72" style="border-color:${c};color:${c};background:${c}18">${ini(n)}</div>
+    </div>
+    <div class="pinfo">
+      <div class="pn">${n}</div>
+      ${gn!==n?`<div class="pgame-nick">🎮 ${gn}</div>`:''}
+      <div class="pm">${g} meczy · ${w} wygranych · ${wr}% winrate</div>
+    </div>
+    <div class="sg4">
+      ${[['Mecze',g],['Wygrane',w],['Przegrane',g-w],['WR',wr+'%']].map(([l,v])=>`<div class="sb"><div class="sv">${v}</div><div class="sl">${l}</div></div>`).join('')}
+    </div>
+    <div class="slbl">Statystyki per rola</div>
+    <div style="padding-bottom:10px">
+      ${ROLES.map(r=>{const rg=s.roles[r],rw=s.wins[r];if(!rg)return '';const rwr=Math.round(rw/rg*100);const rc=rwr>=60?'var(--success)':rwr>=45?'var(--gold)':'var(--danger)';return `<div class="ror"><span style="width:22px;font-size:14px;text-align:center">${RI[r]}</span><span style="width:30px;font-size:10px;color:var(--silver);text-transform:uppercase">${r}</span><div class="rbt"><div class="rbf" style="width:${rwr}%"></div></div><span class="gs">${rw}/${rg}G</span><span class="wv" style="color:${rc}">${rwr}%</span></div>`;}).join('')}
+    </div>
+    ${champArr.length?`
+    <div class="slbl">Zagrane postacie (z AI scan)</div>
+    <div style="padding:0 18px 10px;overflow-x:auto">
+      <table class="kda-tbl">
+        <thead><tr><th>Postać</th><th>G</th><th>WR%</th><th>Avg K</th><th>Avg D</th><th>Avg A</th><th>KDA</th></tr></thead>
+        <tbody>
+        ${champArr.map(ch=>{
+          const champImgKey=ch.ch.replace(/[' ]/g,'').replace(/\./g,'');
+          const kda=ch.d>0?+((ch.k+ch.a)/ch.d).toFixed(2):'∞';
+          const kdaColor=typeof kda==='number'&&kda>=3?'var(--success)':typeof kda==='number'&&kda>=2?'var(--gold)':'var(--silver)';
+          return `<tr>
+            <td style="display:flex;align-items:center;gap:7px">
+              <div class="champ-card-img"><img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${champImgKey}.png" onerror="this.style.display='none'" alt="${ch.ch}" loading="lazy"></div>
+              <span style="font-weight:600">${ch.ch}</span>
+            </td>
+            <td>${ch.g}</td>
+            <td style="color:${ch.wr>=60?'var(--success)':ch.wr>=45?'var(--gold)':'var(--danger)'}">${ch.wr}%</td>
+            <td>${ch.k||'—'}</td><td>${ch.d||'—'}</td><td>${ch.a||'—'}</td>
+            <td style="font-weight:700;color:${kdaColor}">${typeof kda==='number'?kda+'x':'∞'}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>`:''} 
+    ${symA.length?`
+    <div class="slbl">Najlepsza współpraca</div>
+    <div style="padding:0 18px 8px">
+      ${symA.slice(0,5).map(sy=>`<div class="syr"><div class="av av26" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15">${ini(sy.n)}</div><span style="font-size:12px;font-weight:600;min-width:80px">${sy.n}</span><div class="syb"><div style="height:100%;background:var(--success);border-radius:2px;width:${sy.wr}%"></div></div><span class="wp wg">${sy.wr}%</span><span style="font-size:9px;color:var(--silver)">${sy.g}G</span></div>`).join('')}
+    </div>
+    <div class="slbl">Najtrudniejsi wrogowie</div>
+    <div style="padding:0 18px 8px">
+      ${enmA.slice(0,3).map(sy=>`<div class="syr"><div class="av av26" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15">${ini(sy.n)}</div><span style="font-size:12px;font-weight:600;min-width:80px">${sy.n}</span><div class="syb"><div style="height:100%;background:var(--danger);border-radius:2px;width:${100-sy.wr}%"></div></div><span class="wp wb">${sy.wr}%</span><span style="font-size:9px;color:var(--silver)">${sy.g}G</span></div>`).join('')}
+    </div>`:''}
+    <div class="slbl">Aktywne flagi</div>
+    <div style="padding:0 18px 10px">
+      ${myR.length?myR.map(r=>{const ri=restr.indexOf(r);return`<div class="fr"><span style="font-size:13px">${r.type==='teammate'?'👥':'🚫'}</span><span style="font-size:12px">${r.type==='teammate'?`Nie gra z: <b>${r.playerA===n?r.playerB:r.playerA}</b>`:`Nie gra na: <b>${RI[r.role]} ${r.role.toUpperCase()}</b>`}</span><span style="margin-left:auto;cursor:pointer;color:var(--danger);font-size:15px" onclick="removeR(${ri})">×</span></div>`;}).join(''):'<div style="font-size:11px;color:var(--silver);padding:3px 0">Brak blokad</div>'}
+      <div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <select id="nft" class="ss" onchange="tfui()"><option value="teammate">Gracz</option><option value="role">Rola</option></select>
+        <select id="nfta" class="ss">${AP.filter(x=>x!==n).map(x=>`<option>${x}</option>`).join('')}</select>
+        <select id="nfro" class="ss" style="display:none">${ROLES.map(r=>`<option value="${r}">${RI[r]} ${r.toUpperCase()}</option>`).join('')}</select>
+        <button class="btn" style="padding:5px 12px;font-size:10px" onclick="addF('${n}')">+ Blokada</button>
+      </div>
+    </div>
+    <div class="slbl">Historia meczy (${matches.length})</div>
+    <div style="padding-bottom:8px">
+      ${matches.length?[...matches].reverse().map(m=>{
+        const inB=Object.values(m.blue).includes(n);const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
+        const roleInM=Object.entries(inB?m.blue:m.red).find(([r,x])=>x===n)?.[0]||'?';
+        const teammates=Object.values(inB?m.blue:m.red).filter(x=>x!==n).join(', ');
+        const sr=m.scanResult?.[n];const champStr=sr?.champ?` · <span style="color:var(--gold)">${sr.champ}</span>`:'';
+        const kdaStr=sr?.k!==undefined?` <span style="color:var(--silver);font-size:10px">${sr.k}/${sr.d}/${sr.a}</span>`:'';
+        return `<div class="mr"><div class="mb ${won?'mw':'ml'}">${won?'W':'L'}</div><div style="flex:1"><div style="font-size:12px;font-weight:600">${RI[roleInM]||''} ${roleInM.toUpperCase()}${champStr}${kdaStr}</div><div style="font-size:10px;color:var(--silver)">${m.date} · P${m.patch} · #${m.gid} · z: ${teammates}</div></div><div style="font-size:10px;color:${inB?'#5DADE2':'#E84855'}">${inB?'LEWA':'PRAWA'}</div></div>`;
+      }).join(''):'<div style="padding:10px 18px;font-size:11px;color:var(--silver)">Brak meczy.</div>'}
+    </div>
+  </div>`;
+  document.getElementById('nft')?.addEventListener('change',tfui);
+}
+
+function tfui(){const t=document.getElementById('nft')?.value;if(!t)return;document.getElementById('nfta').style.display=t==='role'?'none':'block';document.getElementById('nfro').style.display=t==='role'?'block':'none';}
+function addF(n){const t=document.getElementById('nft')?.value;if(!t)return;if(t==='teammate'){const ta=document.getElementById('nfta')?.value;if(!ta)return;restr.push({type:'teammate',playerA:n,playerB:ta});}else{const ro=document.getElementById('nfro')?.value;if(!ro)return;restr.push({type:'role',player:n,role:ro});}renderRS();renderProfile(n);toast('Blokada dodana!');lsSave();}
+
+// =====================================================================
+// STATS
+// =====================================================================
+function renderStats(){
+  document.getElementById('stop').innerHTML=`
+    <div class="bsc"><div class="bv">${MH.length}</div><div class="bl">Rozegrane mecze</div></div>
+    <div class="bsc"><div class="bv">${AP.length}</div><div class="bl">Aktywni gracze</div></div>
+    <div class="bsc"><div class="bv">${MH.filter(m=>m.scanResult).length}</div><div class="bl">Zeskanowane mecze</div></div>`;
+  const ranked=AP.map(n=>{const s=PS[n];const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const w=Object.values(s.wins).reduce((a,b)=>a+b,0);return{n,g,w,wr:g>0?Math.round(w/g*100):0};});
+  const wrR=[...ranked].sort((a,b)=>b.wr-a.wr||b.g-a.g);const gR=[...ranked].sort((a,b)=>b.g-a.g);const mg=gR[0]?.g||1;
+  const rc=i=>i===0?'r1':i===1?'r2':i===2?'r3':'';
+  const lbrow=(p,i,bw,bc,vt,vc)=>`<div class="lbr"><span class="lbn ${rc(i)}">${i+1}</span><div class="lbav" style="border-color:${PC[p.n]||'#C8AA6E'}55;color:${PC[p.n]||'#C8AA6E'};background:${PC[p.n]||'#C8AA6E'}15">${ini(p.n)}</div><span style="flex:1;font-size:13px;font-weight:600">${p.n}</span><div class="lbbt"><div class="lbbf" style="width:${bw}%;background:${bc}"></div></div><span class="lbw" style="color:${vc}">${vt}</span></div>`;
+  document.getElementById('lbwr').innerHTML=wrR.map((p,i)=>lbrow(p,i,p.wr,'linear-gradient(90deg,var(--teal),var(--blue-bright))',p.wr+'%',p.wr>=60?'var(--success)':p.wr>=45?'var(--gold)':'var(--danger)')).join('');
+  document.getElementById('lbg').innerHTML=gR.map((p,i)=>lbrow(p,i,Math.round(p.g/mg*100),'linear-gradient(90deg,var(--gold-dark),var(--gold))',p.g+'G','var(--gold)')).join('');
+  const sM={};
+  MH.forEach(m=>{const pt=(tm,won)=>{const ns=Object.values(tm);for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){const k=[ns[i],ns[j]].sort().join('|');if(!sM[k])sM[k]={g:0,w:0};sM[k].g++;if(won)sM[k].w++;}};pt(m.blue,m.win==='LEWA');pt(m.red,m.win==='PRAWA');});
+  const sA=Object.entries(sM).map(([k,v])=>({pair:k.split('|'),g:v.g,wr:v.g?Math.round(v.w/v.g*100):0})).filter(s=>s.g>=2).sort((a,b)=>b.wr-a.wr).slice(0,8);
+  document.getElementById('syt').innerHTML=sA.length?`<div style="display:flex;flex-direction:column;gap:7px">${sA.map(s=>`<div class="syr"><div class="av av26" style="border-color:${PC[s.pair[0]]||'#C8AA6E'}55;color:${PC[s.pair[0]]||'#C8AA6E'};background:${PC[s.pair[0]]||'#C8AA6E'}15">${ini(s.pair[0])}</div><span style="font-size:11px;font-weight:600">${s.pair[0]}</span><span style="color:var(--gold);font-size:10px">+</span><div class="av av26" style="border-color:${PC[s.pair[1]]||'#C8AA6E'}55;color:${PC[s.pair[1]]||'#C8AA6E'};background:${PC[s.pair[1]]||'#C8AA6E'}15">${ini(s.pair[1])}</div><span style="font-size:11px;font-weight:600">${s.pair[1]}</span><div class="syb" style="flex:1"><div style="height:100%;background:${s.wr>=55?'var(--success)':s.wr>=45?'var(--gold)':'var(--danger)'};border-radius:2px;width:${s.wr}%"></div></div><span class="wp ${s.wr>=55?'wg':'wb'}">${s.wr}%</span><span style="font-size:9px;color:var(--silver)">${s.g}G</span></div>`).join('')}</div>`:'<div style="font-size:11px;color:var(--silver)">Za mało danych.</div>';
+  // KDA top
+  const kdaRows=[];
+  AP.forEach(n=>{Object.entries(PS[n].champs||{}).forEach(([ch,v])=>{if(v.g>=1&&v.d>=0){const kda=v.d>0?+((v.k+v.a)/v.d).toFixed(2):v.k+v.a;kdaRows.push({player:n,champ:ch,g:v.g,kda,k:v.g>0?+(v.k/v.g).toFixed(1):0,d:v.g>0?+(v.d/v.g).toFixed(1):0,a:v.g>0?+(v.a/v.g).toFixed(1):0});}});});
+  kdaRows.sort((a,b)=>b.kda-a.kda);
+  document.getElementById('kdaTop').innerHTML=kdaRows.length?`<table class="kda-tbl" style="width:100%"><thead><tr><th>Gracz</th><th>Postać</th><th>G</th><th>KDA</th></tr></thead><tbody>${kdaRows.slice(0,10).map(r=>{const c=PC[r.player]||'#C8AA6E';return`<tr><td><span style="color:${c};font-weight:600">${r.player}</span></td><td>${r.champ}</td><td>${r.g}</td><td style="font-weight:700;color:${r.kda>=3?'var(--success)':r.kda>=2?'var(--gold)':'var(--silver)'}">${r.kda}x</td></tr>`;}).join('')}</tbody></table>`:'<div style="font-size:11px;color:var(--silver)">Uruchom AI Scan żeby zobaczyć KDA.</div>';
+}
+
+// =====================================================================
+// HISTORY
+// =====================================================================
+function renderHist(){
+  document.getElementById('histhdr').innerHTML=`Historia meczy (${MH.length}) <button class="btn" style="padding:3px 10px;font-size:10px" onclick="exportCSV()">↓ CSV</button>`;
+  document.getElementById('histList').innerHTML=[...MH].reverse().map(m=>{
+    const hasImg=!!m.imgUrl;const hasScan=!!m.scanResult;
+    const champsBlu=ROLES.map(r=>m.scanResult?.[m.blue[r]]?.champ||'').filter(Boolean);
+    const champsRed=ROLES.map(r=>m.scanResult?.[m.red[r]]?.champ||'').filter(Boolean);
+    return `<div class="hr"><div class="hi">
+      <div style="min-width:60px">
+        <div style="font-size:9px;color:var(--silver)">#${m.gid}</div>
+        <div style="font-size:11px;font-weight:600">${m.date}</div>
+        <div style="font-size:9px;color:var(--silver)">P${m.patch}</div>
+        ${hasImg?`<div style="font-size:9px;margin-top:2px">${hasScan?'<span style="color:var(--success)">✓ AI</span>':'<span style="color:var(--silver)">📷</span>'}</div>`:''}
+      </div>
+      <div style="flex:1;display:grid;grid-template-columns:1fr 46px 1fr;gap:9px;align-items:center">
+        <div style="text-align:right">
+          <div style="font-size:9px;color:#5DADE2;letter-spacing:1.5px;margin-bottom:2px">LEWA</div>
+          <div style="font-size:10px;color:var(--silver)">${ROLES.map(r=>m.blue[r]).filter(Boolean).join(', ')}</div>
+          ${champsBlu.length?`<div style="font-size:9px;color:var(--gold);margin-top:1px">${champsBlu.join(', ')}</div>`:''}
+        </div>
+        <div style="text-align:center;padding:4px 6px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:1px;${m.win==='LEWA'?'background:rgba(93,173,226,0.12);color:#5DADE2;border:1px solid rgba(93,173,226,0.25)':'background:rgba(232,72,85,0.12);color:#E84855;border:1px solid rgba(232,72,85,0.25)'}">${m.win}</div>
+        <div>
+          <div style="font-size:9px;color:#E84855;letter-spacing:1.5px;margin-bottom:2px">PRAWA</div>
+          <div style="font-size:10px;color:var(--silver)">${ROLES.map(r=>m.red[r]).filter(Boolean).join(', ')}</div>
+          ${champsRed.length?`<div style="font-size:9px;color:var(--gold);margin-top:1px">${champsRed.join(', ')}</div>`:''}
+        </div>
+      </div>
+      ${hasImg?`<button class="btn tbtn" style="padding:3px 8px;font-size:9px;flex-shrink:0" onclick="openImgPreview('${m.imgUrl}')">🖼</button>`:''}
+    </div></div>`;
+  }).join('');
+}
+
+function openImgPreview(url){window.open(url,'_blank');}
+
+// =====================================================================
+// AI SCAN MODAL
+// =====================================================================
+let scanInProgress=false;
+
+function buildScanGrid(){
+  const grid=document.getElementById('scanGrid');
+  const withImg=MH.filter(m=>m.imgUrl);
+  grid.innerHTML=withImg.map(m=>{
+    const hasScan=!!m.scanResult;
+    return `<div class="scan-card" id="sc_${m.gid}">
+      <img class="scan-img" src="${m.imgUrl}" alt="GID ${m.gid}" loading="lazy" onerror="this.style.background='#0A1830';this.src=''">
+      <div class="scan-info">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:11px;font-weight:600">GID #${m.gid} · ${m.date}</span>
+          <span class="scan-status ${hasScan?'ss-done':'ss-pending'}" id="ss_${m.gid}">${hasScan?'✓ DONE':'PENDING'}</span>
+        </div>
+        <div style="font-size:10px;color:var(--silver);margin-bottom:4px">${[...Object.values(m.blue),...Object.values(m.red)].join(', ')}</div>
+        <div class="scan-champs" id="sc_res_${m.gid}">${hasScan?formatScanResult(m):''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function formatScanResult(m){
+  if(!m.scanResult)return '';
+  return Object.entries(m.scanResult).map(([player,d])=>{
+    const kda=d.k!==undefined?` ${d.k}/${d.d}/${d.a}`:'';
+    return `<span style="color:${PC[player]||'#C8AA6E'}">${player}</span>: <b>${d.champ||'?'}</b>${kda}`;
+  }).join('\n');
+}
+
+function openScanModal(){document.getElementById('scanModal').style.display='flex';buildScanGrid();}
+function closeScanModal(){document.getElementById('scanModal').style.display='none';}
+
+async function startScan(){
+  if(scanInProgress){toast('Skanowanie już trwa!');return;}
+  const withImg=MH.filter(m=>m.imgUrl&&!m.scanResult);
+  if(!withImg.length){toast('Wszystkie mecze już zeskanowane!');return;}
+  scanInProgress=true;
+  document.getElementById('scanProgress').style.display='block';
+  const total=withImg.length;let done=0;
+  for(const m of withImg){
+    document.getElementById('scanProgressText').textContent=`Skanowanie ${done+1}/${total}: GID #${m.gid}...`;
+    document.getElementById('scanProgressFill').style.width=`${Math.round(done/total*100)}%`;
+    const statusEl=document.getElementById(`ss_${m.gid}`);
+    if(statusEl){statusEl.className='scan-status ss-scanning';statusEl.textContent='SCANNING...';}
+    try{
+      const result=await scanMatchImage(m);
+      m.scanResult=result;
+      if(statusEl){statusEl.className='scan-status ss-done';statusEl.textContent='✓ DONE';}
+      const resEl=document.getElementById(`sc_res_${m.gid}`);
+      if(resEl)resEl.innerHTML=formatScanResult(m).replace(/\n/g,'<br>');
+    }catch(err){
+      console.error('Scan error GID',m.gid,err);
+      if(statusEl){statusEl.className='scan-status ss-error';statusEl.textContent='ERROR';}
+    }
+    done++;
+    await sleep(500);
+  }
+  document.getElementById('scanProgressFill').style.width='100%';
+  document.getElementById('scanProgressText').textContent=`✓ Zakończono skanowanie ${done}/${total} meczy`;
+  scanInProgress=false;
+  PS=buildPS();AP=Object.keys(PS).sort();
+  lsSave();
+  renderStats();renderHist();if(selPr)renderProfile(selPr);
+  toast(`Zeskanowano ${done} meczy!`);
+}
+
+async function scanMatchImage(m){
+  // Build player list with aliases for AI context
+  const allPlayers=[...Object.values(m.blue),...Object.values(m.red)];
+  const playerContext=allPlayers.map(p=>{const gn=getGameNick(p);return gn!==p?`${p} (gra jako: ${gn})`:p;}).join(', ');
+  const prompt=`To jest screenshot z podsumowania gry League of Legends (custom game / custom mecz).
+
+Gracze w tym meczu:
+LEWA drużyna (po lewej na screenshocie): Top=${m.blue.top}, Jng=${m.blue.jng}, Mid=${m.blue.mid}, ADC=${m.blue.adc}, Supp=${m.blue.supp}
+PRAWA drużyna (po prawej): Top=${m.red.top}, Jng=${m.red.jng}, Mid=${m.red.mid}, ADC=${m.red.adc}, Supp=${m.red.supp}
+
+Aliasy (nick aplikacyjny → nick w grze): ${playerContext}
+
+Zadanie: Odczytaj ze screenshota dla KAŻDEGO gracza:
+1. Graną postać (champion name po angielsku)
+2. KDA: kills/deaths/assists
+
+Odpowiedz TYLKO w formacie JSON, bez żadnego tekstu przed/po:
+{
+  "GracNazwa": {"champ": "ChampionName", "k": 5, "d": 2, "a": 8},
+  ...
+}
+Użyj nazw graczy z aplikacji (nie z gry). Jeśli nie możesz odczytać danej wartości, użyj null.`;
+
+  const imgResponse=await fetch(m.imgUrl);
+  const imgBlob=await imgResponse.blob();
+  const b64=await blobToBase64(imgBlob);
+  const mediaType=imgBlob.type||'image/png';
+
+  const apiResponse=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1500,
+      messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:mediaType,data:b64}},
+        {type:'text',text:prompt}
+      ]}]
+    })
+  });
+  if(!apiResponse.ok){const err=await apiResponse.text();throw new Error(`API error: ${apiResponse.status} ${err}`);}
+  const data=await apiResponse.json();
+  const text=data.content.map(c=>c.text||'').join('');
+  const clean=text.replace(/```json|```/g,'').trim();
+  // find JSON object
+  const jsonMatch=clean.match(/\{[\s\S]*\}/);
+  if(!jsonMatch)throw new Error('No JSON in response');
+  return JSON.parse(jsonMatch[0]);
+}
+
+function blobToBase64(blob){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(blob);
+  });
+}
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// =====================================================================
+// DEV MODE
+// =====================================================================
+function toggleDev(){devMode=!devMode;document.getElementById('devBtn').classList.toggle('active',devMode);document.getElementById('devPanel').classList.toggle('open',devMode);if(devMode)renderDev();}
+function renderDev(){
+  ['blue','red'].forEach(t=>{
+    const el=document.getElementById('dev'+(t==='blue'?'B':'R'));
+    el.innerHTML=ROLES.map((role,i)=>{const pid=CT[t][i]||'';const ch=CC[t][i]||'';return `<div class="ds"><label>${RI[role]} ${role}</label><select id="dp_${t}_${i}">${['',...AP].map(n=>`<option value="${n}" ${n===pid?'selected':''}>${n||'—'}</option>`).join('')}</select><select id="dc_${t}_${i}" style="margin-top:3px"><option value="">— brak —</option>${CHAMPS[role].map(c=>`<option value="${c}" ${c===ch?'selected':''}>${c}</option>`).join('')}</select></div>`;}).join('');
+  });
+}
+function applyDev(){
+  ROLES.forEach((role,i)=>{
+    const bP=document.getElementById(`dp_blue_${i}`)?.value;const rP=document.getElementById(`dp_red_${i}`)?.value;
+    const bC=document.getElementById(`dc_blue_${i}`)?.value;const rC=document.getElementById(`dc_red_${i}`)?.value;
+    if(bP)CT.blue[i]=bP;if(rP)CT.red[i]=rP;CC.blue[i]=bC||null;CC.red[i]=rC||null;
+  });
+  renderTS('blue');renderTS('red');toast('Zmiany zastosowane!');
+}
+
+// =====================================================================
+// ADD PLAYER
+// =====================================================================
+const PRESET_COLORS=['#C8AA6E','#5DADE2','#1DE9B6','#E84855','#9B59B6','#F39C12','#2ECC71','#E67E22','#FF69B4','#00BCD4','#FF6B9D','#A78BFA','#34D399','#FCD34D','#60A5FA','#F87171','#818CF8','#FB923C','#4ADE80','#38BDF8','#E879F9','#FACC15','#A3E635','#FB7185','#67E8F9','#86EFAC','#F472B6','#2DD4BF','#FB923C','#C084FC'];
+let apPickedColor='#C8AA6E';
+let editingPlayer=null; // null = add mode, string = edit mode
+
+function openAddPlayer(editName){
+  editingPlayer=editName||null;
+  const title=document.getElementById('addPlayerTitle');
+  if(editName){
+    title.textContent='Edytuj gracza';
+    document.getElementById('apName').value=editName;
+    document.getElementById('apName').disabled=true;
+    document.getElementById('apGameNick').value=ALIASES[editName]||'';
+    apPickedColor=PC[editName]||'#C8AA6E';
+  } else {
+    title.textContent='Dodaj nowego gracza';
+    document.getElementById('apName').value='';
+    document.getElementById('apName').disabled=false;
+    document.getElementById('apGameNick').value='';
+    apPickedColor='#C8AA6E';
+  }
+  buildColorPicker();
+  updateAddPreview();
+  document.getElementById('addPlayerModal').style.display='flex';
+  if(!editName) setTimeout(()=>document.getElementById('apName').focus(),100);
+}
+
+function closeAddPlayer(){
+  document.getElementById('addPlayerModal').style.display='none';
+  editingPlayer=null;
+}
+
+function buildColorPicker(){
+  const row=document.getElementById('colorPickerRow');
+  row.innerHTML=PRESET_COLORS.map(c=>`<div class="color-dot ${c===apPickedColor?'picked':''}" style="background:${c}" onclick="pickColor('${c}')" title="${c}"></div>`).join('');
+  document.getElementById('apCustomColor').value=apPickedColor;
+}
+
+function pickColor(c){
+  apPickedColor=c;
+  buildColorPicker();
+  updateAddPreview();
+}
+
+function pickCustomColor(c){
+  apPickedColor=c;
+  buildColorPicker();
+  updateAddPreview();
+}
+
+function updateAddPreview(){
+  const name=document.getElementById('apName').value.trim()||'??';
+  const av=document.getElementById('apPreviewAv');
+  const nm=document.getElementById('apPreviewName');
+  av.textContent=ini(name);
+  av.style.color=apPickedColor;
+  av.style.borderColor=apPickedColor;
+  av.style.background=apPickedColor+'20';
+  nm.textContent=name;
+}
+
+function confirmAddPlayer(){
+  const name=document.getElementById('apName').value.trim();
+  const gameNick=document.getElementById('apGameNick').value.trim();
+  if(!name){toast('Wpisz nick gracza!');document.getElementById('apName').focus();return;}
+
+  if(!editingPlayer){
+    // ADD mode — check duplicate
+    if(AP.includes(name)){toast('Gracz o tym nicku już istnieje!');return;}
+    PC[name]=apPickedColor;
+    if(gameNick) ALIASES[name]=gameNick;
+    // track as manually-added player
+    if(!EXTRA_PLAYERS.includes(name)) EXTRA_PLAYERS.push(name);
+    PS[name]={name,roles:{top:0,jng:0,mid:0,adc:0,supp:0},wins:{top:0,jng:0,mid:0,adc:0,supp:0},champs:{},kda:{}};
+    AP=Object.keys(PS).sort();
+    toast(`Gracz "${name}" dodany!`);
+  } else {
+    // EDIT mode — update color + alias only (name locked)
+    PC[editingPlayer]=apPickedColor;
+    if(gameNick) ALIASES[editingPlayer]=gameNick;
+    else delete ALIASES[editingPlayer];
+    toast(`Gracz "${editingPlayer}" zaktualizowany!`);
+  }
+
+  closeAddPlayer();
+  renderPL();
+  renderProfileList();
+  renderAliases();
+  renderStats();
+  lsSave();
+}
+
+function deletePlayer(name,e){
+  e.stopPropagation();
+  if(!confirm(`Usunąć gracza "${name}"? Jego mecze pozostaną w historii.`))return;
+  // remove from sel if selected
+  const si=sel.indexOf(name);if(si>=0)sel.splice(si,1);
+  // remove from EXTRA_PLAYERS
+  const ei=EXTRA_PLAYERS.indexOf(name);if(ei>=0)EXTRA_PLAYERS.splice(ei,1);
+  // remove from PS & AP
+  delete PS[name];
+  AP=Object.keys(PS).sort();
+  // remove color & alias
+  delete PC[name];delete ALIASES[name];
+  // remove restrictions involving this player
+  for(let i=restr.length-1;i>=0;i--){
+    const r=restr[i];
+    if((r.type==='teammate'&&(r.playerA===name||r.playerB===name))||(r.type==='role'&&r.player===name)) restr.splice(i,1);
+  }
+  if(selPr===name){selPr=null;document.getElementById('profileContent').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:380px;color:var(--silver);font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:0.45">Wybierz gracza z listy</div>';}
+  renderPL();renderProfileList();renderAliases();renderRS();renderStats();
+  toast(`Gracz "${name}" usunięty.`);lsSave();
+}
+
+// =====================================================================
+// DRAFT MODE
+// =====================================================================
+function setMode(m){
+  draftMode=(m==='draft');
+  document.getElementById('modeRandom').classList.toggle('active',!draftMode);
+  document.getElementById('modeDraft').classList.toggle('active',draftMode);
+  document.getElementById('ctrlRandom').style.display=draftMode?'none':'flex';
+  document.getElementById('ctrlDraft').style.display=draftMode?'flex':'none';
+  document.getElementById('draftHint').style.display=draftMode?'block':'none';
+
+  if(draftMode){
+    // Reset draft state, keep random teams intact separately
+    draftTeams={blue:[],red:[]};
+    renderDraftTeams();
+  } else {
+    // Restore normal team render
+    renderTS('blue');renderTS('red');
+  }
+  renderPL();
+  updateDraftCounts();
+}
+
+// ── DRAG EVENTS ──────────────────────────────────────────────────────
+function onDragStart(e,name){
+  draggedPlayer=name;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',name);
+  e.currentTarget.classList.add('dragging');
+}
+function onDragEnd(e){
+  draggedPlayer=null;
+  e.currentTarget.classList.remove('dragging');
+  // clear all drag-over highlights
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+}
+
+// Allow drop on a team container (blue or red)
+function onDragOverTeam(e,team){
+  e.preventDefault();e.dataTransfer.dropEffect='move';
+  document.getElementById(team+'TeamWrap').classList.add('drag-over');
+}
+function onDragLeaveTeam(e,team){
+  document.getElementById(team+'TeamWrap').classList.remove('drag-over');
+}
+function onDropTeam(e,team){
+  e.preventDefault();
+  document.getElementById(team+'TeamWrap').classList.remove('drag-over');
+  const name=e.dataTransfer.getData('text/plain')||draggedPlayer;
+  if(!name)return;
+  addPlayerToDraft(name,team);
+}
+
+// Allow drop on a specific slot
+function onDragOverSlot(e,team,idx){
+  e.preventDefault();e.stopPropagation();e.dataTransfer.dropEffect='move';
+  document.getElementById(`ds_${team}_${idx}`).classList.add('drag-over');
+}
+function onDragLeaveSlot(e,team,idx){
+  document.getElementById(`ds_${team}_${idx}`)?.classList.remove('drag-over');
+}
+function onDropSlot(e,team,idx){
+  e.preventDefault();e.stopPropagation();
+  document.getElementById(`ds_${team}_${idx}`)?.classList.remove('drag-over');
+  const name=e.dataTransfer.getData('text/plain')||draggedPlayer;
+  if(!name)return;
+  addPlayerToDraftSlot(name,team,idx);
+}
+
+// ── DRAFT LOGIC ───────────────────────────────────────────────────────
+function addPlayerToDraft(name,team){
+  // Check restrictions
+  const other=team==='blue'?'red':'blue';
+  const restriction=restr.find(r=>r.type==='teammate'&&(
+    (r.playerA===name&&draftTeams[team].some(p=>p.name===r.playerB))||
+    (r.playerB===name&&draftTeams[team].some(p=>p.name===r.playerA))
+  ));
+  if(restriction){toast(`⛔ Blokada: ${name} nie może grać z ${restriction.playerA===name?restriction.playerB:restriction.playerA}!`);return;}
+
+  // Remove from other team if there
+  draftTeams[other]=draftTeams[other].filter(p=>p.name!==name);
+  // Remove existing in same team
+  draftTeams[team]=draftTeams[team].filter(p=>p.name!==name);
+  if(draftTeams[team].length>=5){toast('Drużyna jest pełna! (5/5)');return;}
+
+  // Assign role: pick available role, prefer player's most played
+  const usedRoles=draftTeams[team].map(p=>p.role);
+  const available=ROLES.filter(r=>!usedRoles.includes(r));
+  const role=pickBestRole(name,available);
+  draftTeams[team].push({name,role});
+  renderDraftTeams();
+  renderPL();
+  updateDraftCounts();
+  syncDraftToCT();
+}
+
+function addPlayerToDraftSlot(name,team,slotIdx){
+  // slotIdx corresponds to ROLES[slotIdx]
+  const targetRole=ROLES[slotIdx];
+  const other=team==='blue'?'red':'blue';
+
+  const restriction=restr.find(r=>r.type==='teammate'&&(
+    (r.playerA===name&&draftTeams[team].some(p=>p.name===r.playerB))||
+    (r.playerB===name&&draftTeams[team].some(p=>p.name===r.playerA))
+  ));
+  if(restriction){toast(`⛔ Blokada: ${name} nie może grać z ${restriction.playerA===name?restriction.playerB:restriction.playerA}!`);return;}
+
+  // Check role restriction
+  const roleRestr=restr.find(r=>r.type==='role'&&r.player===name&&r.role===targetRole);
+  if(roleRestr){toast(`⛔ ${name} ma blokadę na rolę ${targetRole.toUpperCase()}!`);return;}
+
+  // Remove from any current placement
+  draftTeams[other]=draftTeams[other].filter(p=>p.name!==name);
+  draftTeams[team]=draftTeams[team].filter(p=>p.name!==name);
+  // Remove whoever was in that slot
+  draftTeams[team]=draftTeams[team].filter(p=>p.role!==targetRole);
+  draftTeams[team].push({name,role:targetRole});
+  renderDraftTeams();
+  renderPL();
+  updateDraftCounts();
+  syncDraftToCT();
+}
+
+function removeFromDraft(name,team){
+  draftTeams[team]=draftTeams[team].filter(p=>p.name!==name);
+  renderDraftTeams();renderPL();updateDraftCounts();syncDraftToCT();
+}
+
+function pickBestRole(name,available){
+  if(!available.length)return ROLES[0];
+  const s=PS[name]||{roles:{}};
+  // filter out role restrictions
+  const allowed=available.filter(r=>!restr.find(rx=>rx.type==='role'&&rx.player===name&&rx.role===r));
+  const pool=allowed.length?allowed:available;
+  return pool.sort((a,b)=>(s.roles[b]||0)-(s.roles[a]||0))[0];
+}
+
+function randomizeDraftRoles(){
+  // Re-randomize roles for each team while respecting restrictions
+  ['blue','red'].forEach(team=>{
+    const players=draftTeams[team].map(p=>p.name);
+    const assigned=assignR(players);
+    draftTeams[team]=players.map((name,i)=>({name,role:assigned[i]||ROLES[i]}));
+  });
+  renderDraftTeams();syncDraftToCT();toast('Role przetasowane!');
+}
+
+function clearDraft(){
+  draftTeams={blue:[],red:[]};
+  renderDraftTeams();renderPL();updateDraftCounts();
+  CT={blue:[],red:[],bR:{},rR:{}};
+  CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
+}
+
+function updateDraftCounts(){
+  document.getElementById('blueCount').textContent=`${draftTeams.blue.length}/5`;
+  document.getElementById('redCount').textContent=`${draftTeams.red.length}/5`;
+}
+
+// Sync draft teams into CT so copyToDiscord / save / etc still work
+function syncDraftToCT(){
+  if(!draftMode)return;
+  CT.blue=draftTeams.blue.map(p=>p.name);
+  CT.red=draftTeams.red.map(p=>p.name);
+  CT.bR={};CT.rR={};
+  draftTeams.blue.forEach((p,i)=>CT.bR[i]=p.role);
+  draftTeams.red.forEach((p,i)=>CT.rR[i]=p.role);
+}
+
+// ── RENDER DRAFT TEAMS ────────────────────────────────────────────────
+function renderDraftTeams(){
+  ['blue','red'].forEach(team=>{
+    renderDraftTeamGrid(team);
+    // re-attach drop listeners to the team wrapper
+    const wrap=document.getElementById(team+'TeamWrap');
+    wrap.ondragover=e=>onDragOverTeam(e,team);
+    wrap.ondragleave=e=>onDragLeaveTeam(e,team);
+    wrap.ondrop=e=>onDropTeam(e,team);
+  });
+}
+
+function renderDraftTeamGrid(team){
+  const el=document.getElementById(team+'Team');
+  // Build map role→entry for placed players
+  const placed={};
+  draftTeams[team].forEach(p=>placed[p.role]=p.name);
+
+  el.innerHTML=ROLES.map((role,i)=>{
+    const name=placed[role]||null;
+    const c=name?(PC[name]||'#C8AA6E'):'#4A6A8A';
+    const ch=CC[team][i]||null;
+    const monster=slotMonsters[team][i]||JUNGLE_MONSTERS[0];
+    const bgStyle=name?(ch?`background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${ch.replace(/[' ]/g,'').replace(/\./g,'')}_0.jpg')`:`background-image:url('${monster}')`):'' ;
+    const isMonster=name&&!ch;
+
+    return `<div class="cs draft-cs" id="ds_${team}_${i}"
+      ondragover="onDragOverSlot(event,'${team}',${i})"
+      ondragleave="onDragLeaveSlot(event,'${team}',${i})"
+      ondrop="onDropSlot(event,'${team}',${i})"
+    >
+      <div class="cb ${isMonster?'cb-monster':''}" style="${bgStyle}"></div>
+      <div class="co"></div>
+      <div class="ci">
+        <div class="cri" style="color:${c}">${RI[role]}</div>
+        ${name
+          ? `<div class="cn">${ch||'—'}</div><div class="cp" style="color:${c}">${name}</div>`
+          : `<div class="cn" style="color:rgba(160,180,200,0.4);font-size:11px">UPUŚĆ</div><div class="cp" style="color:rgba(160,180,200,0.3)">${role.toUpperCase()}</div>`
+        }
+      </div>
+      ${name?`<div class="remove-player" onclick="removeFromDraft('${name}','${team}')">✕</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// =====================================================================
+// NAV + UTILS
+// =====================================================================
+function showPage(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+n)?.classList.add('active');btn?.classList.add('active');}
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);}
+
+init();
+</script>
+</body>
+</html>
