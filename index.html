@@ -295,6 +295,56 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
   border:1px solid var(--danger);
 }
 .draft-cs:hover .remove-player{display:flex}
+/* ── NEW PROFILE LAYOUT ───────────────────────────────────────── */
+.prof-wrap{display:flex;flex-direction:column;gap:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+
+/* BANNER */
+.prof-banner{position:relative;height:220px;overflow:hidden;flex-shrink:0}
+.prof-banner-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:all 0.4s}
+.prof-banner-gradient{position:absolute;inset:0;background:linear-gradient(135deg,rgba(5,14,26,0.6) 0%,transparent 50%,rgba(5,14,26,0.8) 100%)}
+.prof-banner-bottom{position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(0deg,var(--blue-deep) 0%,transparent 100%)}
+/* avatar in banner */
+.prof-av-wrap{position:absolute;bottom:-32px;left:28px;z-index:5}
+.prof-av-img{width:80px;height:80px;border-radius:50%;border:3px solid var(--gold);object-fit:cover;background:var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;overflow:hidden;box-shadow:0 0 24px rgba(0,0,0,0.6)}
+/* settings cog on banner */
+.prof-settings-btn{position:absolute;bottom:10px;right:12px;z-index:5;background:rgba(5,14,26,0.75);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;color:var(--gold);font-size:12px;letter-spacing:1px;font-family:'Rajdhani',sans-serif;font-weight:600;transition:all 0.2s;backdrop-filter:blur(6px)}
+.prof-settings-btn:hover{background:rgba(200,170,110,0.15);border-color:var(--gold)}
+
+/* NAME ROW */
+.prof-name-row{padding:44px 28px 16px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.prof-name-block{flex:1}
+.prof-name{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);line-height:1.1}
+.prof-gamenick{font-size:12px;color:var(--teal);margin-top:3px;letter-spacing:1px}
+.prof-subline{font-size:11px;color:var(--silver);margin-top:2px}
+/* top stats strip */
+.prof-stats-strip{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.prof-stat-cell{flex:1;padding:12px 8px;text-align:center;border-right:1px solid var(--border)}
+.prof-stat-cell:last-child{border-right:none}
+.prof-stat-val{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold)}
+.prof-stat-lbl{font-size:9px;color:var(--silver);margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+
+/* PIE CHARTS row */
+.prof-pies{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid var(--border)}
+.prof-pie-cell{padding:14px 8px;text-align:center;border-right:1px solid var(--border);position:relative}
+.prof-pie-cell:last-child{border-right:none}
+.prof-pie-svg{display:block;margin:0 auto 6px;overflow:visible}
+.prof-pie-label{font-size:9px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.prof-pie-wr{font-size:13px;font-weight:700}
+.prof-pie-games{font-size:9px;color:var(--silver);margin-top:1px}
+
+/* BODY SECTIONS */
+.prof-body{padding:0}
+.prof-section{padding:14px 24px;border-bottom:1px solid rgba(200,170,110,0.07)}
+.prof-section:last-child{border-bottom:none}
+.prof-section-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--silver);opacity:0.7;margin-bottom:10px}
+
+/* SETTINGS INLINE PANEL */
+.prof-settings-panel{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:16px;margin:0 24px 16px;display:none}
+.prof-settings-panel.open{display:block}
+.prof-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prof-field label{font-size:9px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px}
+.prof-field input{width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--white);padding:6px 9px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:12px}
+.prof-field input:focus{outline:none;border-color:var(--teal)}
 /* KDA table */
 .kda-tbl{width:100%;border-collapse:collapse;font-size:11px}
 .kda-tbl th{padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;font-weight:600}
@@ -1548,95 +1598,218 @@ function selProfile(n){selPr=n;renderProfileList();renderProfile(n);}
 
 function renderProfile(n){
   const s=PS[n];if(!s)return;
-  const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const w=Object.values(s.wins).reduce((a,b)=>a+b,0);const wr=g>0?Math.round(w/g*100):0;
-  const c=PC[n]||'#C8AA6E';const gn=getGameNick(n);
+  const g=Object.values(s.roles).reduce((a,b)=>a+b,0);
+  const w=Object.values(s.wins).reduce((a,b)=>a+b,0);
+  const wr=g>0?Math.round(w/g*100):0;
+  const c=PC[n]||'#C8AA6E';
+  const gn=getGameNick(n);
+  const meta=PLAYER_META[n]||{};
   const matches=MH.filter(m=>Object.values(m.blue).includes(n)||Object.values(m.red).includes(n));
+
+  // Synergy data
   const symM={},enmM={};
   matches.forEach(m=>{
-    const inB=Object.values(m.blue).includes(n);const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
+    const inB=Object.values(m.blue).includes(n);
+    const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
     Object.values(inB?m.blue:m.red).filter(x=>x!==n).forEach(x=>{if(!symM[x])symM[x]={g:0,w:0};symM[x].g++;if(won)symM[x].w++;});
     Object.values(inB?m.red:m.blue).forEach(x=>{if(!enmM[x])enmM[x]={g:0,w:0};enmM[x].g++;if(won)enmM[x].w++;});
   });
   const symA=Object.entries(symM).map(([x,v])=>({n:x,wr:v.g?Math.round(v.w/v.g*100):0,g:v.g})).sort((a,b)=>b.wr-a.wr);
   const enmA=Object.entries(enmM).map(([x,v])=>({n:x,wr:v.g?Math.round(v.w/v.g*100):0,g:v.g})).sort((a,b)=>a.wr-b.wr);
   const myR=restr.filter(r=>(r.type==='teammate'&&(r.playerA===n||r.playerB===n))||(r.type==='role'&&r.player===n));
-  // Champ stats from scan
   const champArr=Object.entries(s.champs||{}).map(([ch,v])=>({ch,g:v.g,w:v.w,wr:v.g?Math.round(v.w/v.g*100):0,k:v.g>0?+(v.k/v.g).toFixed(1):0,d:v.g>0?+(v.d/v.g).toFixed(1):0,a:v.g>0?+(v.a/v.g).toFixed(1):0})).sort((a,b)=>b.g-a.g);
+
+  // Banner background
+  let bannerBg='';
+  if(meta.bannerUrl){
+    bannerBg=`background-image:url('${meta.bannerUrl}')`;
+  } else if(meta.monsterKey&&MONSTER_KEYS.includes(meta.monsterKey)){
+    bannerBg=`background-image:url('${pickMonsterUrl(meta.monsterKey)}')`;
+  } else {
+    bannerBg=`background:linear-gradient(135deg,${c}40 0%,#030810 60%,${c}18 100%)`;
+  }
+
+  // Avatar
+  const avContent=meta.avatarUrl
+    ? `<img src="${meta.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">`
+    : `<span style="font-size:28px;font-weight:700;color:${c}">${ini(n)}</span>`;
+
+  // Pie chart SVG generator
+  function pie(rg,rw,color,size=52){
+    if(!rg)return `<svg width="${size}" height="${size}" class="prof-pie-svg"><circle cx="${size/2}" cy="${size/2}" r="${size/2-4}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/><text x="${size/2}" y="${size/2+4}" text-anchor="middle" fill="rgba(160,180,200,0.4)" font-size="9" font-family="Rajdhani,sans-serif">—</text></svg>`;
+    const pct=Math.round(rw/rg*100);
+    const r=size/2-5;const circ=2*Math.PI*r;
+    const filled=circ*(pct/100);
+    const wrColor=pct>=60?'#1DE9B6':pct>=45?'#C8AA6E':'#E84855';
+    return `<svg width="${size}" height="${size}" class="prof-pie-svg" viewBox="0 0 ${size} ${size}">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${wrColor}" stroke-width="7"
+        stroke-dasharray="${filled} ${circ}" stroke-dashoffset="${circ/4}"
+        stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"/>
+      <text x="${size/2}" y="${size/2+4}" text-anchor="middle" fill="${wrColor}" font-size="11" font-weight="700" font-family="Rajdhani,sans-serif">${pct}%</text>
+    </svg>`;
+  }
+
   const el=document.getElementById('profileContent');
-  el.innerHTML=`<div class="pcard">
-    <div class="phero">
-      <div class="phbg" style="background:radial-gradient(ellipse at 30% 50%,${c}55,#030810)"></div>
-      <div class="phov"></div>
-      <div class="pavl av72" style="border-color:${c};color:${c};background:${c}18">${ini(n)}</div>
+  el.innerHTML=`
+  <div class="prof-wrap">
+
+    <!-- BANNER -->
+    <div class="prof-banner">
+      <div class="prof-banner-bg" style="${bannerBg}"></div>
+      ${meta.monsterKey?`<div style="position:absolute;inset:0;background:${c}33;mix-blend-mode:color;pointer-events:none"></div>`:''}
+      <div class="prof-banner-gradient"></div>
+      <div class="prof-banner-bottom"></div>
+      <div class="prof-av-wrap">
+        <div class="prof-av-img" style="border-color:${c};background:${c}18">${avContent}</div>
+      </div>
+      <button class="prof-settings-btn" onclick="toggleProfSettings('${n}')">⚙ Ustawienia</button>
     </div>
-    <div class="pinfo">
-      <div class="pn">${n}</div>
-      ${gn!==n?`<div class="pgame-nick">🎮 ${gn}</div>`:''}
-      <div class="pm">${g} meczy · ${w} wygranych · ${wr}% winrate</div>
-    </div>
-    <div class="sg4">
-      ${[['Mecze',g],['Wygrane',w],['Przegrane',g-w],['WR',wr+'%']].map(([l,v])=>`<div class="sb"><div class="sv">${v}</div><div class="sl">${l}</div></div>`).join('')}
-    </div>
-    <div class="slbl">Statystyki per rola</div>
-    <div style="padding-bottom:10px">
-      ${ROLES.map(r=>{const rg=s.roles[r],rw=s.wins[r];if(!rg)return '';const rwr=Math.round(rw/rg*100);const rc=rwr>=60?'var(--success)':rwr>=45?'var(--gold)':'var(--danger)';return `<div class="ror"><span style="width:22px;font-size:14px;text-align:center">${RI[r]}</span><span style="width:30px;font-size:10px;color:var(--silver);text-transform:uppercase">${r}</span><div class="rbt"><div class="rbf" style="width:${rwr}%"></div></div><span class="gs">${rw}/${rg}G</span><span class="wv" style="color:${rc}">${rwr}%</span></div>`;}).join('')}
-    </div>
-    ${champArr.length?`
-    <div class="slbl">Zagrane postacie (z AI scan)</div>
-    <div style="padding:0 18px 10px;overflow-x:auto">
-      <table class="kda-tbl">
-        <thead><tr><th>Postać</th><th>G</th><th>WR%</th><th>Avg K</th><th>Avg D</th><th>Avg A</th><th>KDA</th></tr></thead>
-        <tbody>
-        ${champArr.map(ch=>{
-          const champImgKey=ch.ch.replace(/[' ]/g,'').replace(/\./g,'');
-          const kda=ch.d>0?+((ch.k+ch.a)/ch.d).toFixed(2):'∞';
-          const kdaColor=typeof kda==='number'&&kda>=3?'var(--success)':typeof kda==='number'&&kda>=2?'var(--gold)':'var(--silver)';
-          return `<tr>
-            <td style="display:flex;align-items:center;gap:7px">
-              <div class="champ-card-img"><img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${champImgKey}.png" onerror="this.style.display='none'" alt="${ch.ch}" loading="lazy"></div>
-              <span style="font-weight:600">${ch.ch}</span>
-            </td>
-            <td>${ch.g}</td>
-            <td style="color:${ch.wr>=60?'var(--success)':ch.wr>=45?'var(--gold)':'var(--danger)'}">${ch.wr}%</td>
-            <td>${ch.k||'—'}</td><td>${ch.d||'—'}</td><td>${ch.a||'—'}</td>
-            <td style="font-weight:700;color:${kdaColor}">${typeof kda==='number'?kda+'x':'∞'}</td>
-          </tr>`;
-        }).join('')}
-        </tbody>
-      </table>
-    </div>`:''} 
-    ${symA.length?`
-    <div class="slbl">Najlepsza współpraca</div>
-    <div style="padding:0 18px 8px">
-      ${symA.slice(0,5).map(sy=>`<div class="syr"><div class="av av26" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15">${ini(sy.n)}</div><span style="font-size:12px;font-weight:600;min-width:80px">${sy.n}</span><div class="syb"><div style="height:100%;background:var(--success);border-radius:2px;width:${sy.wr}%"></div></div><span class="wp wg">${sy.wr}%</span><span style="font-size:9px;color:var(--silver)">${sy.g}G</span></div>`).join('')}
-    </div>
-    <div class="slbl">Najtrudniejsi wrogowie</div>
-    <div style="padding:0 18px 8px">
-      ${enmA.slice(0,3).map(sy=>`<div class="syr"><div class="av av26" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15">${ini(sy.n)}</div><span style="font-size:12px;font-weight:600;min-width:80px">${sy.n}</span><div class="syb"><div style="height:100%;background:var(--danger);border-radius:2px;width:${100-sy.wr}%"></div></div><span class="wp wb">${sy.wr}%</span><span style="font-size:9px;color:var(--silver)">${sy.g}G</span></div>`).join('')}
-    </div>`:''}
-    <div class="slbl">Aktywne flagi</div>
-    <div style="padding:0 18px 10px">
-      ${myR.length?myR.map(r=>{const ri=restr.indexOf(r);return`<div class="fr"><span style="font-size:13px">${r.type==='teammate'?'👥':'🚫'}</span><span style="font-size:12px">${r.type==='teammate'?`Nie gra z: <b>${r.playerA===n?r.playerB:r.playerA}</b>`:`Nie gra na: <b>${RI[r.role]} ${r.role.toUpperCase()}</b>`}</span><span style="margin-left:auto;cursor:pointer;color:var(--danger);font-size:15px" onclick="removeR(${ri})">×</span></div>`;}).join(''):'<div style="font-size:11px;color:var(--silver);padding:3px 0">Brak blokad</div>'}
-      <div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <select id="nft" class="ss" onchange="tfui()"><option value="teammate">Gracz</option><option value="role">Rola</option></select>
-        <select id="nfta" class="ss">${AP.filter(x=>x!==n).map(x=>`<option>${x}</option>`).join('')}</select>
-        <select id="nfro" class="ss" style="display:none">${ROLES.map(r=>`<option value="${r}">${RI[r]} ${r.toUpperCase()}</option>`).join('')}</select>
-        <button class="btn" style="padding:5px 12px;font-size:10px" onclick="addF('${n}')">+ Blokada</button>
+
+    <!-- SETTINGS PANEL (inline, toggleable) -->
+    <div class="prof-settings-panel" id="profSettingsPanel_${n}">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Ustawienia profilu — ${n}</div>
+      <div class="prof-settings-grid">
+        <div class="prof-field">
+          <label>Avatar (URL obrazka)</label>
+          <input id="ps_avatar_${n}" value="${meta.avatarUrl||''}" placeholder="https://...">
+        </div>
+        <div class="prof-field">
+          <label>Baner (URL obrazka)</label>
+          <input id="ps_banner_${n}" value="${meta.bannerUrl||''}" placeholder="https://...">
+        </div>
+        <div class="prof-field">
+          <label>Stwór w tle</label>
+          <select id="ps_monster_${n}" class="ss" style="width:100%;font-size:12px">
+            <option value="">— brak —</option>
+            ${MONSTER_KEYS.map(k=>`<option value="${k}" ${meta.monsterKey===k?'selected':''}>${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="prof-field">
+          <label>Kolor gracza</label>
+          <input type="color" id="ps_color_${n}" value="${c}" style="height:34px;width:100%;padding:2px;border-radius:4px;border:1px solid var(--border);background:rgba(0,0,0,0.4);cursor:pointer">
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn primary" style="padding:6px 16px;font-size:11px" onclick="saveProfSettings('${n}')">💾 Zapisz</button>
+        <button class="btn" style="padding:6px 12px;font-size:11px" onclick="toggleProfSettings('${n}')">Zamknij</button>
       </div>
     </div>
-    <div class="slbl">Historia meczy (${matches.length})</div>
-    <div style="padding-bottom:8px">
-      ${matches.length?[...matches].reverse().map(m=>{
-        const inB=Object.values(m.blue).includes(n);const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
-        const roleInM=Object.entries(inB?m.blue:m.red).find(([r,x])=>x===n)?.[0]||'?';
-        const teammates=Object.values(inB?m.blue:m.red).filter(x=>x!==n).join(', ');
-        const sr=m.scanResult?.[n];const champStr=sr?.champ?` · <span style="color:var(--gold)">${sr.champ}</span>`:'';
-        const kdaStr=sr?.k!==undefined?` <span style="color:var(--silver);font-size:10px">${sr.k}/${sr.d}/${sr.a}</span>`:'';
-        return `<div class="mr"><div class="mb ${won?'mw':'ml'}">${won?'W':'L'}</div><div style="flex:1"><div style="font-size:12px;font-weight:600">${RI[roleInM]||''} ${roleInM.toUpperCase()}${champStr}${kdaStr}</div><div style="font-size:10px;color:var(--silver)">${m.date} · P${m.patch} · #${m.gid} · z: ${teammates}</div></div><div style="font-size:10px;color:${inB?'#5DADE2':'#E84855'}">${inB?'LEWA':'PRAWA'}</div></div>`;
-      }).join(''):'<div style="padding:10px 18px;font-size:11px;color:var(--silver)">Brak meczy.</div>'}
+
+    <!-- NAME ROW -->
+    <div class="prof-name-row">
+      <div class="prof-name-block">
+        <div class="prof-name">${n}</div>
+        ${gn!==n?`<div class="prof-gamenick">🎮 ${gn}</div>`:''}
+        <div class="prof-subline">${g} meczy · ${matches.length} z historii</div>
+      </div>
+    </div>
+
+    <!-- STATS STRIP -->
+    <div class="prof-stats-strip">
+      ${[['Mecze',g],['Wygrane',w],['Przegrane',g-w],['WR',wr+'%'],['Mecze hist.',matches.length]].map(([l,v])=>
+        `<div class="prof-stat-cell"><div class="prof-stat-val" style="color:${l==='WR'?(wr>=60?'var(--success)':wr>=45?'var(--gold)':'var(--danger)'):'var(--gold)'}">${v}</div><div class="prof-stat-lbl">${l}</div></div>`
+      ).join('')}
+    </div>
+
+    <!-- PIE CHARTS PER ROLE -->
+    <div class="prof-pies">
+      ${ROLES.map(role=>{
+        const rg=s.roles[role]||0;const rw=s.wins[role]||0;
+        return `<div class="prof-pie-cell">
+          <div class="prof-pie-label">${RI[role]} ${role.toUpperCase()}</div>
+          ${pie(rg,rw,c)}
+          <div class="prof-pie-games" style="color:var(--silver)">${rg>0?rg+'G':'—'}</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="prof-body">
+
+      ${champArr.length?`
+      <div class="prof-section">
+        <div class="prof-section-title">Zagrane postacie (AI Scan)</div>
+        <div style="overflow-x:auto">
+          <table class="kda-tbl">
+            <thead><tr><th>Postać</th><th>G</th><th>WR%</th><th>K</th><th>D</th><th>A</th><th>KDA</th></tr></thead>
+            <tbody>
+            ${champArr.map(ch=>{
+              const key=ch.ch.replace(/[' ]/g,'').replace(/\./g,'');
+              const kda=ch.d>0?+((ch.k+ch.a)/ch.d).toFixed(2):'∞';
+              const kc=typeof kda==='number'&&kda>=3?'var(--success)':typeof kda==='number'&&kda>=2?'var(--gold)':'var(--silver)';
+              return `<tr>
+                <td style="display:flex;align-items:center;gap:7px">
+                  <div class="champ-card-img"><img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${key}.png" onerror="this.style.display='none'" loading="lazy"></div>
+                  <span style="font-weight:600">${ch.ch}</span>
+                </td>
+                <td>${ch.g}</td>
+                <td style="color:${ch.wr>=60?'var(--success)':ch.wr>=45?'var(--gold)':'var(--danger)'}">${ch.wr}%</td>
+                <td>${ch.k||'—'}</td><td>${ch.d||'—'}</td><td>${ch.a||'—'}</td>
+                <td style="font-weight:700;color:${kc}">${typeof kda==='number'?kda+'x':'∞'}</td>
+              </tr>`;
+            }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`:''}
+
+      ${symA.length?`
+      <div class="prof-section">
+        <div class="prof-section-title">Najlepsza współpraca</div>
+        ${symA.slice(0,5).map(sy=>`<div class="syr"><div class="av av26" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15">${ini(sy.n)}</div><span style="font-size:12px;font-weight:600;min-width:80px">${sy.n}</span><div class="syb"><div style="height:100%;background:var(--success);border-radius:2px;width:${sy.wr}%"></div></div><span class="wp wg">${sy.wr}%</span><span style="font-size:9px;color:var(--silver)">${sy.g}G</span></div>`).join('')}
+        <div class="prof-section-title" style="margin-top:12px">Najtrudniejsi wrogowie</div>
+        ${enmA.slice(0,3).map(sy=>`<div class="syr"><div class="av av26" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15">${ini(sy.n)}</div><span style="font-size:12px;font-weight:600;min-width:80px">${sy.n}</span><div class="syb"><div style="height:100%;background:var(--danger);border-radius:2px;width:${100-sy.wr}%"></div></div><span class="wp wb">${sy.wr}%</span><span style="font-size:9px;color:var(--silver)">${sy.g}G</span></div>`).join('')}
+      </div>`:''}
+
+      <div class="prof-section">
+        <div class="prof-section-title">Aktywne blokady</div>
+        ${myR.length?myR.map(r=>{const ri=restr.indexOf(r);return`<div class="fr"><span style="font-size:13px">${r.type==='teammate'?'👥':'🚫'}</span><span style="font-size:12px">${r.type==='teammate'?`Nie gra z: <b>${r.playerA===n?r.playerB:r.playerA}</b>`:`Nie gra na: <b>${RI[r.role]} ${r.role.toUpperCase()}</b>`}</span><span style="margin-left:auto;cursor:pointer;color:var(--danger);font-size:15px" onclick="removeR(${ri})">×</span></div>`;}).join(''):'<div style="font-size:11px;color:var(--silver)">Brak blokad</div>'}
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <select id="nft" class="ss" onchange="tfui()"><option value="teammate">Gracz</option><option value="role">Rola</option></select>
+          <select id="nfta" class="ss">${AP.filter(x=>x!==n).map(x=>`<option>${x}</option>`).join('')}</select>
+          <select id="nfro" class="ss" style="display:none">${ROLES.map(r=>`<option value="${r}">${RI[r]} ${r.toUpperCase()}</option>`).join('')}</select>
+          <button class="btn" style="padding:5px 12px;font-size:10px" onclick="addF('${n}')">+ Blokada</button>
+        </div>
+      </div>
+
+      <div class="prof-section">
+        <div class="prof-section-title">Historia meczy (${matches.length})</div>
+        ${matches.length?[...matches].reverse().map(m=>{
+          const inB=Object.values(m.blue).includes(n);const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
+          const roleInM=Object.entries(inB?m.blue:m.red).find(([r,x])=>x===n)?.[0]||'?';
+          const teammates=Object.values(inB?m.blue:m.red).filter(x=>x!==n).join(', ');
+          const sr=m.scanResult?.[n];
+          const champStr=sr?.champ?` · <span style="color:var(--gold)">${sr.champ}</span>`:'';
+          const kdaStr=sr?.k!==undefined?` <span style="color:var(--silver);font-size:10px">${sr.k}/${sr.d}/${sr.a}</span>`:'';
+          return `<div class="mr"><div class="mb ${won?'mw':'ml'}">${won?'W':'L'}</div><div style="flex:1"><div style="font-size:12px;font-weight:600">${RI[roleInM]||''} ${roleInM.toUpperCase()}${champStr}${kdaStr}</div><div style="font-size:10px;color:var(--silver)">${m.date} · P${m.patch} · #${m.gid} · z: ${teammates}</div></div><div style="font-size:10px;color:${inB?'#5DADE2':'#E84855'}">${inB?'LEWA':'PRAWA'}</div></div>`;
+        }).join(''):'<div style="font-size:11px;color:var(--silver)">Brak meczy w historii.</div>'}
+      </div>
+
     </div>
   </div>`;
   document.getElementById('nft')?.addEventListener('change',tfui);
+}
+
+function toggleProfSettings(n){
+  const el=document.getElementById(`profSettingsPanel_${n}`);
+  if(el) el.classList.toggle('open');
+}
+
+function saveProfSettings(n){
+  const avatarUrl=document.getElementById(`ps_avatar_${n}`)?.value.trim();
+  const bannerUrl=document.getElementById(`ps_banner_${n}`)?.value.trim();
+  const monsterKey=document.getElementById(`ps_monster_${n}`)?.value;
+  const color=document.getElementById(`ps_color_${n}`)?.value;
+  if(!PLAYER_META[n]) PLAYER_META[n]={};
+  PLAYER_META[n].avatarUrl=avatarUrl||'';
+  PLAYER_META[n].bannerUrl=bannerUrl||'';
+  PLAYER_META[n].monsterKey=monsterKey||'';
+  if(color) PC[n]=color;
+  lsSave();
+  renderProfile(n);
+  renderProfileList();
+  renderPL();
+  toast(`Profil ${n} zaktualizowany!`);
 }
 
 function tfui(){const t=document.getElementById('nft')?.value;if(!t)return;document.getElementById('nfta').style.display=t==='role'?'none':'block';document.getElementById('nfro').style.display=t==='role'?'block':'none';}
@@ -1974,11 +2147,15 @@ function setMode(m){
   document.getElementById('draftHint').style.display=draftMode?'block':'none';
 
   if(draftMode){
-    // Reset draft state, keep random teams intact separately
-    draftTeams={blue:[],red:[]};
+    // Seed draft from current CT if teams already exist
+    if(CT.blue.length && !draftTeams.blue.length && !draftTeams.red.length){
+      draftTeams.blue=CT.blue.map((name,i)=>({name,role:CT.bR[i]||ROLES[i]}));
+      draftTeams.red=CT.red.map((name,i)=>({name,role:CT.rR[i]||ROLES[i]}));
+    }
     renderDraftTeams();
   } else {
-    // Restore normal team render
+    // Sync draft back to CT and render normally
+    if(draftTeams.blue.length) syncDraftToCT();
     renderTS('blue');renderTS('red');
   }
   renderPL();
