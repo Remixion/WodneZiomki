@@ -1314,18 +1314,22 @@ function genDrops(){
 // RANDOMIZE
 // =====================================================================
 function randomizeTeams(){
-  // Use all players in AP — pick 10 if more, or use all if ≤10
-  const pool10=AP.length>=10 ? (() => {
-    let p=[...AP];shuf(p);return p.slice(0,10);
-  })() : [...AP];
-  if(pool10.length<10){toast('Za mało graczy! Potrzebujesz min. 10.');return;}
+  // Collect all players currently in both teams
+  const allDrafted=[...draftTeams.blue,...draftTeams.red].map(p=>p.name);
+  if(allDrafted.length<2){toast('Przeciągnij najpierw graczy do drużyn!');return;}
+  if(allDrafted.length!==10){toast(`Masz ${allDrafted.length}/10 graczy. Uzupełnij skład.`);return;}
 
-  let b=pool10.slice(0,5),r=pool10.slice(5,10);
+  // Shuffle them and split 5/5, respecting teammate restrictions
+  let pool=[...allDrafted];shuf(pool);
+  let b=pool.slice(0,5),r=pool.slice(5,10);
   for(let a=0;a<100;a++){
     let ok=true;
-    for(const rx of restr){if(rx.type==='teammate'&&((b.includes(rx.playerA)&&b.includes(rx.playerB))||(r.includes(rx.playerA)&&r.includes(rx.playerB)))){ok=false;break;}}
-    if(ok)break;shuf(pool10);b=pool10.slice(0,5);r=pool10.slice(5,10);
+    for(const rx of restr){
+      if(rx.type==='teammate'&&((b.includes(rx.playerA)&&b.includes(rx.playerB))||(r.includes(rx.playerA)&&r.includes(rx.playerB)))){ok=false;break;}
+    }
+    if(ok)break;shuf(pool);b=pool.slice(0,5);r=pool.slice(5,10);
   }
+  // Assign roles
   const bR=assignR(b);const rR=assignR(r);
   draftTeams.blue=b.map((name,i)=>({name,role:bR[i]||ROLES[i]}));
   draftTeams.red=r.map((name,i)=>({name,role:rR[i]||ROLES[i]}));
@@ -1333,9 +1337,47 @@ function randomizeTeams(){
   RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};
   assignMonsters();
   syncDraftToCT();
-  renderDraftTeams('blue');renderDraftTeams('red');
+  renderDraftTeams('blue');
+  // slight delay so both animate nicely
+  setTimeout(()=>renderDraftTeams('red'),80);
   renderPL();updateDraftCounts();
-  toast('Drużyny wylosowane!');
+  toast('Drużyny przetasowane!');
+}
+
+function randomizeDraftRoles(){
+  if(!draftTeams.blue.length&&!draftTeams.red.length){toast('Przeciągnij najpierw graczy do drużyn!');return;}
+  // Truly randomize roles per team — shuffle available roles then assign
+  ['blue','red'].forEach(team=>{
+    const players=draftTeams[team].map(p=>p.name);
+    if(!players.length)return;
+    // Get roles available (respecting role restrictions)
+    const availRoles=[...ROLES];shuf(availRoles);
+    const assigned={};
+    // First pass: assign preferred & unrestricted
+    const unassigned=[...players];
+    const usedRoles=[];
+    // Try random shuffle assignment
+    for(let attempt=0;attempt<50;attempt++){
+      shuf(availRoles);
+      let valid=true;
+      const tryAssign={};
+      for(let i=0;i<players.length;i++){
+        const role=availRoles[i];
+        const restricted=restr.find(rx=>rx.type==='role'&&rx.player===players[i]&&rx.role===role);
+        if(restricted){valid=false;break;}
+        tryAssign[i]=role;
+      }
+      if(valid){Object.assign(assigned,tryAssign);break;}
+    }
+    // Fallback if couldn't satisfy all restrictions
+    if(!Object.keys(assigned).length){
+      players.forEach((n,i)=>assigned[i]=ROLES[i]);
+    }
+    draftTeams[team]=players.map((name,i)=>({name,role:assigned[i]||ROLES[i]}));
+  });
+  syncDraftToCT();
+  renderDraftTeams();
+  toast('Role wylosowane!');
 }
 
 function clearAll(){
@@ -2120,16 +2162,6 @@ function pickBestRole(name,available){
   const allowed=available.filter(r=>!restr.find(rx=>rx.type==='role'&&rx.player===name&&rx.role===r));
   const pool=allowed.length?allowed:available;
   return pool.sort((a,b)=>(s.roles[b]||0)-(s.roles[a]||0))[0];
-}
-
-function randomizeDraftRoles(){
-  // Re-randomize roles for each team while respecting restrictions
-  ['blue','red'].forEach(team=>{
-    const players=draftTeams[team].map(p=>p.name);
-    const assigned=assignR(players);
-    draftTeams[team]=players.map((name,i)=>({name,role:assigned[i]||ROLES[i]}));
-  });
-  renderDraftTeams();syncDraftToCT();toast('Role przetasowane!');
 }
 
 function clearDraft(){
