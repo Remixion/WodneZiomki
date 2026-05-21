@@ -353,17 +353,6 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
         <div class="panel-header">Blokady</div>
         <div id="rside" style="padding:9px;max-height:160px;overflow-y:auto"><div style="font-size:11px;color:var(--silver)">Brak.</div></div>
       </div>
-      <!-- LOSOWANIE RÓL przeniesione na lewą stronę -->
-      <div class="panel" style="margin-top:12px">
-        <div class="panel-header">Losowanie ról</div>
-        <div style="padding:9px;display:flex;flex-direction:column;gap:5px">
-          <div class="rtr"><span class="rlbl">⚔ Top</span><div class="toggle on" id="tog-top" onclick="toggleRole('top')"></div></div>
-          <div class="rtr"><span class="rlbl">🌿 Jungle</span><div class="toggle on" id="tog-jng" onclick="toggleRole('jng')"></div></div>
-          <div class="rtr"><span class="rlbl">⚡ Mid</span><div class="toggle on" id="tog-mid" onclick="toggleRole('mid')"></div></div>
-          <div class="rtr"><span class="rlbl">🏹 ADC</span><div class="toggle on" id="tog-adc" onclick="toggleRole('adc')"></div></div>
-          <div class="rtr"><span class="rlbl">🛡 Support</span><div class="toggle on" id="tog-supp" onclick="toggleRole('supp')"></div></div>
-        </div>
-      </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div class="team-display tb" id="blueTeamWrap">
@@ -649,7 +638,7 @@ function buildPS(){
 let PS=buildPS();
 let AP=Object.keys(PS).sort();
 let restr=[];
-let roleOn={top:true,jng:true,mid:true,adc:true,supp:true};
+// roleOn removed — all roles always enabled
 let sel=[];
 let CT={blue:[],red:[],bR:{},rR:{}};
 let CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
@@ -762,6 +751,7 @@ function renderTS(t, animate){
     const delay=animate?(i*0.09+0.05)+'s':'0s';
     return `<div class="cs ${animate?'cs-waterfall':''}" style="${animate?`animation-delay:${delay}`:''}" data-t="${t}" data-i="${i}">
       <div class="cb ${isMonster?'cb-monster':''}" style="${bgStyle}"></div>
+      ${isMonster?`<div style="position:absolute;inset:0;background:${c}44;mix-blend-mode:color;pointer-events:none;z-index:1"></div>`:''}
       <div class="co"></div>
       <div class="cs-water ${animate?'flowing':''}" style="${animate?`animation-delay:${delay}`:''}"></div>
       <div class="cs-drops ${animate?'flowing':''}" style="${animate?`animation-delay:${delay}`:''}">
@@ -1449,8 +1439,8 @@ function renderRAP(){
 function randomizeChamps(){
   RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};const used=[];
   ROLES.forEach((role,i)=>{
-    if(roleOn[role]){const bc=pch(role,used);used.push(bc);CC.blue[i]=bc;const rc=pch(role,used);used.push(rc);CC.red[i]=rc;}
-    else{CC.blue[i]=null;CC.red[i]=null;}
+    const bc=pch(role,used);used.push(bc);CC.blue[i]=bc;
+    const rc=pch(role,used);used.push(rc);CC.red[i]=rc;
   });
   if(CT.blue.length){renderTS('blue');renderTS('red');}toast('Postacie wylosowane!');
 }
@@ -1458,11 +1448,9 @@ function randomizeChamps(){
 function pch(role,exc){const pool=CHAMPS[role].filter(c=>!exc.includes(c));return pool[Math.floor(Math.random()*pool.length)]||CHAMPS[role][0];}
 
 function rerollC(t,i,role,e){
-  e.stopPropagation();if(RR[t][i]>=MXR){toast('Brak rerollów!');return;}if(!roleOn[role]){toast('Rola wyłączona!');return;}
+  e.stopPropagation();if(RR[t][i]>=MXR){toast('Brak rerollów!');return;}
   RR[t][i]++;const all=[...CC.blue,...CC.red].filter(c=>c);CC[t][i]=pch(role,all);renderTS(t);toast(`Reroll ${RR[t][i]}/${MXR}`);
 }
-
-function toggleRole(r){roleOn[r]=!roleOn[r];document.getElementById('tog-'+r).classList.toggle('on',roleOn[r]);}
 
 function renderRS(){
   const el=document.getElementById('rside');
@@ -2064,7 +2052,7 @@ function addPlayerToDraft(name,team){
   const available=ROLES.filter(r=>!usedRoles.includes(r));
   const role=pickBestRole(name,available);
   draftTeams[team].push({name,role});
-  renderDraftTeams();
+  renderDraftTeams(team);
   renderPL();
   updateDraftCounts();
   syncDraftToCT();
@@ -2091,7 +2079,7 @@ function addPlayerToDraftSlot(name,team,slotIdx){
   // Remove whoever was in that slot
   draftTeams[team]=draftTeams[team].filter(p=>p.role!==targetRole);
   draftTeams[team].push({name,role:targetRole});
-  renderDraftTeams();
+  renderDraftTeams(team);
   renderPL();
   updateDraftCounts();
   syncDraftToCT();
@@ -2144,10 +2132,9 @@ function syncDraftToCT(){
 }
 
 // ── RENDER DRAFT TEAMS ────────────────────────────────────────────────
-function renderDraftTeams(){
+function renderDraftTeams(animateTeam){
   ['blue','red'].forEach(team=>{
-    renderDraftTeamGrid(team);
-    // re-attach drop listeners to the team wrapper
+    renderDraftTeamGrid(team, team===animateTeam);
     const wrap=document.getElementById(team+'TeamWrap');
     wrap.ondragover=e=>onDragOverTeam(e,team);
     wrap.ondragleave=e=>onDragLeaveTeam(e,team);
@@ -2155,9 +2142,8 @@ function renderDraftTeams(){
   });
 }
 
-function renderDraftTeamGrid(team){
+function renderDraftTeamGrid(team, animate){
   const el=document.getElementById(team+'Team');
-  // Build map role→entry for placed players
   const placed={};
   draftTeams[team].forEach(p=>placed[p.role]=p.name);
 
@@ -2165,22 +2151,42 @@ function renderDraftTeamGrid(team){
     const name=placed[role]||null;
     const c=name?(PC[name]||'#C8AA6E'):'#4A6A8A';
     const ch=CC[team][i]||null;
-    const monster=slotMonsters[team][i]||JUNGLE_MONSTERS[0];
-    const bgStyle=name?(ch?`background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${ch.replace(/[' ]/g,'').replace(/\./g,'')}_0.jpg')`:`background-image:url('${monster}')`):'' ;
-    const isMonster=name&&!ch;
 
-    return `<div class="cs draft-cs" id="ds_${team}_${i}"
+    let bgStyle='';let isMonster=false;
+    if(name){
+      if(ch){
+        const key=ch.replace(/[' ]/g,'').replace(/\./g,'');
+        bgStyle=`background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${key}_0.jpg')`;
+      } else {
+        const mkey=slotMonsters[team][i]||MONSTER_KEYS[0];
+        bgStyle=`background-image:url('${pickMonsterUrl(mkey)}')`;
+        isMonster=true;
+      }
+    }
+
+    // Player color tint overlay for monsters
+    const tintStyle=isMonster?`background:${c}33`:'';//  ~20% opacity color tint
+
+    const delay=animate?(i*0.09+0.05)+'s':'0s';
+
+    return `<div class="cs draft-cs ${animate?'cs-waterfall':''}" id="ds_${team}_${i}"
+      style="${animate?`animation-delay:${delay}`:''}"
       ondragover="onDragOverSlot(event,'${team}',${i})"
       ondragleave="onDragLeaveSlot(event,'${team}',${i})"
       ondrop="onDropSlot(event,'${team}',${i})"
     >
       <div class="cb ${isMonster?'cb-monster':''}" style="${bgStyle}"></div>
+      ${isMonster?`<div style="position:absolute;inset:0;background:${c}44;mix-blend-mode:color;pointer-events:none;z-index:1"></div>`:''}
       <div class="co"></div>
+      <div class="cs-water ${animate?'flowing':''}" style="${animate?`animation-delay:${delay}`:''}"></div>
+      <div class="cs-drops ${animate?'flowing':''}" style="${animate?`animation-delay:${delay}`:''}">
+        ${animate?genDrops():''}
+      </div>
       <div class="ci">
         <div class="cri" style="color:${c}">${RI[role]}</div>
         ${name
           ? `<div class="cn">${ch||'—'}</div><div class="cp" style="color:${c}">${name}</div>`
-          : `<div class="cn" style="color:rgba(160,180,200,0.4);font-size:11px">UPUŚĆ</div><div class="cp" style="color:rgba(160,180,200,0.3)">${role.toUpperCase()}</div>`
+          : `<div class="cn" style="color:rgba(160,180,200,0.35);font-size:11px">UPUŚĆ</div><div class="cp" style="color:rgba(160,180,200,0.25)">${role.toUpperCase()}</div>`
         }
       </div>
       ${name?`<div class="remove-player" onclick="removeFromDraft('${name}','${team}')">✕</div>`:''}
