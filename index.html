@@ -7,7 +7,7 @@
 <meta property="og:title" content="Rift Draft">
 <meta property="og:description" content="Losowanie drużyn, tryb draft, statystyki graczy i historia meczy — wszystko w przeglądarce.">
 <meta property="og:type" content="website">
-<title>Rift Draft — Custom Mecze</title>
+<title>Wodne Customy</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#C8AA6E;--gold-light:#F0E6D3;--gold-dark:#785A28;--blue-deep:#050E1A;--blue-mid:#0F2044;--blue-bright:#0BC4E3;--teal:#00BCD4;--silver:#A0B4C8;--white:#EEF0F3;--danger:#E84855;--success:#1DE9B6;--warn:#F39C12;--panel:rgba(8,18,36,0.93);--border:rgba(200,170,110,0.28);--border-bright:rgba(200,170,110,0.65)}
@@ -359,10 +359,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
 <nav>
   <div class="nav-logo">
     <svg viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="11" stroke="#C8AA6E" stroke-width="1.2"/><path d="M13 3L16.5 9L23 10.5L18.5 15.5L19.5 22L13 19L6.5 22L7.5 15.5L3 10.5L9.5 9Z" fill="#C8AA6E" opacity="0.65"/><circle cx="13" cy="13" r="3" fill="#C8AA6E"/></svg>
-    RIFT&nbsp;DRAFT
+    WODNE&nbsp;CUSTOMY
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('randomizer',this)">Losowanie</button>
+    <button class="nav-tab active" onclick="showPage('randomizer',this)">Skład</button>
     <button class="nav-tab" onclick="showPage('profiles',this)">Profile</button>
     <button class="nav-tab" onclick="showPage('stats',this)">Statystyki</button>
     <button class="nav-tab" onclick="showPage('history',this)">Historia</button>
@@ -378,56 +378,73 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
 <!-- RANDOMIZER -->
 <div class="page active" id="page-randomizer">
   <div class="main-grid">
+
+    <!-- LEFT: player pool -->
     <div>
       <div class="panel">
-        <div class="panel-header">Gracze <span id="sc" style="font-size:10px;color:var(--silver)">0/10</span>
+        <div class="panel-header">
+          Gracze
+          <span id="sc" style="font-size:10px;color:var(--silver)">0/10</span>
           <button class="btn sbtn" style="padding:2px 10px;font-size:10px;margin-left:auto" onclick="openAddPlayer()">+ Dodaj</button>
-        </div>
-        <!-- MODE SWITCH -->
-        <div class="mode-switch">
-          <button class="mode-btn active" id="modeRandom" onclick="setMode('random')">🎲 Losowanie</button>
-          <button class="mode-btn" id="modeDraft" onclick="setMode('draft')">✋ Draft</button>
         </div>
         <div style="padding:7px 10px;border-bottom:1px solid var(--border)">
           <input id="plSearch" class="ss" style="width:100%;padding:5px 9px 5px 28px;font-size:12px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0B4C8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:8px center" placeholder="Szukaj gracza..." oninput="renderPL()">
         </div>
-        <div id="playerList" style="max-height:370px;overflow-y:auto"></div>
-        <!-- DRAFT MODE HINT -->
-        <div id="draftHint" style="display:none;padding:10px 12px;font-size:11px;color:var(--teal);border-top:1px solid var(--border);line-height:1.6">
-          ✋ Przeciągnij gracza na slot drużyny.<br>
-          <span style="color:var(--silver)">Rola zostanie wylosowana automatycznie.</span>
+        <div id="playerList" style="max-height:420px;overflow-y:auto"></div>
+        <div style="padding:9px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--teal);line-height:1.6">
+          ✋ Przeciągnij gracza na slot drużyny
         </div>
       </div>
-      <!-- BLOKADY przeniesione na lewą stronę -->
       <div class="panel" style="margin-top:12px">
         <div class="panel-header">Blokady</div>
-        <div id="rside" style="padding:9px;max-height:160px;overflow-y:auto"><div style="font-size:11px;color:var(--silver)">Brak.</div></div>
+        <div id="rside" style="padding:9px;max-height:150px;overflow-y:auto">
+          <div style="font-size:11px;color:var(--silver)">Brak.</div>
+        </div>
       </div>
     </div>
+
+    <!-- CENTER: teams + controls -->
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div class="team-display tb" id="blueTeamWrap">
+
+      <!-- ACTION BUTTONS ROW -->
+      <div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:center;padding:4px 0">
+        <button class="btn" onclick="randomizeDraftRoles()" title="Losuje tylko role dla już przypisanych graczy — można klikać wielokrotnie">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+          Losuj role
+        </button>
+        <button class="btn primary" onclick="randomizeTeams()" title="Losuje wszystko — przypisuje graczy do drużyn i role">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+          Losuj drużyny
+        </button>
+        <button class="btn" onclick="randomizeChamps()" title="Losuje postacie dla każdej roli">
+          🎲 Losuj postacie
+        </button>
+        <button class="btn sbtn" onclick="copyToDiscord()">📋 Discord</button>
+        <button class="btn" onclick="openSave()">💾 Zapisz wynik</button>
+        <button class="btn dbtn" onclick="clearAll()" style="padding:8px 12px">✕</button>
+      </div>
+
+      <!-- BLUE TEAM -->
+      <div class="team-display tb" id="blueTeamWrap"
+        ondragover="onDragOverTeam(event,'blue')"
+        ondragleave="onDragLeaveTeam(event,'blue')"
+        ondrop="onDropTeam(event,'blue')">
         <div class="team-hdr">
           <span class="team-title">◆ DRUŻYNA LEWA</span>
           <span id="blueCount" style="font-size:10px;color:var(--silver)"></span>
         </div>
         <div class="cg" id="blueTeam"></div>
       </div>
+
       <div class="cctrl">
         <div class="vs">VS</div>
-        <div id="ctrlRandom" class="ctr">
-          <button class="btn primary" onclick="randomizeTeams()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>Losuj drużyny</button>
-          <button class="btn" onclick="randomizeChamps()">🎲 Losuj postacie</button>
-        </div>
-        <div id="ctrlDraft" class="ctr" style="display:none">
-          <button class="btn" onclick="randomizeDraftRoles()">🎲 Losuj role</button>
-          <button class="btn dbtn" onclick="clearDraft()">✕ Wyczyść</button>
-        </div>
-        <div class="ctr">
-          <button class="btn sbtn" onclick="copyToDiscord()">📋 Kopiuj Discord</button>
-          <button class="btn" onclick="openSave()">💾 Zapisz wynik</button>
-        </div>
       </div>
-      <div class="team-display tr" id="redTeamWrap">
+
+      <!-- RED TEAM -->
+      <div class="team-display tr" id="redTeamWrap"
+        ondragover="onDragOverTeam(event,'red')"
+        ondragleave="onDragLeaveTeam(event,'red')"
+        ondrop="onDropTeam(event,'red')">
         <div class="team-hdr">
           <span class="team-title">◆ DRUŻYNA PRAWA</span>
           <span id="redCount" style="font-size:10px;color:var(--silver)"></span>
@@ -435,6 +452,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
         <div class="cg" id="redTeam"></div>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -697,11 +715,10 @@ let CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
 let RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};
 const MXR=3;
 let PW=null,selPr=null,devMode=false;
-// Draft mode state
-let draftMode=false;
-// draftTeams: {blue: [{name, role},...], red: [{name, role},...]}
+// Unified drag & drop mode (always on)
+const draftMode=true;
 let draftTeams={blue:[],red:[]};
-let draggedPlayer=null; // name being dragged
+let draggedPlayer=null;
 
 // =====================================================================
 // INIT
@@ -711,9 +728,10 @@ function init(){
   PS=buildPS();
   AP=Object.keys(PS).sort();
   assignMonsters();
-  renderPL();renderProfileList();renderTS('blue');renderTS('red');renderRS();renderStats();renderHist();renderAliases();buildScanGrid();
+  renderPL();renderProfileList();
+  renderDraftTeams();
+  renderRS();renderStats();renderHist();renderAliases();buildScanGrid();
   updateDraftCounts();
-  // fetch latest data from GitHub in background
   ghAutoFetch();
 }
 
@@ -725,53 +743,37 @@ function renderPL(){
   const q=(document.getElementById('plSearch')?.value||'').toLowerCase().trim();
   const list=q ? AP.filter(n=>n.toLowerCase().includes(q)||getGameNick(n).toLowerCase().includes(q)) : AP;
 
-  if(draftMode){
-    // In draft mode: show who is already placed
-    const placed=[...draftTeams.blue,...draftTeams.red].map(p=>p.name);
-    el.innerHTML=list.map(n=>{
-      const inBlue=draftTeams.blue.some(p=>p.name===n);
-      const inRed=draftTeams.red.some(p=>p.name===n);
-      const isPlaced=inBlue||inRed;
-      const c=PC[n]||'#C8AA6E';
-      const s=PS[n];const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const wr=g>0?Math.round(Object.values(s.wins).reduce((a,b)=>a+b,0)/g*100):0;
-      return `<div class="pi ${isPlaced?'sel':''}"
-        draggable="${!isPlaced}"
-        ondragstart="onDragStart(event,'${n}')"
-        ondragend="onDragEnd(event)"
-        style="${isPlaced?'opacity:0.45;cursor:default':''}"
-      >
-        <div class="av av32" style="border-color:${c}55;color:${c};background:${c}15">${ini(n)}</div>
-        <div style="flex:1;min-width:0">
-          <div class="pname">${n}</div>
-          <div class="psub">${g}G · ${wr}%WR</div>
-        </div>
-        ${inBlue?`<span style="font-size:10px;color:#5DADE2;font-weight:700;letter-spacing:1px">LEWA</span>`:''}
-        ${inRed?`<span style="font-size:10px;color:#E84855;font-weight:700;letter-spacing:1px">PRAWA</span>`:''}
-      </div>`;
-    }).join('');
-    document.getElementById('sc').textContent=`${draftTeams.blue.length+draftTeams.red.length}/10`;
-  } else {
-    el.innerHTML=list.map(n=>{
-      const s=PS[n];const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const w=Object.values(s.wins).reduce((a,b)=>a+b,0);
-      const wr=g>0?Math.round(w/g*100):0;const isSel=sel.includes(n);const c=PC[n]||'#C8AA6E';
-      const gn=getGameNick(n);const showAlias=gn!==n;
-      return `<div class="pi ${isSel?'sel':''}" onclick="toggleSel('${n}')">
-        <div class="av av32" style="border-color:${c}55;color:${c};background:${c}15">${ini(n)}</div>
-        <div style="flex:1;min-width:0">
-          <div class="pname">${n}</div>
-          ${showAlias?`<div class="pgame">${gn}</div>`:''}
-          <div class="psub">${g}G · ${wr}%WR</div>
-        </div>
-        ${isSel?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`:''}
-        <span title="Edytuj" style="color:rgba(200,170,110,0.45);cursor:pointer;font-size:13px;padding:2px 3px;flex-shrink:0;transition:color 0.2s" onmouseenter="this.style.color='var(--gold)'" onmouseleave="this.style.color='rgba(200,170,110,0.45)'" onclick="event.stopPropagation();openAddPlayer('${n}')">✎</span>
-        <span class="pi-del" title="Usuń" onclick="deletePlayer('${n}',event)">✕</span>
-      </div>`;
-    }).join('');
-    document.getElementById('sc').textContent=`${sel.length}/10`;
-  }
+  const placed=[...draftTeams.blue,...draftTeams.red].map(p=>p.name);
+  el.innerHTML=list.map(n=>{
+    const inBlue=draftTeams.blue.some(p=>p.name===n);
+    const inRed=draftTeams.red.some(p=>p.name===n);
+    const isPlaced=inBlue||inRed;
+    const c=PC[n]||'#C8AA6E';
+    const s=PS[n];
+    const g=Object.values(s.roles).reduce((a,b)=>a+b,0);
+    const wr=g>0?Math.round(Object.values(s.wins).reduce((a,b)=>a+b,0)/g*100):0;
+    const gn=getGameNick(n);
+    return `<div class="pi ${isPlaced?'sel':''}"
+      draggable="${!isPlaced}"
+      ondragstart="onDragStart(event,'${n}')"
+      ondragend="onDragEnd(event)"
+      style="${isPlaced?'opacity:0.5;cursor:default':''}"
+    >
+      <div class="av av32" style="border-color:${c}55;color:${c};background:${c}15">${ini(n)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="pname">${n}${gn!==n?` <span style='color:var(--teal);font-size:9px'>(${gn})</span>`:''}</div>
+        <div class="psub">${g}G · ${wr}%WR</div>
+      </div>
+      ${inBlue?`<span style="font-size:9px;color:#5DADE2;font-weight:700;flex-shrink:0">LEWA</span>`:''}
+      ${inRed?`<span style="font-size:9px;color:#E84855;font-weight:700;flex-shrink:0">PRAWA</span>`:''}
+      ${!isPlaced?`<span title="Edytuj" style="color:rgba(200,170,110,0.4);cursor:pointer;font-size:13px;padding:2px 3px;flex-shrink:0" onmouseenter="this.style.color='var(--gold)'" onmouseleave="this.style.color='rgba(200,170,110,0.4)'" onclick="event.stopPropagation();openAddPlayer('${n}')">✎</span>
+      <span class="pi-del" title="Usuń" onclick="deletePlayer('${n}',event)">✕</span>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('sc').textContent=`${draftTeams.blue.length+draftTeams.red.length}/10`;
 }
 
-function toggleSel(n){if(draftMode)return;const i=sel.indexOf(n);if(i>=0)sel.splice(i,1);else if(sel.length<10)sel.push(n);renderPL();}
+function toggleSel(n){}
 
 // =====================================================================
 // TEAM SLOTS
@@ -1312,18 +1314,37 @@ function genDrops(){
 // RANDOMIZE
 // =====================================================================
 function randomizeTeams(){
-  if(sel.length!==10){toast('Wybierz dokładnie 10 graczy!');return;}
-  let pool=[...sel];shuf(pool);let b=pool.slice(0,5),r=pool.slice(5,10);
+  // Use all players in AP — pick 10 if more, or use all if ≤10
+  const pool10=AP.length>=10 ? (() => {
+    let p=[...AP];shuf(p);return p.slice(0,10);
+  })() : [...AP];
+  if(pool10.length<10){toast('Za mało graczy! Potrzebujesz min. 10.');return;}
+
+  let b=pool10.slice(0,5),r=pool10.slice(5,10);
   for(let a=0;a<100;a++){
     let ok=true;
     for(const rx of restr){if(rx.type==='teammate'&&((b.includes(rx.playerA)&&b.includes(rx.playerB))||(r.includes(rx.playerA)&&r.includes(rx.playerB)))){ok=false;break;}}
-    if(ok)break;shuf(pool);b=pool.slice(0,5);r=pool.slice(5,10);
+    if(ok)break;shuf(pool10);b=pool10.slice(0,5);r=pool10.slice(5,10);
   }
-  CT.blue=b;CT.red=r;CT.bR=assignR(b);CT.rR=assignR(r);
-  RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};
+  const bR=assignR(b);const rR=assignR(r);
+  draftTeams.blue=b.map((name,i)=>({name,role:bR[i]||ROLES[i]}));
+  draftTeams.red=r.map((name,i)=>({name,role:rR[i]||ROLES[i]}));
   CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
+  RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};
   assignMonsters();
-  renderTS('blue',true);renderTS('red',true);renderRAP();toast('Drużyny wylosowane!');
+  syncDraftToCT();
+  renderDraftTeams('blue');renderDraftTeams('red');
+  renderPL();updateDraftCounts();
+  toast('Drużyny wylosowane!');
+}
+
+function clearAll(){
+  draftTeams={blue:[],red:[]};
+  CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
+  RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};
+  assignMonsters();
+  renderDraftTeams();renderPL();updateDraftCounts();
+  toast('Wyczyszczono!');
 }
 
 function assignR(players){
@@ -1341,13 +1362,7 @@ function assignR(players){
   return res;
 }
 
-function renderRAP(){
-  let h='<div style="margin-bottom:5px;font-size:9px;color:#5DADE2;letter-spacing:2px">LEWA</div>';
-  CT.blue.forEach((n,i)=>{const role=CT.bR[i]||ROLES[i];const c=PC[n]||'#C8AA6E';h+=`<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(200,170,110,0.05)"><span style="color:${c};font-size:12px;font-weight:600">${n}</span><span style="color:var(--silver);font-size:10px">${RI[role]} ${role.toUpperCase()}</span></div>`;});
-  h+='<div style="margin:6px 0 4px;font-size:9px;color:#E84855;letter-spacing:2px">PRAWA</div>';
-  CT.red.forEach((n,i)=>{const role=CT.rR[i]||ROLES[i];const c=PC[n]||'#C8AA6E';h+=`<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(200,170,110,0.05)"><span style="color:${c};font-size:12px;font-weight:600">${n}</span><span style="color:var(--silver);font-size:10px">${RI[role]} ${role.toUpperCase()}</span></div>`;});
-  document.getElementById('rap').innerHTML=h;
-}
+function renderRAP(){} // removed — no separate role panel in unified mode
 
 function randomizeChamps(){
   RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};const used=[];
@@ -1355,14 +1370,15 @@ function randomizeChamps(){
     const bc=pch(role,used);used.push(bc);CC.blue[i]=bc;
     const rc=pch(role,used);used.push(rc);CC.red[i]=rc;
   });
-  if(CT.blue.length){renderTS('blue');renderTS('red');}toast('Postacie wylosowane!');
+  if(draftTeams.blue.length){renderDraftTeams();}toast('Postacie wylosowane!');
 }
 
 function pch(role,exc){const pool=CHAMPS[role].filter(c=>!exc.includes(c));return pool[Math.floor(Math.random()*pool.length)]||CHAMPS[role][0];}
 
 function rerollC(t,i,role,e){
   e.stopPropagation();if(RR[t][i]>=MXR){toast('Brak rerollów!');return;}
-  RR[t][i]++;const all=[...CC.blue,...CC.red].filter(c=>c);CC[t][i]=pch(role,all);renderTS(t);toast(`Reroll ${RR[t][i]}/${MXR}`);
+  RR[t][i]++;const all=[...CC.blue,...CC.red].filter(c=>c);CC[t][i]=pch(role,all);
+  renderDraftTeamGrid(t);toast(`Reroll ${RR[t][i]}/${MXR}`);
 }
 
 function renderRS(){
@@ -1374,28 +1390,18 @@ function renderRS(){
 function removeR(i){restr.splice(i,1);renderRS();if(selPr)renderProfile(selPr);lsSave();}
 
 function copyToDiscord(){
-  if(!CT.blue.length){toast('Najpierw wylosuj drużyny!');return;}
-
-  // Build role→player maps sorted by ROLES order
+  if(!draftTeams.blue.length){toast('Najpierw przypisz graczy do drużyn!');return;}
   const blueByRole={}, redByRole={};
-  CT.blue.forEach((n,i)=>{ const role=CT.bR[i]||ROLES[i]; blueByRole[role]={name:n,champ:CC.blue[i]}; });
-  CT.red.forEach((n,i)=>{ const role=CT.rR[i]||ROLES[i]; redByRole[role]={name:n,champ:CC.red[i]}; });
-
+  draftTeams.blue.forEach(p=>{ blueByRole[p.role]={name:p.name,champ:CC.blue[ROLES.indexOf(p.role)]}; });
+  draftTeams.red.forEach(p=>{ redByRole[p.role]={name:p.name,champ:CC.red[ROLES.indexOf(p.role)]}; });
   let txt='🔵 **DRUŻYNA LEWA**\n';
-  ROLES.forEach(role=>{
-    const p=blueByRole[role]; if(!p)return;
-    txt+=`${RI[role]} **${role.toUpperCase()}** ${p.name}${p.champ?' — '+p.champ:''}\n`;
-  });
+  ROLES.forEach(role=>{ const p=blueByRole[role];if(!p)return;txt+=`${RI[role]} **${role.toUpperCase()}** ${p.name}${p.champ?' — '+p.champ:''}\n`; });
   txt+='\nvs\n\n🔴 **DRUŻYNA PRAWA**\n';
-  ROLES.forEach(role=>{
-    const p=redByRole[role]; if(!p)return;
-    txt+=`${RI[role]} **${role.toUpperCase()}** ${p.name}${p.champ?' — '+p.champ:''}\n`;
-  });
-
+  ROLES.forEach(role=>{ const p=redByRole[role];if(!p)return;txt+=`${RI[role]} **${role.toUpperCase()}** ${p.name}${p.champ?' — '+p.champ:''}\n`; });
   navigator.clipboard.writeText(txt).then(()=>toast('Skopiowano!')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Skopiowano!');});
 }
 
-function openSave(){if(!CT.blue.length){toast('Najpierw wylosuj drużyny!');return;}PW=null;document.getElementById('wbB').style.borderColor='var(--border)';document.getElementById('wbR').style.borderColor='var(--border)';document.getElementById('saveModal').style.display='flex';}
+function openSave(){if(!draftTeams.blue.length){toast('Najpierw przypisz graczy do drużyn!');return;}PW=null;document.getElementById('wbB').style.borderColor='var(--border)';document.getElementById('wbR').style.borderColor='var(--border)';document.getElementById('saveModal').style.display='flex';}
 function closeSave(){document.getElementById('saveModal').style.display='none';}
 function setW(s){PW=s;document.getElementById('wbB').style.borderColor=s==='LEWA'?'var(--teal)':'var(--border)';document.getElementById('wbR').style.borderColor=s==='PRAWA'?'var(--danger)':'var(--border)';}
 
@@ -1404,7 +1410,8 @@ function saveGame(){
   const patch=document.getElementById('pi').value||'?';
   const date=new Date().toISOString().split('T')[0];
   const blue={},red={};
-  ROLES.forEach((role,i)=>{blue[CT.bR[i]||role]=CT.blue[i];red[CT.rR[i]||role]=CT.red[i];});
+  draftTeams.blue.forEach(p=>blue[p.role]=p.name);
+  draftTeams.red.forEach(p=>red[p.role]=p.name);
   MH.push({gid:String(MH.length+1),patch,date,win:PW,blue,red});
   PS=buildPS();AP=Object.keys(PS).sort();
   closeSave();renderHist();renderStats();renderPL();if(selPr)renderProfile(selPr);
@@ -1864,11 +1871,23 @@ function renderDev(){
 }
 function applyDev(){
   ROLES.forEach((role,i)=>{
-    const bP=document.getElementById(`dp_blue_${i}`)?.value;const rP=document.getElementById(`dp_red_${i}`)?.value;
-    const bC=document.getElementById(`dc_blue_${i}`)?.value;const rC=document.getElementById(`dc_red_${i}`)?.value;
-    if(bP)CT.blue[i]=bP;if(rP)CT.red[i]=rP;CC.blue[i]=bC||null;CC.red[i]=rC||null;
+    const bP=document.getElementById(`dp_blue_${i}`)?.value;
+    const rP=document.getElementById(`dp_red_${i}`)?.value;
+    const bC=document.getElementById(`dc_blue_${i}`)?.value;
+    const rC=document.getElementById(`dc_red_${i}`)?.value;
+    if(bP){
+      const existing=draftTeams.blue.find(p=>p.role===role);
+      if(existing)existing.name=bP;else draftTeams.blue.push({name:bP,role});
+    }
+    if(rP){
+      const existing=draftTeams.red.find(p=>p.role===role);
+      if(existing)existing.name=rP;else draftTeams.red.push({name:rP,role});
+    }
+    CC.blue[i]=bC||null;CC.red[i]=rC||null;
   });
-  renderTS('blue');renderTS('red');toast('Zmiany zastosowane!');
+  syncDraftToCT();
+  renderDraftTeams();renderPL();updateDraftCounts();
+  toast('Zmiany zastosowane!');
 }
 
 // =====================================================================
@@ -1987,29 +2006,7 @@ function deletePlayer(name,e){
 // =====================================================================
 // DRAFT MODE
 // =====================================================================
-function setMode(m){
-  draftMode=(m==='draft');
-  document.getElementById('modeRandom').classList.toggle('active',!draftMode);
-  document.getElementById('modeDraft').classList.toggle('active',draftMode);
-  document.getElementById('ctrlRandom').style.display=draftMode?'none':'flex';
-  document.getElementById('ctrlDraft').style.display=draftMode?'flex':'none';
-  document.getElementById('draftHint').style.display=draftMode?'block':'none';
-
-  if(draftMode){
-    // Seed draft from current CT if teams already exist
-    if(CT.blue.length && !draftTeams.blue.length && !draftTeams.red.length){
-      draftTeams.blue=CT.blue.map((name,i)=>({name,role:CT.bR[i]||ROLES[i]}));
-      draftTeams.red=CT.red.map((name,i)=>({name,role:CT.rR[i]||ROLES[i]}));
-    }
-    renderDraftTeams();
-  } else {
-    // Sync draft back to CT and render normally
-    if(draftTeams.blue.length) syncDraftToCT();
-    renderTS('blue');renderTS('red');
-  }
-  renderPL();
-  updateDraftCounts();
-}
+function setMode(m){} // unified mode — no-op
 
 // ── DRAG EVENTS ──────────────────────────────────────────────────────
 function onDragStart(e,name){
