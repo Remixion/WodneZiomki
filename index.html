@@ -645,6 +645,8 @@ window.GH_CONFIG = window.GH_CONFIG || {
   branch: 'main',
   path:   'data.js'
 };
+// Fallback globals in case data.js loads after this script runs
+window.PLAYER_META = window.PLAYER_META || {};
 </script>
 <script src="data.js?v=2"></script>
 <script>
@@ -832,34 +834,27 @@ const JUNGLE_MONSTERS_SVG = {
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
     <ellipse cx="150" cy="240" rx="100" ry="80" fill="url(#glow)"/>
-    <!-- tentacles -->
     <path d="M80 320 Q40 260 70 200 Q90 170 80 140" stroke="#6d28d9" stroke-width="12" fill="none" stroke-linecap="round"/>
     <path d="M100 330 Q60 280 85 230 Q105 200 95 160" stroke="#7c3aed" stroke-width="10" fill="none" stroke-linecap="round"/>
     <path d="M220 320 Q260 260 230 200 Q210 170 220 140" stroke="#6d28d9" stroke-width="12" fill="none" stroke-linecap="round"/>
     <path d="M200 330 Q240 280 215 230 Q195 200 205 160" stroke="#7c3aed" stroke-width="10" fill="none" stroke-linecap="round"/>
-    <!-- body -->
     <ellipse cx="150" cy="220" rx="75" ry="90" fill="#1e1035"/>
     <ellipse cx="150" cy="220" rx="70" ry="85" fill="none" stroke="#6d28d9" stroke-width="2"/>
-    <!-- segments -->
     <path d="M82 200 Q150 210 218 200" stroke="#6d28d9" stroke-width="1.5" fill="none" opacity="0.6"/>
     <path d="M78 230 Q150 242 222 230" stroke="#6d28d9" stroke-width="1.5" fill="none" opacity="0.6"/>
     <path d="M85 260 Q150 272 215 260" stroke="#6d28d9" stroke-width="1.5" fill="none" opacity="0.6"/>
-    <!-- head -->
     <ellipse cx="150" cy="155" rx="55" ry="45" fill="#16082a"/>
     <ellipse cx="150" cy="155" rx="52" ry="42" fill="none" stroke="#7c3aed" stroke-width="2"/>
-    <!-- eyes — 6 eyes -->
     <circle cx="120" cy="148" r="9" fill="#0f0520"/><circle cx="120" cy="148" r="7" fill="#a855f7"/><circle cx="120" cy="148" r="3" fill="#e9d5ff"/>
     <circle cx="150" cy="140" r="9" fill="#0f0520"/><circle cx="150" cy="140" r="7" fill="#a855f7"/><circle cx="150" cy="140" r="3" fill="#e9d5ff"/>
     <circle cx="180" cy="148" r="9" fill="#0f0520"/><circle cx="180" cy="148" r="7" fill="#a855f7"/><circle cx="180" cy="148" r="3" fill="#e9d5ff"/>
     <circle cx="128" cy="165" r="6" fill="#0f0520"/><circle cx="128" cy="165" r="5" fill="#7c3aed"/>
     <circle cx="150" cy="168" r="6" fill="#0f0520"/><circle cx="150" cy="168" r="5" fill="#7c3aed"/>
     <circle cx="172" cy="165" r="6" fill="#0f0520"/><circle cx="172" cy="165" r="5" fill="#7c3aed"/>
-    <!-- void particles -->
     <circle cx="110" cy="300" r="3" fill="#a855f7" opacity="0.6"/>
     <circle cx="190" cy="280" r="2" fill="#7c3aed" opacity="0.5"/>
     <circle cx="60" cy="180" r="2.5" fill="#c4b5fd" opacity="0.4"/>
     <circle cx="240" cy="190" r="2" fill="#c4b5fd" opacity="0.4"/>
-    <!-- claws -->
     <path d="M90 290 L70 310 M90 290 L75 325 M90 290 L95 325" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/>
     <path d="M210 290 L230 310 M210 290 L225 325 M210 290 L205 325" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/>
   </svg>`),
@@ -871,45 +866,32 @@ const JUNGLE_MONSTERS_SVG = {
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
     <ellipse cx="150" cy="280" rx="120" ry="60" fill="url(#fireglow)"/>
-    <!-- wings -->
     <path d="M150 200 L40 100 L80 200 Z" fill="#7f1d1d" opacity="0.8"/>
     <path d="M150 200 L260 100 L220 200 Z" fill="#7f1d1d" opacity="0.8"/>
     <path d="M150 200 L40 100 L80 200 Z" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.5"/>
     <path d="M150 200 L260 100 L220 200 Z" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.5"/>
-    <!-- wing membrane veins -->
     <path d="M150 200 L55 115" stroke="#dc2626" stroke-width="1" opacity="0.4"/>
     <path d="M150 200 L65 145" stroke="#dc2626" stroke-width="1" opacity="0.4"/>
     <path d="M150 200 L245 115" stroke="#dc2626" stroke-width="1" opacity="0.4"/>
     <path d="M150 200 L235 145" stroke="#dc2626" stroke-width="1" opacity="0.4"/>
-    <!-- body -->
     <path d="M100 200 Q150 170 200 200 Q230 240 210 300 Q185 350 150 360 Q115 350 90 300 Q70 240 100 200Z" fill="#450a0a"/>
     <path d="M100 200 Q150 170 200 200 Q230 240 210 300 Q185 350 150 360 Q115 350 90 300 Q70 240 100 200Z" fill="none" stroke="#ef4444" stroke-width="2"/>
-    <!-- scales -->
     <path d="M110 230 Q130 222 150 230 Q170 222 190 230" stroke="#dc2626" stroke-width="1.5" fill="none" opacity="0.7"/>
     <path d="M105 260 Q130 250 150 260 Q170 250 195 260" stroke="#dc2626" stroke-width="1.5" fill="none" opacity="0.7"/>
     <path d="M110 290 Q130 280 150 290 Q170 280 190 290" stroke="#dc2626" stroke-width="1.5" fill="none" opacity="0.7"/>
-    <!-- neck -->
     <path d="M125 200 Q130 160 150 140 Q170 160 175 200" fill="#450a0a"/>
-    <!-- head -->
     <ellipse cx="150" cy="130" rx="45" ry="35" fill="#3b0a0a"/>
     <ellipse cx="150" cy="130" rx="42" ry="32" fill="none" stroke="#ef4444" stroke-width="2"/>
-    <!-- horns -->
     <path d="M128 110 L112 75 L125 112" fill="#7f1d1d"/>
     <path d="M172 110 L188 75 L175 112" fill="#7f1d1d"/>
-    <!-- snout -->
     <ellipse cx="150" cy="143" rx="22" ry="12" fill="#2d0808"/>
-    <!-- nostrils glow -->
     <circle cx="142" cy="142" r="3" fill="#f97316" opacity="0.8"/>
     <circle cx="158" cy="142" r="3" fill="#f97316" opacity="0.8"/>
-    <!-- eyes -->
     <ellipse cx="133" cy="124" rx="10" ry="8" fill="#1a0000"/><ellipse cx="133" cy="124" rx="8" ry="6" fill="#f97316"/><circle cx="133" cy="124" r="3" fill="#fef3c7"/>
     <ellipse cx="167" cy="124" rx="10" ry="8" fill="#1a0000"/><ellipse cx="167" cy="124" rx="8" ry="6" fill="#f97316"/><circle cx="167" cy="124" r="3" fill="#fef3c7"/>
-    <!-- fire breath -->
     <path d="M140 150 Q135 175 120 185 Q115 190 110 195" stroke="#f97316" stroke-width="3" fill="none" opacity="0.7" stroke-linecap="round"/>
     <path d="M150 152 Q148 178 140 192" stroke="#fbbf24" stroke-width="2" fill="none" opacity="0.6" stroke-linecap="round"/>
-    <!-- tail -->
     <path d="M150 360 Q130 380 100 370 Q80 360 90 340" stroke="#7f1d1d" stroke-width="8" fill="none" stroke-linecap="round"/>
-    <!-- ember particles -->
     <circle cx="90" cy="170" r="2" fill="#f97316" opacity="0.7"/>
     <circle cx="210" cy="165" r="2.5" fill="#fbbf24" opacity="0.6"/>
     <circle cx="75" cy="210" r="1.5" fill="#ef4444" opacity="0.5"/>
@@ -921,35 +903,26 @@ const JUNGLE_MONSTERS_SVG = {
       <radialGradient id="bg" cx="50%" cy="70%" r="70%"><stop offset="0%" stop-color="#1c1a0a"/><stop offset="100%" stop-color="#070601"/></radialGradient>
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
-    <!-- wings -->
     <path d="M150 200 L35 90 L75 200 Z" fill="#44403c" opacity="0.85"/>
     <path d="M150 200 L265 90 L225 200 Z" fill="#44403c" opacity="0.85"/>
     <path d="M150 200 L35 90" stroke="#78716c" stroke-width="2" opacity="0.5"/>
     <path d="M150 200 L265 90" stroke="#78716c" stroke-width="2" opacity="0.5"/>
-    <!-- body -->
     <path d="M95 205 Q150 175 205 205 Q235 245 215 305 Q190 355 150 365 Q110 355 85 305 Q65 245 95 205Z" fill="#292524"/>
     <path d="M95 205 Q150 175 205 205 Q235 245 215 305 Q190 355 150 365 Q110 355 85 305 Q65 245 95 205Z" fill="none" stroke="#78716c" stroke-width="2.5"/>
-    <!-- stone armour plates -->
     <path d="M115 215 L145 205 L175 215 L160 235 L140 238 L120 235Z" fill="#57534e"/>
     <path d="M110 250 L145 238 L180 250 L165 272 L135 275 L115 272Z" fill="#57534e"/>
     <path d="M115 285 L148 273 L178 285 L162 305 L138 308 L118 305Z" fill="#57534e"/>
-    <!-- neck -->
     <path d="M128 205 Q133 162 150 142 Q167 162 172 205" fill="#292524"/>
     <path d="M128 205 Q133 162 150 142 Q167 162 172 205" fill="none" stroke="#78716c" stroke-width="1.5"/>
-    <!-- head -->
     <ellipse cx="150" cy="128" rx="48" ry="38" fill="#1c1917"/>
     <ellipse cx="150" cy="128" rx="45" ry="35" fill="none" stroke="#78716c" stroke-width="2.5"/>
-    <!-- stone crown spikes -->
     <polygon points="118,108 112,80 126,110" fill="#57534e"/>
     <polygon points="140,103 137,72 150,105" fill="#78716c"/>
     <polygon points="160,103 163,72 150,105" fill="#78716c"/>
     <polygon points="182,108 188,80 174,110" fill="#57534e"/>
-    <!-- snout -->
     <path d="M125 138 Q150 150 175 138 Q170 125 150 120 Q130 125 125 138Z" fill="#292524"/>
-    <!-- eyes -->
     <ellipse cx="132" cy="122" rx="11" ry="9" fill="#0c0a09"/><ellipse cx="132" cy="122" rx="9" ry="7" fill="#d97706"/><circle cx="132" cy="122" r="4" fill="#fef3c7"/>
     <ellipse cx="168" cy="122" rx="11" ry="9" fill="#0c0a09"/><ellipse cx="168" cy="122" rx="9" ry="7" fill="#d97706"/><circle cx="168" cy="122" r="4" fill="#fef3c7"/>
-    <!-- rock particles -->
     <circle cx="85" cy="180" r="3" fill="#78716c" opacity="0.6"/>
     <circle cx="215" cy="175" r="4" fill="#57534e" opacity="0.5"/>
   </svg>`),
@@ -961,34 +934,25 @@ const JUNGLE_MONSTERS_SVG = {
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
     <ellipse cx="150" cy="280" rx="120" ry="65" fill="url(#ag)"/>
-    <!-- fins / wings -->
     <path d="M150 200 L30 120 L85 205 Z" fill="#0c4a6e" opacity="0.9"/>
     <path d="M150 200 L270 120 L215 205 Z" fill="#0c4a6e" opacity="0.9"/>
     <path d="M150 200 L30 120" stroke="#38bdf8" stroke-width="2" opacity="0.5"/>
     <path d="M150 200 L270 120" stroke="#38bdf8" stroke-width="2" opacity="0.5"/>
-    <!-- body -->
     <path d="M98 205 Q150 175 202 205 Q232 244 212 304 Q187 355 150 365 Q113 355 88 304 Q68 244 98 205Z" fill="#0c2744"/>
     <path d="M98 205 Q150 175 202 205 Q232 244 212 304 Q187 355 150 365 Q113 355 88 304 Q68 244 98 205Z" fill="none" stroke="#38bdf8" stroke-width="2"/>
-    <!-- scales -->
     <path d="M112 225 Q150 215 188 225" stroke="#0ea5e9" stroke-width="1.5" fill="none" opacity="0.6"/>
     <path d="M108 255 Q150 243 192 255" stroke="#0ea5e9" stroke-width="1.5" fill="none" opacity="0.6"/>
     <path d="M112 285 Q150 273 188 285" stroke="#0ea5e9" stroke-width="1.5" fill="none" opacity="0.6"/>
-    <!-- neck -->
     <path d="M126 205 Q131 160 150 140 Q169 160 174 205" fill="#0c2744"/>
-    <!-- head -->
     <ellipse cx="150" cy="128" rx="47" ry="37" fill="#082030"/>
     <ellipse cx="150" cy="128" rx="44" ry="34" fill="none" stroke="#38bdf8" stroke-width="2"/>
-    <!-- fin spines on head -->
     <path d="M125 105 Q120 82 130 108" fill="#0c4a6e" opacity="0.8"/>
     <path d="M142 100 Q138 72 148 103" fill="#0369a1" opacity="0.8"/>
     <path d="M158 100 Q162 72 152 103" fill="#0369a1" opacity="0.8"/>
     <path d="M175 105 Q180 82 170 108" fill="#0c4a6e" opacity="0.8"/>
-    <!-- snout -->
     <ellipse cx="150" cy="143" rx="22" ry="11" fill="#041a28"/>
-    <!-- eyes -->
     <ellipse cx="132" cy="122" rx="11" ry="9" fill="#020c14"/><ellipse cx="132" cy="122" rx="9" ry="7" fill="#0ea5e9"/><circle cx="132" cy="122" r="4" fill="#e0f2fe"/>
     <ellipse cx="168" cy="122" rx="11" ry="9" fill="#020c14"/><ellipse cx="168" cy="122" rx="9" ry="7" fill="#0ea5e9"/><circle cx="168" cy="122" r="4" fill="#e0f2fe"/>
-    <!-- water sparkles -->
     <circle cx="88" cy="175" r="2" fill="#38bdf8" opacity="0.7"/>
     <circle cx="212" cy="170" r="2.5" fill="#7dd3fc" opacity="0.6"/>
     <circle cx="72" cy="220" r="1.5" fill="#38bdf8" opacity="0.5"/>
@@ -1002,35 +966,26 @@ const JUNGLE_MONSTERS_SVG = {
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
     <ellipse cx="150" cy="210" rx="130" ry="80" fill="url(#ag)"/>
-    <!-- cloud wisps -->
     <ellipse cx="80" cy="160" rx="40" ry="20" fill="#312e81" opacity="0.4"/>
     <ellipse cx="220" cy="155" rx="38" ry="18" fill="#312e81" opacity="0.4"/>
     <ellipse cx="150" cy="145" rx="55" ry="22" fill="#3730a3" opacity="0.3"/>
-    <!-- wings — large graceful -->
     <path d="M150 190 L20 80 L90 195 Z" fill="#3730a3" opacity="0.75"/>
     <path d="M150 190 L280 80 L210 195 Z" fill="#3730a3" opacity="0.75"/>
     <path d="M150 190 L20 80" stroke="#a78bfa" stroke-width="2.5" opacity="0.6"/>
     <path d="M150 190 L280 80" stroke="#a78bfa" stroke-width="2.5" opacity="0.6"/>
-    <!-- extra wing feather lines -->
     <path d="M90 195 L40 115" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
     <path d="M90 195 L60 135" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
     <path d="M210 195 L260 115" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
     <path d="M210 195 L240 135" stroke="#818cf8" stroke-width="1" opacity="0.4"/>
-    <!-- body -->
     <path d="M100 195 Q150 168 200 195 Q228 232 210 292 Q186 342 150 352 Q114 342 90 292 Q72 232 100 195Z" fill="#1e1b4b"/>
     <path d="M100 195 Q150 168 200 195 Q228 232 210 292 Q186 342 150 352 Q114 342 90 292 Q72 232 100 195Z" fill="none" stroke="#a78bfa" stroke-width="2"/>
-    <!-- neck -->
     <path d="M128 195 Q133 152 150 133 Q167 152 172 195" fill="#1e1b4b"/>
-    <!-- head -->
     <ellipse cx="150" cy="122" rx="46" ry="36" fill="#16134a"/>
     <ellipse cx="150" cy="122" rx="43" ry="33" fill="none" stroke="#a78bfa" stroke-width="2"/>
-    <!-- elegant swept horns -->
     <path d="M122 104 Q105 72 115 68 Q122 85 128 106" fill="#4338ca"/>
     <path d="M178 104 Q195 72 185 68 Q178 85 172 106" fill="#4338ca"/>
-    <!-- eyes -->
     <ellipse cx="133" cy="116" rx="11" ry="9" fill="#08061f"/><ellipse cx="133" cy="116" rx="9" ry="7" fill="#a78bfa"/><circle cx="133" cy="116" r="4" fill="#ede9fe"/>
     <ellipse cx="167" cy="116" rx="11" ry="9" fill="#08061f"/><ellipse cx="167" cy="116" rx="9" ry="7" fill="#a78bfa"/><circle cx="167" cy="116" r="4" fill="#ede9fe"/>
-    <!-- wind sparkles -->
     <circle cx="85" cy="168" r="2" fill="#c4b5fd" opacity="0.7"/>
     <circle cx="215" cy="162" r="2" fill="#a78bfa" opacity="0.6"/>
     <circle cx="230" cy="200" r="1.5" fill="#818cf8" opacity="0.5"/>
@@ -1042,36 +997,26 @@ const JUNGLE_MONSTERS_SVG = {
       <radialGradient id="eyeglow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#d946ef" stop-opacity="0.6"/><stop offset="100%" stop-color="#d946ef" stop-opacity="0"/></radialGradient>
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
-    <!-- massive body — crab-like -->
     <ellipse cx="150" cy="270" rx="110" ry="80" fill="#1e1035"/>
     <ellipse cx="150" cy="270" rx="108" ry="78" fill="none" stroke="#9333ea" stroke-width="2.5"/>
-    <!-- shell segments -->
     <path d="M55 250 Q150 230 245 250 Q245 270 150 285 Q55 270 55 250Z" fill="#2d1050" stroke="#7c3aed" stroke-width="1.5"/>
     <path d="M60 285 Q150 268 240 285 Q238 305 150 318 Q62 305 60 285Z" fill="#1e1035" stroke="#7c3aed" stroke-width="1.5"/>
-    <!-- legs -->
     <path d="M75 260 L35 225 M75 280 L30 270 M75 300 L40 330" stroke="#6d28d9" stroke-width="7" stroke-linecap="round"/>
     <path d="M225 260 L265 225 M225 280 L270 270 M225 300 L260 330" stroke="#6d28d9" stroke-width="7" stroke-linecap="round"/>
-    <!-- smaller legs -->
     <path d="M90 255 L65 215" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/>
     <path d="M210 255 L235 215" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/>
-    <!-- neck -->
     <path d="M118 235 Q125 185 150 165 Q175 185 182 235" fill="#1e1035"/>
-    <!-- head -->
     <ellipse cx="150" cy="155" rx="52" ry="44" fill="#12082a"/>
     <ellipse cx="150" cy="155" rx="49" ry="41" fill="none" stroke="#9333ea" stroke-width="2.5"/>
-    <!-- THE EYE — on back exposed -->
     <ellipse cx="150" cy="270" rx="28" ry="22" fill="url(#eyeglow)"/>
     <ellipse cx="150" cy="270" rx="22" ry="17" fill="#1a0030"/>
     <ellipse cx="150" cy="270" rx="17" ry="13" fill="#d946ef"/>
     <ellipse cx="150" cy="270" rx="10" ry="8" fill="#fce7f3"/>
     <ellipse cx="150" cy="270" rx="5" ry="4" fill="#1a0030"/>
-    <!-- face eyes -->
     <ellipse cx="130" cy="148" rx="12" ry="10" fill="#0a0020"/><ellipse cx="130" cy="148" rx="10" ry="8" fill="#d946ef"/><circle cx="130" cy="148" r="4" fill="#fce7f3"/>
     <ellipse cx="170" cy="148" rx="12" ry="10" fill="#0a0020"/><ellipse cx="170" cy="148" rx="10" ry="8" fill="#d946ef"/><circle cx="170" cy="148" r="4" fill="#fce7f3"/>
-    <!-- horns -->
     <path d="M120 125 L108 90 L126 128" fill="#581c87"/>
     <path d="M180 125 L192 90 L174 128" fill="#581c87"/>
-    <!-- void particles -->
     <circle cx="70" cy="200" r="2.5" fill="#d946ef" opacity="0.5"/>
     <circle cx="230" cy="195" r="2" fill="#a21caf" opacity="0.5"/>
     <circle cx="100" cy="350" r="2" fill="#d946ef" opacity="0.4"/>
@@ -1082,34 +1027,25 @@ const JUNGLE_MONSTERS_SVG = {
       <radialGradient id="bg" cx="50%" cy="70%" r="70%"><stop offset="0%" stop-color="#052e3d"/><stop offset="100%" stop-color="#010a10"/></radialGradient>
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
-    <!-- river shimmer -->
     <ellipse cx="150" cy="320" rx="140" ry="55" fill="#0e4c6a" opacity="0.3"/>
     <path d="M30 310 Q80 295 150 310 Q220 295 270 310" stroke="#38bdf8" stroke-width="2" fill="none" opacity="0.3"/>
-    <!-- shell / carapace — top view crab -->
     <ellipse cx="150" cy="235" rx="95" ry="75" fill="#164e63"/>
     <ellipse cx="150" cy="235" rx="92" ry="72" fill="none" stroke="#0ea5e9" stroke-width="2.5"/>
-    <!-- shell markings -->
     <ellipse cx="150" cy="228" rx="60" ry="48" fill="none" stroke="#38bdf8" stroke-width="1.2" opacity="0.5"/>
     <ellipse cx="150" cy="225" rx="35" ry="28" fill="#0c4a6e" opacity="0.8"/>
-    <!-- vision shrine symbol on shell -->
     <path d="M150 210 L150 245 M133 222 L167 222 M138 213 L162 236 M162 213 L138 236" stroke="#7dd3fc" stroke-width="2" opacity="0.7"/>
-    <!-- legs — 8 legs crab style -->
     <path d="M78 215 L42 190 M72 235 L28 225 M75 255 L35 260 M82 275 L50 295" stroke="#0369a1" stroke-width="6" stroke-linecap="round"/>
     <path d="M222 215 L258 190 M228 235 L272 225 M225 255 L265 260 M218 275 L250 295" stroke="#0369a1" stroke-width="6" stroke-linecap="round"/>
-    <!-- small claw tips -->
     <circle cx="42" cy="190" r="5" fill="#38bdf8"/>
     <circle cx="28" cy="225" r="5" fill="#38bdf8"/>
     <circle cx="258" cy="190" r="5" fill="#38bdf8"/>
     <circle cx="272" cy="225" r="5" fill="#38bdf8"/>
-    <!-- pincers (front) -->
     <path d="M110 195 Q85 165 70 155" stroke="#0369a1" stroke-width="10" stroke-linecap="round" fill="none"/>
     <path d="M70 155 L58 145 M70 155 L65 140" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round"/>
     <path d="M190 195 Q215 165 230 155" stroke="#0369a1" stroke-width="10" stroke-linecap="round" fill="none"/>
     <path d="M230 155 L242 145 M230 155 L235 140" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round"/>
-    <!-- head / face -->
     <ellipse cx="150" cy="175" rx="42" ry="32" fill="#0c4a6e"/>
     <ellipse cx="150" cy="175" rx="40" ry="30" fill="none" stroke="#0ea5e9" stroke-width="2"/>
-    <!-- stalked eyes -->
     <line x1="133" y1="162" x2="125" y2="145" stroke="#0369a1" stroke-width="3"/>
     <circle cx="125" cy="142" r="7" fill="#0c4a6e"/>
     <circle cx="125" cy="142" r="6" fill="#38bdf8" opacity="0.9"/>
@@ -1118,10 +1054,8 @@ const JUNGLE_MONSTERS_SVG = {
     <circle cx="175" cy="142" r="7" fill="#0c4a6e"/>
     <circle cx="175" cy="142" r="6" fill="#38bdf8" opacity="0.9"/>
     <circle cx="175" cy="142" r="3" fill="#e0f2fe"/>
-    <!-- antennae -->
     <path d="M138 158 Q128 135 115 118" stroke="#7dd3fc" stroke-width="1.5" fill="none"/>
     <path d="M162 158 Q172 135 185 118" stroke="#7dd3fc" stroke-width="1.5" fill="none"/>
-    <!-- water sparkles -->
     <circle cx="95" cy="310" r="3" fill="#38bdf8" opacity="0.5"/>
     <circle cx="205" cy="305" r="2.5" fill="#7dd3fc" opacity="0.5"/>
     <circle cx="60" cy="295" r="2" fill="#38bdf8" opacity="0.4"/>
@@ -1132,33 +1066,25 @@ const JUNGLE_MONSTERS_SVG = {
       <radialGradient id="bg" cx="50%" cy="65%" r="65%"><stop offset="0%" stop-color="#0a1f0a"/><stop offset="100%" stop-color="#020702"/></radialGradient>
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
-    <!-- swamp atmosphere -->
     <ellipse cx="150" cy="330" rx="130" ry="40" fill="#064e3b" opacity="0.25"/>
-    <!-- massive body -->
     <ellipse cx="150" cy="260" rx="100" ry="85" fill="#14532d"/>
     <ellipse cx="150" cy="260" rx="97" ry="82" fill="none" stroke="#22c55e" stroke-width="2"/>
-    <!-- bumpy warts -->
     <circle cx="110" cy="240" r="8" fill="#166534"/><circle cx="110" cy="240" r="6" fill="none" stroke="#22c55e" stroke-width="1"/>
     <circle cx="180" cy="235" r="10" fill="#166534"/><circle cx="180" cy="235" r="8" fill="none" stroke="#22c55e" stroke-width="1"/>
     <circle cx="130" cy="280" r="7" fill="#166534"/>
     <circle cx="165" cy="290" r="9" fill="#15803d"/>
     <circle cx="200" cy="265" r="6" fill="#166534"/>
     <circle cx="95" cy="270" r="7" fill="#15803d"/>
-    <!-- toxic spots -->
     <circle cx="145" cy="250" r="4" fill="#4ade80" opacity="0.6"/>
     <circle cx="170" cy="270" r="3" fill="#86efac" opacity="0.5"/>
-    <!-- short thick legs -->
     <ellipse cx="100" cy="330" rx="28" ry="18" fill="#14532d" stroke="#22c55e" stroke-width="1.5"/>
     <ellipse cx="200" cy="330" rx="28" ry="18" fill="#14532d" stroke="#22c55e" stroke-width="1.5"/>
     <ellipse cx="115" cy="345" rx="20" ry="12" fill="#15803d"/>
     <ellipse cx="185" cy="345" rx="20" ry="12" fill="#15803d"/>
-    <!-- head — massive wide frog head -->
     <ellipse cx="150" cy="175" rx="80" ry="58" fill="#0f3d20"/>
     <ellipse cx="150" cy="175" rx="77" ry="55" fill="none" stroke="#22c55e" stroke-width="2.5"/>
-    <!-- massive mouth -->
     <path d="M78 185 Q150 210 222 185" stroke="#22c55e" stroke-width="3" fill="none"/>
     <path d="M78 185 Q150 215 222 185 Q200 230 150 235 Q100 230 78 185Z" fill="#0a2e12" opacity="0.7"/>
-    <!-- eyes — bulging frog eyes -->
     <ellipse cx="108" cy="152" rx="22" ry="18" fill="#0f3d20" stroke="#22c55e" stroke-width="2"/>
     <ellipse cx="108" cy="152" rx="18" ry="15" fill="#16a34a"/>
     <ellipse cx="108" cy="152" rx="10" ry="9" fill="#052e16"/>
@@ -1167,13 +1093,10 @@ const JUNGLE_MONSTERS_SVG = {
     <ellipse cx="192" cy="152" rx="18" ry="15" fill="#16a34a"/>
     <ellipse cx="192" cy="152" rx="10" ry="9" fill="#052e16"/>
     <circle cx="192" cy="152" r="5" fill="#86efac"/>
-    <!-- toxic drool -->
     <path d="M130 215 Q128 230 125 240" stroke="#4ade80" stroke-width="2" fill="none" opacity="0.6"/>
     <path d="M150 218 Q150 235 148 245" stroke="#86efac" stroke-width="1.5" fill="none" opacity="0.5"/>
-    <!-- tiny front arms -->
     <path d="M80 230 Q55 250 50 270" stroke="#14532d" stroke-width="8" stroke-linecap="round" fill="none"/>
     <path d="M220 230 Q245 250 250 270" stroke="#14532d" stroke-width="8" stroke-linecap="round" fill="none"/>
-    <!-- fly (gromp eats insects) -->
     <circle cx="65" cy="135" r="3" fill="#4ade80" opacity="0.7"/>
   </svg>`),
 
@@ -1184,43 +1107,33 @@ const JUNGLE_MONSTERS_SVG = {
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
     <ellipse cx="150" cy="260" rx="115" ry="85" fill="url(#bgl)"/>
-    <!-- body — massive stone golem -->
     <rect x="88" y="195" width="124" height="155" rx="20" fill="#1e3a8a"/>
     <rect x="88" y="195" width="124" height="155" rx="20" fill="none" stroke="#60a5fa" stroke-width="2.5"/>
-    <!-- body runes -->
     <path d="M115 225 L120 215 L125 225 L120 235Z" fill="#93c5fd" opacity="0.6"/>
     <path d="M145 225 L150 215 L155 225 L150 235Z" fill="#93c5fd" opacity="0.6"/>
     <path d="M175 225 L180 215 L185 225 L180 235Z" fill="#93c5fd" opacity="0.6"/>
     <path d="M110 265 L185 265" stroke="#60a5fa" stroke-width="1.5" opacity="0.5"/>
     <path d="M115 285 L180 285" stroke="#60a5fa" stroke-width="1.5" opacity="0.4"/>
-    <!-- blue gem chest -->
     <polygon points="150,252 165,262 165,280 150,290 135,280 135,262" fill="#1d4ed8"/>
     <polygon points="150,252 165,262 165,280 150,290 135,280 135,262" fill="none" stroke="#93c5fd" stroke-width="2"/>
     <ellipse cx="150" cy="270" rx="10" ry="12" fill="#3b82f6"/>
     <ellipse cx="150" cy="270" rx="6" ry="7" fill="#bfdbfe"/>
-    <!-- arms / shoulder pads -->
     <rect x="55" y="195" width="38" height="85" rx="12" fill="#1d4ed8"/>
     <rect x="55" y="195" width="38" height="85" rx="12" fill="none" stroke="#60a5fa" stroke-width="2"/>
     <rect x="207" y="195" width="38" height="85" rx="12" fill="#1d4ed8"/>
     <rect x="207" y="195" width="38" height="85" rx="12" fill="none" stroke="#60a5fa" stroke-width="2"/>
-    <!-- fists -->
     <ellipse cx="73" cy="295" rx="22" ry="18" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/>
     <ellipse cx="226" cy="295" rx="22" ry="18" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/>
-    <!-- head -->
     <rect x="108" y="135" width="84" height="68" rx="15" fill="#1e3a8a"/>
     <rect x="108" y="135" width="84" height="68" rx="15" fill="none" stroke="#60a5fa" stroke-width="2.5"/>
-    <!-- visor / eyes -->
     <rect x="118" y="152" width="64" height="18" rx="8" fill="#0c1d5e"/>
     <ellipse cx="138" cy="161" rx="10" ry="7" fill="#3b82f6"/>
     <circle cx="138" cy="161" r="5" fill="#bfdbfe"/>
     <ellipse cx="162" cy="161" rx="10" ry="7" fill="#3b82f6"/>
     <circle cx="162" cy="161" r="5" fill="#bfdbfe"/>
-    <!-- crest on head -->
     <polygon points="150,135 140,108 150,115 160,108" fill="#1d4ed8" stroke="#60a5fa" stroke-width="1.5"/>
-    <!-- blue mana energy legs -->
     <rect x="110" y="348" width="30" height="40" rx="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.5"/>
     <rect x="160" y="348" width="30" height="40" rx="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.5"/>
-    <!-- energy particles -->
     <circle cx="72" cy="165" r="3" fill="#60a5fa" opacity="0.7"/>
     <circle cx="228" cy="170" r="2.5" fill="#93c5fd" opacity="0.6"/>
     <circle cx="150" cy="108" r="3" fill="#bfdbfe" opacity="0.5"/>
@@ -1233,10 +1146,8 @@ const JUNGLE_MONSTERS_SVG = {
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
     <ellipse cx="150" cy="265" rx="115" ry="85" fill="url(#rgl)"/>
-    <!-- body — thorny bramble beast -->
     <ellipse cx="150" cy="265" rx="95" ry="80" fill="#450a0a"/>
     <ellipse cx="150" cy="265" rx="92" ry="77" fill="none" stroke="#ef4444" stroke-width="2.5"/>
-    <!-- thorns/spikes on body -->
     <polygon points="150,185 144,205 156,205" fill="#dc2626"/>
     <polygon points="125,192 118,213 132,213" fill="#b91c1c"/>
     <polygon points="175,192 168,213 182,213" fill="#b91c1c"/>
@@ -1244,40 +1155,31 @@ const JUNGLE_MONSTERS_SVG = {
     <polygon points="205,230 195,252 215,252" fill="#dc2626"/>
     <polygon points="82,270 70,292 94,292" fill="#b91c1c"/>
     <polygon points="218,270 206,292 230,292" fill="#b91c1c"/>
-    <!-- bramble vines -->
     <path d="M90 260 Q68 240 58 220" stroke="#7f1d1d" stroke-width="3" fill="none"/>
     <path d="M210 260 Q232 240 242 220" stroke="#7f1d1d" stroke-width="3" fill="none"/>
-    <!-- burning red gem in chest -->
     <polygon points="150,242 167,253 163,272 150,278 137,272 133,253" fill="#7f1d1d" stroke="#ef4444" stroke-width="2"/>
     <ellipse cx="150" cy="260" rx="10" ry="12" fill="#dc2626"/>
     <ellipse cx="150" cy="260" rx="6" ry="7" fill="#fee2e2"/>
-    <!-- arms -->
     <rect x="52" y="200" width="42" height="90" rx="14" fill="#7f1d1d"/>
     <rect x="52" y="200" width="42" height="90" rx="14" fill="none" stroke="#ef4444" stroke-width="2"/>
     <rect x="206" y="200" width="42" height="90" rx="14" fill="#7f1d1d"/>
     <rect x="206" y="200" width="42" height="90" rx="14" fill="none" stroke="#ef4444" stroke-width="2"/>
-    <!-- spiked fists -->
     <ellipse cx="72" cy="303" rx="24" ry="19" fill="#450a0a" stroke="#ef4444" stroke-width="2"/>
     <ellipse cx="228" cy="303" rx="24" ry="19" fill="#450a0a" stroke="#ef4444" stroke-width="2"/>
     <polygon points="72,283 68,270 76,270" fill="#dc2626"/>
     <polygon points="228,283 224,270 232,270" fill="#dc2626"/>
-    <!-- head -->
     <rect x="106" y="130" width="88" height="75" rx="16" fill="#450a0a"/>
     <rect x="106" y="130" width="88" height="75" rx="16" fill="none" stroke="#ef4444" stroke-width="2.5"/>
-    <!-- head spikes -->
     <polygon points="130,130 124,100 136,130" fill="#dc2626"/>
     <polygon points="150,130 145,95 155,95 160,130" fill="#b91c1c"/>
     <polygon points="170,130 164,100 176,130" fill="#dc2626"/>
-    <!-- eyes burning red -->
     <rect x="116" y="150" width="68" height="20" rx="8" fill="#2d0808"/>
     <ellipse cx="138" cy="160" rx="11" ry="8" fill="#dc2626"/>
     <circle cx="138" cy="160" r="5" fill="#fee2e2"/>
     <ellipse cx="162" cy="160" rx="11" ry="8" fill="#dc2626"/>
     <circle cx="162" cy="160" r="5" fill="#fee2e2"/>
-    <!-- legs -->
     <rect x="112" y="343" width="30" height="42" rx="9" fill="#450a0a" stroke="#ef4444" stroke-width="1.5"/>
     <rect x="158" y="343" width="30" height="42" rx="9" fill="#450a0a" stroke="#ef4444" stroke-width="1.5"/>
-    <!-- ember -->
     <circle cx="75" cy="170" r="3" fill="#ef4444" opacity="0.7"/>
     <circle cx="225" cy="168" r="2.5" fill="#fca5a5" opacity="0.6"/>
   </svg>`),
@@ -1287,45 +1189,31 @@ const JUNGLE_MONSTERS_SVG = {
       <radialGradient id="bg" cx="40%" cy="55%" r="65%"><stop offset="0%" stop-color="#111827"/><stop offset="100%" stop-color="#030508"/></radialGradient>
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
-    <!-- two-headed wolf body -->
     <ellipse cx="150" cy="280" rx="90" ry="70" fill="#1f2937"/>
     <ellipse cx="150" cy="280" rx="87" ry="67" fill="none" stroke="#6b7280" stroke-width="1.5"/>
-    <!-- fur texture lines -->
     <path d="M80 260 Q100 252 120 260" stroke="#374151" stroke-width="2" fill="none"/>
     <path d="M180 260 Q200 252 220 260" stroke="#374151" stroke-width="2" fill="none"/>
     <path d="M90 285 Q120 275 150 280 Q180 275 210 285" stroke="#4b5563" stroke-width="1.5" fill="none"/>
-    <!-- haunches / hind legs -->
     <ellipse cx="100" cy="340" rx="30" ry="22" fill="#111827" stroke="#6b7280" stroke-width="1.5"/>
     <ellipse cx="200" cy="340" rx="30" ry="22" fill="#111827" stroke="#6b7280" stroke-width="1.5"/>
-    <!-- paws -->
     <path d="M82 355 L74 370 M92 358 L88 372 M102 358 L102 372" stroke="#374151" stroke-width="4" stroke-linecap="round"/>
     <path d="M182 355 L174 370 M192 358 L188 372 M202 358 L202 372" stroke="#374151" stroke-width="4" stroke-linecap="round"/>
-    <!-- forelegs -->
     <ellipse cx="108" cy="300" rx="18" ry="35" fill="#1f2937" stroke="#6b7280" stroke-width="1.5" transform="rotate(-15,108,300)"/>
     <ellipse cx="192" cy="300" rx="18" ry="35" fill="#1f2937" stroke="#6b7280" stroke-width="1.5" transform="rotate(15,192,300)"/>
-    <!-- TWO NECKS -->
     <path d="M115 218 Q108 175 118 148" stroke="#1f2937" stroke-width="28" stroke-linecap="round" fill="none"/>
     <path d="M185 218 Q192 175 182 148" stroke="#1f2937" stroke-width="28" stroke-linecap="round" fill="none"/>
-    <!-- LEFT HEAD -->
     <ellipse cx="108" cy="132" rx="40" ry="32" fill="#111827" stroke="#6b7280" stroke-width="2"/>
     <path d="M88 116 L80 92 L96 118" fill="#1f2937"/>
     <path d="M110 112 L108 88 L118 115" fill="#374151"/>
-    <!-- left snout -->
     <ellipse cx="90" cy="138" rx="18" ry="12" fill="#0d1117"/>
-    <!-- left eye -->
     <ellipse cx="105" cy="124" rx="11" ry="9" fill="#0d1117"/><ellipse cx="105" cy="124" rx="9" ry="7" fill="#f59e0b"/><circle cx="105" cy="124" r="4" fill="#fef3c7"/>
-    <!-- RIGHT HEAD -->
     <ellipse cx="192" cy="132" rx="40" ry="32" fill="#111827" stroke="#6b7280" stroke-width="2"/>
     <path d="M212 116 L220 92 L204 118" fill="#1f2937"/>
     <path d="M190 112 L192 88 L182 115" fill="#374151"/>
-    <!-- right snout -->
     <ellipse cx="210" cy="138" rx="18" ry="12" fill="#0d1117"/>
-    <!-- right eye -->
     <ellipse cx="195" cy="124" rx="11" ry="9" fill="#0d1117"/><ellipse cx="195" cy="124" rx="9" ry="7" fill="#f59e0b"/><circle cx="195" cy="124" r="4" fill="#fef3c7"/>
-    <!-- glowing eyes at night -->
     <circle cx="104" cy="124" r="2" fill="#fef3c7" opacity="0.5"/>
     <circle cx="194" cy="124" r="2" fill="#fef3c7" opacity="0.5"/>
-    <!-- tail -->
     <path d="M150 345 Q175 360 185 350 Q195 338 175 330" stroke="#374151" stroke-width="8" fill="none" stroke-linecap="round"/>
   </svg>`),
 
@@ -1334,39 +1222,27 @@ const JUNGLE_MONSTERS_SVG = {
       <radialGradient id="bg" cx="50%" cy="65%" r="65%"><stop offset="0%" stop-color="#1a1008"/><stop offset="100%" stop-color="#060401"/></radialGradient>
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
-    <!-- rocky ground hints -->
     <ellipse cx="150" cy="360" rx="120" ry="30" fill="#292524" opacity="0.5"/>
-    <!-- body — stone beetle -->
     <ellipse cx="150" cy="260" rx="100" ry="85" fill="#292524"/>
     <ellipse cx="150" cy="260" rx="97" ry="82" fill="none" stroke="#d97706" stroke-width="2.5"/>
-    <!-- stone plates / segments -->
     <path d="M60 240 Q150 218 240 240 Q240 260 150 272 Q60 260 60 240Z" fill="#3d3830" stroke="#a16207" stroke-width="1.5"/>
     <path d="M65 272 Q150 256 235 272 Q232 292 150 302 Q68 292 65 272Z" fill="#292524" stroke="#a16207" stroke-width="1.5"/>
-    <!-- crystal eyes in shell — blue gems -->
     <ellipse cx="120" cy="245" rx="10" ry="9" fill="#1e1b10"/><ellipse cx="120" cy="245" rx="8" ry="7" fill="#d97706"/><circle cx="120" cy="245" r="3" fill="#fef3c7"/>
     <ellipse cx="180" cy="245" rx="10" ry="9" fill="#1e1b10"/><ellipse cx="180" cy="245" rx="8" ry="7" fill="#d97706"/><circle cx="180" cy="245" r="3" fill="#fef3c7"/>
-    <!-- rock legs — stubby -->
     <ellipse cx="85" cy="325" rx="28" ry="18" fill="#3d3830" stroke="#a16207" stroke-width="1.5"/>
     <ellipse cx="150" cy="335" rx="25" ry="15" fill="#3d3830" stroke="#a16207" stroke-width="1.5"/>
     <ellipse cx="215" cy="325" rx="28" ry="18" fill="#3d3830" stroke="#a16207" stroke-width="1.5"/>
-    <!-- smaller rock legs -->
     <ellipse cx="68" cy="305" rx="20" ry="14" fill="#292524"/>
     <ellipse cx="232" cy="305" rx="20" ry="14" fill="#292524"/>
-    <!-- head — angular stone -->
     <path d="M88 195 L105 150 L195 150 L212 195 Z" fill="#292524" stroke="#d97706" stroke-width="2.5"/>
-    <!-- rocky brow protrusions -->
     <polygon points="108,152 100,125 120,154" fill="#3d3830"/>
     <polygon points="150,148 145,118 155,118 160,148" fill="#57534e"/>
     <polygon points="192,152 200,125 180,154" fill="#3d3830"/>
-    <!-- face eyes — glowing amber -->
     <ellipse cx="122" cy="172" rx="14" ry="11" fill="#1c1917"/><ellipse cx="122" cy="172" rx="12" ry="9" fill="#d97706"/><circle cx="122" cy="172" r="5" fill="#fef3c7"/>
     <ellipse cx="178" cy="172" rx="14" ry="11" fill="#1c1917"/><ellipse cx="178" cy="172" rx="12" ry="9" fill="#d97706"/><circle cx="178" cy="172" r="5" fill="#fef3c7"/>
-    <!-- cracked stone lines on face -->
     <path d="M150 152 L150 195 M130 165 L168 165" stroke="#78716c" stroke-width="1" opacity="0.4"/>
-    <!-- fangs -->
     <polygon points="135,192 130,208 140,208" fill="#57534e"/>
     <polygon points="160,192 155,208 165,208" fill="#57534e"/>
-    <!-- small crack glow -->
     <path d="M140 230 L155 220 L165 235" stroke="#d97706" stroke-width="1.5" opacity="0.5"/>
   </svg>`),
 
@@ -1375,42 +1251,29 @@ const JUNGLE_MONSTERS_SVG = {
       <radialGradient id="bg" cx="55%" cy="55%" r="65%"><stop offset="0%" stop-color="#1a100a"/><stop offset="100%" stop-color="#060302"/></radialGradient>
     </defs>
     <rect width="300" height="400" fill="url(#bg)"/>
-    <!-- Crimson Raptor — large aggressive bird -->
-    <!-- tail feathers -->
     <path d="M80 280 L50 320 M88 275 L55 308 M96 270 L72 305" stroke="#dc2626" stroke-width="6" stroke-linecap="round"/>
-    <!-- body -->
     <ellipse cx="155" cy="255" rx="85" ry="70" fill="#450a0a"/>
     <ellipse cx="155" cy="255" rx="82" ry="67" fill="none" stroke="#ef4444" stroke-width="2"/>
-    <!-- crimson feather markings -->
     <path d="M100 240 Q130 228 160 235 Q185 228 210 240" stroke="#dc2626" stroke-width="2" fill="none" opacity="0.7"/>
     <path d="M105 268 Q130 255 160 262 Q185 255 208 268" stroke="#b91c1c" stroke-width="1.5" fill="none" opacity="0.6"/>
-    <!-- wings folded -->
     <path d="M90 240 Q75 200 85 165 Q95 185 108 225Z" fill="#7f1d1d"/>
     <path d="M90 240 Q75 200 85 165" stroke="#ef4444" stroke-width="1.5" fill="none" opacity="0.5"/>
     <path d="M218 240 Q232 200 222 165 Q212 185 200 225Z" fill="#7f1d1d"/>
     <path d="M218 240 Q232 200 222 165" stroke="#ef4444" stroke-width="1.5" fill="none" opacity="0.5"/>
-    <!-- legs — powerful raptor legs -->
     <path d="M125 310 Q118 340 108 360" stroke="#450a0a" stroke-width="16" stroke-linecap="round" fill="none"/>
     <path d="M185 310 Q192 340 202 360" stroke="#450a0a" stroke-width="16" stroke-linecap="round" fill="none"/>
-    <!-- feet / talons -->
     <path d="M108 360 L95 375 M108 360 L105 378 M108 360 L118 372" stroke="#7f1d1d" stroke-width="5" stroke-linecap="round"/>
     <path d="M202 360 L215 375 M202 360 L205 378 M202 360 L192 372" stroke="#7f1d1d" stroke-width="5" stroke-linecap="round"/>
-    <!-- neck -->
     <path d="M138 195 Q145 158 155 135 Q162 158 168 195" fill="#450a0a"/>
-    <!-- head -->
     <ellipse cx="155" cy="122" rx="42" ry="35" fill="#3b0909"/>
     <ellipse cx="155" cy="122" rx="39" ry="32" fill="none" stroke="#ef4444" stroke-width="2"/>
-    <!-- crest feathers -->
     <path d="M140 95 Q135 68 145 92" fill="#dc2626"/>
     <path d="M155 90 Q153 60 162 90" fill="#ef4444"/>
     <path d="M170 95 Q178 70 168 92" fill="#dc2626"/>
-    <!-- beak -->
     <path d="M120 125 L155 132 L155 145 L122 138 Z" fill="#1c0707"/>
     <path d="M120 125 L155 132 L155 135 L122 130Z" fill="#2d0c0c"/>
-    <!-- eyes — intelligent aggressive -->
     <ellipse cx="142" cy="115" rx="12" ry="10" fill="#1a0000"/><ellipse cx="142" cy="115" rx="10" ry="8" fill="#dc2626"/><circle cx="142" cy="115" r="4" fill="#fef2f2"/>
     <ellipse cx="168" cy="115" rx="12" ry="10" fill="#1a0000"/><ellipse cx="168" cy="115" rx="10" ry="8" fill="#dc2626"/><circle cx="168" cy="115" r="4" fill="#fef2f2"/>
-    <!-- small raptors hints in background -->
     <ellipse cx="55" cy="310" rx="12" ry="9" fill="#450a0a" opacity="0.6"/>
     <ellipse cx="255" cy="315" rx="10" ry="8" fill="#450a0a" opacity="0.6"/>
   </svg>`),
@@ -1596,6 +1459,16 @@ function renderProfileList(){
 
 function selProfile(n){selPr=n;renderProfileList();renderProfile(n);}
 
+// Pie chart SVG helper — defined outside renderProfile to avoid strict mode issues
+function makePieChart(rg, rw, size=52){
+  if(!rg) return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size/2}" cy="${size/2}" r="${size/2-5}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/><text x="${size/2}" y="${size/2+4}" text-anchor="middle" fill="rgba(160,180,200,0.35)" font-size="9" font-family="Rajdhani,sans-serif">—</text></svg>`;
+  const pct=Math.round(rw/rg*100);
+  const r=size/2-5; const circ=2*Math.PI*r;
+  const filled=circ*(pct/100);
+  const col=pct>=60?'#1DE9B6':pct>=45?'#C8AA6E':'#E84855';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="7" stroke-dasharray="${filled} ${circ}" stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"/><text x="${size/2}" y="${size/2+4}" text-anchor="middle" fill="${col}" font-size="11" font-weight="700" font-family="Rajdhani,sans-serif">${pct}%</text></svg>`;
+}
+
 function renderProfile(n){
   const s=PS[n];if(!s)return;
   const g=Object.values(s.roles).reduce((a,b)=>a+b,0);
@@ -1634,27 +1507,11 @@ function renderProfile(n){
     ? `<img src="${meta.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">`
     : `<span style="font-size:28px;font-weight:700;color:${c}">${ini(n)}</span>`;
 
-  // Pie chart SVG generator
-  function pie(rg,rw,color,size=52){
-    if(!rg)return `<svg width="${size}" height="${size}" class="prof-pie-svg"><circle cx="${size/2}" cy="${size/2}" r="${size/2-4}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/><text x="${size/2}" y="${size/2+4}" text-anchor="middle" fill="rgba(160,180,200,0.4)" font-size="9" font-family="Rajdhani,sans-serif">—</text></svg>`;
-    const pct=Math.round(rw/rg*100);
-    const r=size/2-5;const circ=2*Math.PI*r;
-    const filled=circ*(pct/100);
-    const wrColor=pct>=60?'#1DE9B6':pct>=45?'#C8AA6E':'#E84855';
-    return `<svg width="${size}" height="${size}" class="prof-pie-svg" viewBox="0 0 ${size} ${size}">
-      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/>
-      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${wrColor}" stroke-width="7"
-        stroke-dasharray="${filled} ${circ}" stroke-dashoffset="${circ/4}"
-        stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"/>
-      <text x="${size/2}" y="${size/2+4}" text-anchor="middle" fill="${wrColor}" font-size="11" font-weight="700" font-family="Rajdhani,sans-serif">${pct}%</text>
-    </svg>`;
-  }
+
 
   const el=document.getElementById('profileContent');
   el.innerHTML=`
   <div class="prof-wrap">
-
-    <!-- BANNER -->
     <div class="prof-banner">
       <div class="prof-banner-bg" style="${bannerBg}"></div>
       ${meta.monsterKey?`<div style="position:absolute;inset:0;background:${c}33;mix-blend-mode:color;pointer-events:none"></div>`:''}
@@ -1665,8 +1522,6 @@ function renderProfile(n){
       </div>
       <button class="prof-settings-btn" onclick="toggleProfSettings('${n}')">⚙ Ustawienia</button>
     </div>
-
-    <!-- SETTINGS PANEL (inline, toggleable) -->
     <div class="prof-settings-panel" id="profSettingsPanel_${n}">
       <div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Ustawienia profilu — ${n}</div>
       <div class="prof-settings-grid">
@@ -1695,8 +1550,6 @@ function renderProfile(n){
         <button class="btn" style="padding:6px 12px;font-size:11px" onclick="toggleProfSettings('${n}')">Zamknij</button>
       </div>
     </div>
-
-    <!-- NAME ROW -->
     <div class="prof-name-row">
       <div class="prof-name-block">
         <div class="prof-name">${n}</div>
@@ -1704,21 +1557,17 @@ function renderProfile(n){
         <div class="prof-subline">${g} meczy · ${matches.length} z historii</div>
       </div>
     </div>
-
-    <!-- STATS STRIP -->
     <div class="prof-stats-strip">
       ${[['Mecze',g],['Wygrane',w],['Przegrane',g-w],['WR',wr+'%'],['Mecze hist.',matches.length]].map(([l,v])=>
         `<div class="prof-stat-cell"><div class="prof-stat-val" style="color:${l==='WR'?(wr>=60?'var(--success)':wr>=45?'var(--gold)':'var(--danger)'):'var(--gold)'}">${v}</div><div class="prof-stat-lbl">${l}</div></div>`
       ).join('')}
     </div>
-
-    <!-- PIE CHARTS PER ROLE -->
     <div class="prof-pies">
       ${ROLES.map(role=>{
         const rg=s.roles[role]||0;const rw=s.wins[role]||0;
         return `<div class="prof-pie-cell">
           <div class="prof-pie-label">${RI[role]} ${role.toUpperCase()}</div>
-          ${pie(rg,rw,c)}
+          ${makePieChart(rg,rw)}
           <div class="prof-pie-games" style="color:var(--silver)">${rg>0?rg+'G':'—'}</div>
         </div>`;
       }).join('')}
