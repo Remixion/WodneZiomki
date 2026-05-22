@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Rift Draft — narzędzie do losowania drużyn i postaci w League of Legends custom meczach">
-<meta property="og:title" content="Rift Draft">
-<meta property="og:description" content="Losowanie drużyn, tryb draft, statystyki graczy i historia meczy — wszystko w przeglądarce.">
+<meta name="description" content="Wodne Customy — narzędzie do losowania drużyn i postaci w League of Legends custom meczach">
+<meta property="og:title" content="Wodne Customy">
+<meta property="og:description" content="Losowanie drużyn, drag & drop draft, statystyki graczy i historia meczy.">
 <meta property="og:type" content="website">
 <title>Wodne Customy</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@300;400;500;600;700&family=Lobster&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@300;400;500;600;700&family=Lobster&family=Pacifico&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#C8AA6E;--gold-light:#F0E6D3;--gold-dark:#785A28;--blue-deep:#050E1A;--blue-mid:#0F2044;--blue-bright:#0BC4E3;--teal:#00BCD4;--silver:#A0B4C8;--white:#EEF0F3;--danger:#E84855;--success:#1DE9B6;--warn:#F39C12;--panel:rgba(8,18,36,0.93);--border:rgba(200,170,110,0.28);--border-bright:rgba(200,170,110,0.65)}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -20,8 +20,8 @@ body{font-family:'Rajdhani',sans-serif;background:var(--blue-deep);color:var(--w
 .hex-bg{position:fixed;inset:0;z-index:0;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpolygon points='30,2 58,17 58,35 30,50 2,35 2,17' fill='none' stroke='%23C8AA6E' stroke-width='1'/%3E%3C/svg%3E");background-size:60px 52px}
 .app{position:relative;z-index:1;min-height:100vh}
 nav{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(3,8,18,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;gap:12px;flex-wrap:wrap}
-.nav-logo{font-family:'Cinzel',serif;font-size:17px;font-weight:700;color:var(--gold);letter-spacing:3px;display:flex;align-items:center;gap:9px}
-.nav-logo svg{width:24px;height:24px}
+.nav-logo{font-family:'Pacifico',cursive;font-size:18px;color:#5DADE2;letter-spacing:1px;display:flex;align-items:center;gap:10px;text-shadow:0 0 20px rgba(93,173,226,0.4)}
+.nav-logo svg{width:32px;height:28px}
 .nav-tabs{display:flex;gap:2px;flex-wrap:wrap}
 .nav-tab{padding:6px 14px;background:transparent;border:1px solid transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s}
 .nav-tab:hover{color:var(--gold);border-color:var(--border)}
@@ -360,8 +360,26 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
 <div class="app">
 <nav>
   <div class="nav-logo">
-    <svg viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="11" stroke="#C8AA6E" stroke-width="1.2"/><path d="M13 3L16.5 9L23 10.5L18.5 15.5L19.5 22L13 19L6.5 22L7.5 15.5L3 10.5L9.5 9Z" fill="#C8AA6E" opacity="0.65"/><circle cx="13" cy="13" r="3" fill="#C8AA6E"/></svg>
-    WODNE&nbsp;CUSTOMY
+    <svg viewBox="0 0 36 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- water drop -->
+      <path d="M18 2 C18 2 10 12 10 17 A8 8 0 0 0 26 17 C26 12 18 2 18 2Z" fill="url(#dropGrad)" opacity="0.9"/>
+      <!-- inner highlight -->
+      <ellipse cx="15" cy="15" rx="2.5" ry="4" fill="white" opacity="0.25" transform="rotate(-20 15 15)"/>
+      <!-- wave 1 -->
+      <path d="M2 24 Q7 21 12 24 Q17 27 22 24 Q27 21 34 24" stroke="#5DADE2" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.8"/>
+      <!-- wave 2 -->
+      <path d="M4 27.5 Q9 25 14 27.5 Q19 30 24 27.5 Q29 25 34 27.5" stroke="#0BC4E3" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.55"/>
+      <!-- small drops -->
+      <circle cx="6" cy="16" r="1.5" fill="#5DADE2" opacity="0.7"/>
+      <circle cx="30" cy="13" r="1" fill="#0BC4E3" opacity="0.6"/>
+      <defs>
+        <linearGradient id="dropGrad" x1="18" y1="2" x2="18" y2="25" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#5DADE2"/>
+          <stop offset="100%" stop-color="#0BC4E3"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    Wodne Customy
   </div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('randomizer',this)">Skład</button>
@@ -555,8 +573,34 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
       </button>
     </div>
 
-    <!-- LOG -->
-    <div id="ghLog" style="margin-top:14px;max-height:140px;overflow-y:auto;font-size:10px;color:var(--silver);font-family:monospace;line-height:1.7;padding:8px;background:rgba(0,0,0,0.3);border-radius:4px;display:none"></div>
+    <div style="border-top:1px solid var(--border);margin:18px 0"></div>
+
+    <!-- GOOGLE SHEETS SECTION -->
+    <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--teal);letter-spacing:2px;margin-bottom:12px">📊 Google Sheets</div>
+
+    <div style="margin-bottom:12px;padding:10px 12px;background:rgba(11,196,227,0.05);border:1px solid rgba(11,196,227,0.2);border-radius:6px;font-size:11px;color:var(--silver);line-height:1.8">
+      <div>📥 CSV (odczyt): <a href="${GS_CONFIG.csvUrl}" target="_blank" style="color:var(--teal);font-size:10px">arkusz publiczny ✓</a></div>
+      <div id="gsScriptStatus">📤 Apps Script: <span style="color:var(--warn)">nie skonfigurowany</span></div>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">
+        Apps Script URL (do zapisu)
+        <a href="#" onclick="showAppsScriptGuide();return false" style="color:var(--teal);margin-left:8px;font-size:10px">Jak to skonfigurować? →</a>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="gsScriptInput" class="ss" style="flex:1" placeholder="https://script.google.com/macros/s/...">
+        <button class="btn tbtn" style="padding:5px 12px;font-size:11px" onclick="saveGsScript()">Zapisz</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn tbtn" style="flex:1;justify-content:center;min-width:140px" onclick="gsFetch()">
+        ↓ Odśwież mecze z Sheets
+      </button>
+    </div>
+
+    <div id="gsLog" style="margin-top:12px;max-height:120px;overflow-y:auto;font-size:10px;color:var(--silver);font-family:monospace;line-height:1.6;padding:7px;background:rgba(0,0,0,0.3);border-radius:4px;display:none"></div>
   </div>
 </div>
 
@@ -635,21 +679,36 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
 
 <!-- SAVE MODAL -->
 <div id="saveModal" class="modal-overlay" style="display:none">
-  <div class="modal-box" style="width:min(340px,95vw)">
-    <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px;margin-bottom:14px">Zapisz wynik meczu</div>
-    <div style="margin-bottom:11px">
-      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Kto wygrał?</div>
-      <div style="display:flex;gap:7px">
-        <button id="wbB" class="btn" style="flex:1;justify-content:center" onclick="setW('LEWA')">◆ LEWA</button>
-        <button id="wbR" class="btn" style="flex:1;justify-content:center" onclick="setW('PRAWA')">◆ PRAWA</button>
+  <div class="modal-box" style="width:min(640px,95vw);max-height:88vh;overflow-y:auto">
+    <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px;margin-bottom:16px">💾 Zapisz wynik meczu</div>
+
+    <!-- WINNER + PATCH row -->
+    <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:16px;align-items:end">
+      <div>
+        <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Kto wygrał?</div>
+        <div style="display:flex;gap:7px">
+          <button id="wbB" class="btn" style="flex:1;justify-content:center" onclick="setW('LEWA')">◆ LEWA</button>
+          <button id="wbR" class="btn" style="flex:1;justify-content:center" onclick="setW('PRAWA')">◆ PRAWA</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Patch</div>
+        <input id="pi" class="ss" style="width:90px" value="26.02">
       </div>
     </div>
-    <div style="margin-bottom:14px">
-      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Patch</div>
-      <input id="pi" class="ss" style="width:100%" value="26.02">
+
+    <!-- CHAMPIONS GRID -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">
+        Grane postacie <span style="opacity:0.5;font-size:9px">(opcjonalne)</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="champInputsGrid">
+        <!-- populated by openSave() -->
+      </div>
     </div>
+
     <div style="display:flex;gap:7px">
-      <button class="btn sbtn" style="flex:1;justify-content:center" onclick="saveGame()">Zapisz</button>
+      <button class="btn sbtn" style="flex:1;justify-content:center" onclick="saveGame()">✓ Zapisz</button>
       <button class="btn dbtn" style="flex:1;justify-content:center" onclick="closeSave()">Anuluj</button>
     </div>
   </div>
@@ -1445,7 +1504,58 @@ function copyToDiscord(){
   navigator.clipboard.writeText(txt).then(()=>toast('Skopiowano!')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Skopiowano!');});
 }
 
-function openSave(){if(!draftTeams.blue.length){toast('Najpierw przypisz graczy do drużyn!');return;}PW=null;document.getElementById('wbB').style.borderColor='var(--border)';document.getElementById('wbR').style.borderColor='var(--border)';document.getElementById('saveModal').style.display='flex';}
+function openSave(){
+  if(!draftTeams.blue.length){toast('Najpierw przypisz graczy do drużyn!');return;}
+  PW=null;
+  document.getElementById('wbB').style.borderColor='var(--border)';
+  document.getElementById('wbR').style.borderColor='var(--border)';
+
+  // Build champion input grid
+  const grid=document.getElementById('champInputsGrid');
+  const allRoles=[...ROLES];
+
+  // Blue team section
+  let html=`<div style="grid-column:1/-1;font-size:10px;color:#5DADE2;letter-spacing:2px;text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid rgba(93,173,226,0.2)">◆ Lewa</div>`;
+  allRoles.forEach(role=>{
+    const p=draftTeams.blue.find(x=>x.role===role);
+    if(!p)return;
+    const idx=ROLES.indexOf(role);
+    const preChamp=CC.blue[idx]||'';
+    const c=PC[p.name]||'#C8AA6E';
+    html+=`<div style="display:flex;align-items:center;gap:7px">
+      <div class="av" style="width:26px;height:26px;font-size:9px;flex-shrink:0;border-color:${c}55;color:${c};background:${c}15">${ini(p.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:10px;color:${c};font-weight:600;margin-bottom:2px">${p.name} <span style="color:var(--silver);font-weight:400">${RI[role]} ${role.toUpperCase()}</span></div>
+        <input id="champ_blue_${role}" class="ss" style="width:100%;font-size:11px;padding:4px 7px" placeholder="postać..." value="${preChamp}" list="champList">
+      </div>
+    </div>`;
+  });
+
+  // Red team section
+  html+=`<div style="grid-column:1/-1;font-size:10px;color:#E84855;letter-spacing:2px;text-transform:uppercase;padding:8px 0 4px;border-bottom:1px solid rgba(232,72,85,0.2)">◆ Prawa</div>`;
+  allRoles.forEach(role=>{
+    const p=draftTeams.red.find(x=>x.role===role);
+    if(!p)return;
+    const idx=ROLES.indexOf(role);
+    const preChamp=CC.red[idx]||'';
+    const c=PC[p.name]||'#C8AA6E';
+    html+=`<div style="display:flex;align-items:center;gap:7px">
+      <div class="av" style="width:26px;height:26px;font-size:9px;flex-shrink:0;border-color:${c}55;color:${c};background:${c}15">${ini(p.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:10px;color:${c};font-weight:600;margin-bottom:2px">${p.name} <span style="color:var(--silver);font-weight:400">${RI[role]} ${role.toUpperCase()}</span></div>
+        <input id="champ_red_${role}" class="ss" style="width:100%;font-size:11px;padding:4px 7px" placeholder="postać..." value="${preChamp}" list="champList">
+      </div>
+    </div>`;
+  });
+
+  // Datalist for autocomplete
+  const allChamps=[...new Set(Object.values(CHAMPS).flat())].sort();
+  html+=`<datalist id="champList">${allChamps.map(c=>`<option value="${c}">`).join('')}</datalist>`;
+
+  grid.innerHTML=html;
+  document.getElementById('saveModal').style.display='flex';
+}
+
 function closeSave(){document.getElementById('saveModal').style.display='none';}
 function setW(s){PW=s;document.getElementById('wbB').style.borderColor=s==='LEWA'?'var(--teal)':'var(--border)';document.getElementById('wbR').style.borderColor=s==='PRAWA'?'var(--danger)':'var(--border)';}
 
@@ -1454,19 +1564,44 @@ function saveGame(){
   const patch=document.getElementById('pi').value||'?';
   const date=new Date().toISOString().split('T')[0];
   const blue={},red={};
-  draftTeams.blue.forEach(p=>blue[p.role]=p.name);
-  draftTeams.red.forEach(p=>red[p.role]=p.name);
-  MH.push({gid:String(MH.length+1),patch,date,win:PW,blue,red});
+  const blueChamps={},redChamps={};
+
+  draftTeams.blue.forEach(p=>{
+    blue[p.role]=p.name;
+    const champ=(document.getElementById(`champ_blue_${p.role}`)?.value||'').trim();
+    if(champ) blueChamps[p.role]=champ;
+  });
+  draftTeams.red.forEach(p=>{
+    red[p.role]=p.name;
+    const champ=(document.getElementById(`champ_red_${p.role}`)?.value||'').trim();
+    if(champ) redChamps[p.role]=champ;
+  });
+
+  const hasChamps=Object.keys(blueChamps).length>0||Object.keys(redChamps).length>0;
+  const match={gid:String(MH.length+1),patch,date,win:PW,blue,red};
+  if(hasChamps){match.blueChamps=blueChamps;match.redChamps=redChamps;}
+
+  MH.push(match);
   PS=buildPS();AP=Object.keys(PS).sort();
   closeSave();renderHist();renderStats();renderPL();if(selPr)renderProfile(selPr);
-  toast('Mecz zapisany! Wysyłam na GitHub...');
-  ghPushData('nowy mecz GID '+MH[MH.length-1].gid);
+  toast('Mecz zapisany! Wysyłam do Sheets...');
+  gsWrite(match); // write to Google Sheets
+  // Also push player data updates to GitHub (no match data there anymore)
+  // ghPushData('nowy mecz GID '+match.gid); // optional — commented out since Sheets is source of truth
 }
 
 function exportCSV(){
-  const h='GID,Patch,Data,WIN,Top_L,Jng_L,Mid_L,Adc_L,Supp_L,Top_P,Jng_P,Mid_P,Adc_P,Supp_P';
-  const rows=MH.map(m=>[m.gid,m.patch,m.date,m.win,m.blue.top||'',m.blue.jng||'',m.blue.mid||'',m.blue.adc||'',m.blue.supp||'',m.red.top||'',m.red.jng||'',m.red.mid||'',m.red.adc||'',m.red.supp||''].join(','));
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h,...rows].join('\n'));a.download='mecze.csv';a.click();toast('Eksportowano!');
+  const h='GID,Patch,Data,WIN,Top_L,Jng_L,Mid_L,Adc_L,Supp_L,Top_P,Jng_P,Mid_P,Adc_P,Supp_P,Champ_Top_L,Champ_Jng_L,Champ_Mid_L,Champ_Adc_L,Champ_Supp_L,Champ_Top_P,Champ_Jng_P,Champ_Mid_P,Champ_Adc_P,Champ_Supp_P';
+  const rows=MH.map(m=>[
+    m.gid,m.patch,m.date,m.win,
+    m.blue.top||'',m.blue.jng||'',m.blue.mid||'',m.blue.adc||'',m.blue.supp||'',
+    m.red.top||'',m.red.jng||'',m.red.mid||'',m.red.adc||'',m.red.supp||'',
+    m.blueChamps?.top||'',m.blueChamps?.jng||'',m.blueChamps?.mid||'',m.blueChamps?.adc||'',m.blueChamps?.supp||'',
+    m.redChamps?.top||'',m.redChamps?.jng||'',m.redChamps?.mid||'',m.redChamps?.adc||'',m.redChamps?.supp||''
+  ].join(','));
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h,...rows].join('\n'));
+  a.download='wodne_customy_mecze.csv';a.click();toast('Eksportowano!');
 }
 
 // =====================================================================
@@ -1747,8 +1882,9 @@ function renderHist(){
   document.getElementById('histhdr').innerHTML=`Historia meczy (${MH.length}) <button class="btn" style="padding:3px 10px;font-size:10px" onclick="exportCSV()">↓ CSV</button>`;
   document.getElementById('histList').innerHTML=[...MH].reverse().map(m=>{
     const hasImg=!!m.imgUrl;const hasScan=!!m.scanResult;
-    const champsBlu=ROLES.map(r=>m.scanResult?.[m.blue[r]]?.champ||'').filter(Boolean);
-    const champsRed=ROLES.map(r=>m.scanResult?.[m.red[r]]?.champ||'').filter(Boolean);
+    // Champions: prefer manually entered blueChamps/redChamps, fallback to AI scan
+    const champsBlu=ROLES.map(r=>m.blueChamps?.[r]||m.scanResult?.[m.blue[r]]?.champ||'').filter(Boolean);
+    const champsRed=ROLES.map(r=>m.redChamps?.[r]||m.scanResult?.[m.red[r]]?.champ||'').filter(Boolean);
     return `<div class="hr"><div class="hi">
       <div style="min-width:60px">
         <div style="font-size:9px;color:var(--silver)">#${m.gid}</div>
@@ -2269,6 +2405,12 @@ function openGhSettings(){
   document.getElementById('ghRepoDisplay').textContent=`${GH_CONFIG.owner}/${GH_CONFIG.repo}`;
   const tok=localStorage.getItem(LS_GH_TOKEN)||'';
   document.getElementById('ghTokenInput').value=tok?'••••••••••••••••':'';
+  // Sheets
+  const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl||'';
+  const inp=document.getElementById('gsScriptInput');
+  if(inp) inp.value=scriptUrl?'••••••••••••••••':'';
+  const st=document.getElementById('gsScriptStatus');
+  if(st) st.innerHTML=`📤 Apps Script: <span style="color:${scriptUrl?'var(--success)':'var(--warn)'}">${scriptUrl?'skonfigurowany ✓':'nie skonfigurowany'}</span>`;
   ghRefreshStatus();
 }
 function closeGhSettings(){ document.getElementById('ghModal').style.display='none'; }
@@ -2280,6 +2422,45 @@ function saveGhToken(){
   document.getElementById('ghTokenInput').value='••••••••••••••••';
   toast('Token zapisany!');
   ghRefreshStatus();
+}
+
+function saveGsScript(){
+  const v=document.getElementById('gsScriptInput')?.value.trim();
+  if(!v||v==='••••••••••••••••'){toast('Wpisz URL Apps Script!');return;}
+  localStorage.setItem(LS_GS_SCRIPT,v);
+  document.getElementById('gsScriptInput').value='••••••••••••••••';
+  const st=document.getElementById('gsScriptStatus');
+  if(st) st.innerHTML='📤 Apps Script: <span style="color:var(--success)">skonfigurowany ✓</span>';
+  toast('Apps Script URL zapisany!');
+}
+
+function showAppsScriptGuide(){
+  const guide=`INSTRUKCJA — Google Apps Script (zapis meczy):
+
+1. Otwórz swój arkusz Google Sheets
+2. Kliknij Extensions → Apps Script
+3. Wklej ten kod:
+
+function doGet(e) {
+  const action = e.parameter.action;
+  if (action === 'addRow') {
+    const row = JSON.parse(decodeURIComponent(e.parameter.row));
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    sheet.appendRow(row);
+    return ContentService.createTextOutput(JSON.stringify({status:'ok'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput(JSON.stringify({status:'error',error:'unknown action'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+4. Kliknij Deploy → New deployment
+5. Type: Web App
+6. Execute as: Me
+7. Who has access: Anyone
+8. Kliknij Deploy → skopiuj URL
+9. Wklej URL tutaj w polu "Apps Script URL"`;
+  alert(guide);
 }
 
 function ghLog(msg,color='var(--silver)'){
@@ -2463,18 +2644,128 @@ async function ghPushData(reason='save'){
 }
 
 // ── AUTO FETCH ON STARTUP ─────────────────────────────────────────────
+// =====================================================================
+// GOOGLE SHEETS SYNC
+// =====================================================================
+
+// Parse CSV text → array of match objects
+function parseSheetCSV(csv){
+  const lines=csv.trim().split('\n');
+  if(lines.length<2)return[];
+  const header=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+  const matches=[];
+  for(let i=1;i<lines.length;i++){
+    // Handle quoted fields
+    const cols=lines[i].match(/(".*?"|[^,]+|(?<=,)(?=,)|(?<=,)$|^(?=,))/g)||[];
+    const row=cols.map(c=>c.replace(/^"|"$/g,'').trim());
+    if(!row[0]||!row[0].match(/^\d+$/))continue;
+    const get=(idx)=>row[idx]||'';
+    const m={
+      gid:get(0), patch:get(1), date:get(2), win:get(3),
+      blue:{top:get(4),jng:get(5),mid:get(6),adc:get(7),supp:get(8)},
+      red: {top:get(9),jng:get(10),mid:get(11),adc:get(12),supp:get(13)},
+    };
+    // Optional champ columns (14-23)
+    const bct=get(14),bcj=get(15),bcm=get(16),bca=get(17),bcs=get(18);
+    const rct=get(19),rcj=get(20),rcm=get(21),rca=get(22),rcs=get(23);
+    if(bct||bcj||bcm||bca||bcs) m.blueChamps={top:bct,jng:bcj,mid:bcm,adc:bca,supp:bcs};
+    if(rct||rcj||rcm||rca||rcs) m.redChamps={top:rct,jng:rcj,mid:rcm,adc:rca,supp:rcs};
+    const imgUrl=get(24)||get(14); // fallback: col 14 might be imgUrl in old format
+    if(imgUrl&&imgUrl.startsWith('http'))m.imgUrl=imgUrl;
+    // preserve any local scanResult
+    const existing=MH.find(x=>x.gid===m.gid);
+    if(existing?.scanResult)m.scanResult=existing.scanResult;
+    matches.push(m);
+  }
+  return matches;
+}
+
+// Fetch matches from Google Sheets CSV
+async function gsFetch(silent=false){
+  const url=GS_CONFIG.csvUrl||(localStorage.getItem(LS_GS_SCRIPT+'_csv')||'');
+  if(!url){if(!silent)toast('Brak URL do arkusza Google Sheets');return false;}
+  try{
+    if(!silent)gsLog('Pobieranie z Google Sheets...');
+    const r=await fetch(url+'&t='+Date.now());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const csv=await r.text();
+    const parsed=parseSheetCSV(csv);
+    if(!parsed.length){if(!silent)toast('Arkusz pusty lub błędny format');return false;}
+    // Merge: keep local scan results, replace rest
+    const localScans={};
+    MH.forEach(m=>{if(m.scanResult)localScans[m.gid]=m.scanResult;});
+    MH.splice(0,MH.length,...parsed);
+    MH.forEach(m=>{if(localScans[m.gid])m.scanResult=localScans[m.gid];});
+    lsSave();
+    PS=buildPS();AP=Object.keys(PS).sort();
+    renderPL();renderProfileList();renderStats();renderHist();
+    if(selPr)renderProfile(selPr);
+    if(!silent){toast(`✓ Załadowano ${MH.length} meczy z Sheets`);gsLog(`✓ ${MH.length} meczy`,'var(--success)');}
+    return true;
+  }catch(e){
+    if(!silent){toast('Błąd Sheets: '+e.message);gsLog('✗ '+e.message,'var(--danger)');}
+    return false;
+  }
+}
+
+// Send new match to Google Apps Script
+async function gsWrite(matchData){
+  const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
+  if(!scriptUrl){
+    // No script URL — save locally only, remind user
+    toast('⚠ Brak Apps Script URL — mecz zapisany lokalnie');
+    gsLog('Brak scriptUrl — zapis tylko lokalny','var(--warn)');
+    return false;
+  }
+  try{
+    gsLog('Wysyłam do Google Sheets...');
+    const row=[
+      matchData.gid, matchData.patch, matchData.date, matchData.win,
+      matchData.blue.top||'', matchData.blue.jng||'', matchData.blue.mid||'', matchData.blue.adc||'', matchData.blue.supp||'',
+      matchData.red.top||'',  matchData.red.jng||'',  matchData.red.mid||'',  matchData.red.adc||'',  matchData.red.supp||'',
+      matchData.blueChamps?.top||'', matchData.blueChamps?.jng||'', matchData.blueChamps?.mid||'', matchData.blueChamps?.adc||'', matchData.blueChamps?.supp||'',
+      matchData.redChamps?.top||'',  matchData.redChamps?.jng||'',  matchData.redChamps?.mid||'',  matchData.redChamps?.adc||'',  matchData.redChamps?.supp||'',
+    ];
+    const r=await fetch(scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(row)));
+    const res=await r.json();
+    if(res.status==='ok'){
+      gsLog('✓ Zapisano w Google Sheets','var(--success)');
+      toast('✓ Mecz w Google Sheets!');
+      return true;
+    } else {
+      throw new Error(res.error||'nieznany błąd');
+    }
+  }catch(e){
+    gsLog('✗ Sheets write: '+e.message,'var(--danger)');
+    toast('Błąd zapisu Sheets: '+e.message);
+    return false;
+  }
+}
+
+function gsLog(msg,color='var(--silver)'){
+  const el=document.getElementById('gsLog');
+  if(!el)return;
+  el.style.display='block';
+  const ts=new Date().toLocaleTimeString('pl');
+  el.innerHTML+=`<div style="color:${color}">[${ts}] ${msg}</div>`;
+  el.scrollTop=el.scrollHeight;
+}
+
 async function ghAutoFetch(){
-  if(!GH_CONFIG.owner || !GH_CONFIG.repo) return; // not configured
+  // Google Sheets takes priority for match data
+  const sheetsOk=await gsFetch(true);
+  // Also sync GitHub for player data (colors, aliases, meta)
+  if(!GH_CONFIG.owner||!GH_CONFIG.repo)return;
   const indicator=document.getElementById('ghSyncBtn');
-  if(indicator){ indicator.textContent='⏳ GitHub'; indicator.style.opacity='0.6'; }
-  const ok=await ghFetchData(true);
+  if(indicator){indicator.textContent='⏳ Sync';indicator.style.opacity='0.6';}
+  const ghOk=await ghFetchData(true);
   if(indicator){
     indicator.textContent='⚙ GitHub';
     indicator.style.opacity='1';
+    const ok=sheetsOk||ghOk;
     indicator.style.borderColor=ok?'rgba(29,233,182,0.45)':'rgba(200,170,110,0.35)';
     indicator.style.color=ok?'var(--success)':'var(--gold)';
-    // revert after 3s
-    setTimeout(()=>{ indicator.style.borderColor='rgba(200,170,110,0.35)'; indicator.style.color='var(--gold)'; },3000);
+    setTimeout(()=>{indicator.style.borderColor='rgba(200,170,110,0.35)';indicator.style.color='var(--gold)';},3000);
   }
 }
 
