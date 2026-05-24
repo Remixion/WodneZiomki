@@ -692,8 +692,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
         </div>
       </div>
       <div>
-        <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Patch</div>
-        <input id="pi" class="ss" style="width:90px" value="26.02">
+        <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Patch <span style="color:var(--teal);font-size:9px;font-weight:400;letter-spacing:0">(auto)</span></div>
+        <input id="pi" class="ss" style="width:90px" value="26.02" title="Wykrywany automatycznie z daty — możesz zmienić ręcznie">
       </div>
     </div>
 
@@ -1509,6 +1509,10 @@ function openSave(){
   PW=null;
   document.getElementById('wbB').style.borderColor='var(--border)';
   document.getElementById('wbR').style.borderColor='var(--border)';
+
+  // Auto-detect current patch
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('pi').value=getCurrentPatch(today);
 
   // Build champion input grid
   const grid=document.getElementById('champInputsGrid');
@@ -2661,7 +2665,7 @@ function parseSheetCSV(csv){
     if(!row[0]||!row[0].match(/^\d+$/))continue;
     const get=(idx)=>row[idx]||'';
     const m={
-      gid:get(0), patch:get(1), date:get(2), win:get(3),
+      gid:get(0), patch:get(1)||getCurrentPatch(get(2)), date:get(2), win:get(3),
       blue:{top:get(4),jng:get(5),mid:get(6),adc:get(7),supp:get(8)},
       red: {top:get(9),jng:get(10),mid:get(11),adc:get(12),supp:get(13)},
     };
