@@ -22,10 +22,24 @@ body{font-family:'Rajdhani',sans-serif;background:var(--blue-deep);color:var(--w
 nav{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(3,8,18,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;gap:12px;flex-wrap:wrap}
 .nav-logo{font-family:'Pacifico',cursive;font-size:18px;color:#5DADE2;letter-spacing:1px;display:flex;align-items:center;gap:10px;text-shadow:0 0 20px rgba(93,173,226,0.4)}
 .nav-logo svg{width:32px;height:28px}
-.nav-tabs{display:flex;gap:2px;flex-wrap:wrap}
+.nav-tabs{display:flex;gap:2px;flex-wrap:wrap;align-items:center}
 .nav-tab{padding:6px 14px;background:transparent;border:1px solid transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s}
 .nav-tab:hover{color:var(--gold);border-color:var(--border)}
 .nav-tab.active{color:var(--gold);border-color:var(--border-bright);background:rgba(200,170,110,0.07)}
+/* Center emblem for Skład tab */
+.nav-center-emblem{position:relative;margin:0 6px}
+.nav-tab-center{
+  padding:7px 20px;
+  background:linear-gradient(135deg,rgba(11,196,227,0.15),rgba(93,173,226,0.1));
+  border:1px solid rgba(11,196,227,0.45);
+  color:var(--teal);
+  cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;border-radius:6px;
+  transition:all 0.25s;display:flex;align-items:center;
+  box-shadow:0 0 12px rgba(11,196,227,0.15);
+}
+.nav-tab-center:hover{background:linear-gradient(135deg,rgba(11,196,227,0.25),rgba(93,173,226,0.18));box-shadow:0 0 20px rgba(11,196,227,0.3)}
+.nav-tab-center.active{background:linear-gradient(135deg,rgba(11,196,227,0.22),rgba(93,173,226,0.15));border-color:var(--teal);box-shadow:0 0 18px rgba(11,196,227,0.28),inset 0 0 12px rgba(11,196,227,0.08);color:var(--white)}
 .nav-right{display:flex;gap:6px;align-items:center}
 .dev-badge{padding:4px 12px;background:rgba(232,72,85,0.12);border:1px solid rgba(232,72,85,0.35);color:var(--danger);font-size:11px;letter-spacing:2px;border-radius:20px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Rajdhani',sans-serif}
 .dev-badge.active{background:rgba(232,72,85,0.28);box-shadow:0 0 14px rgba(232,72,85,0.35)}
@@ -208,26 +222,26 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
   gap:3px;padding:8px 4px;
 }
 .mc-result-badge{
-  font-size:12px;font-weight:800;letter-spacing:1px;
+  font-size:16px;font-weight:800;letter-spacing:1px;
 }
 .mc-result-badge.win{color:#5DADE2}
 .mc-result-badge.loss{color:#E84855}
-.mc-gid{font-size:9px;color:rgba(160,180,200,0.45);letter-spacing:0.5px}
+.mc-gid{font-size:11px;color:rgba(160,180,200,0.45);letter-spacing:0.5px}
 
 /* Champ icons column */
 .mc-champs{
   display:flex;flex-direction:column;justify-content:center;
-  gap:2px;padding:8px 6px;flex-shrink:0;
+  gap:3px;padding:8px 9px;flex-shrink:0;
 }
 .mc-champ-row{display:flex;align-items:center;gap:5px}
 .mc-champ-img{
-  width:32px;height:32px;border-radius:6px;
+  width:38px;height:38px;border-radius:7px;
   background:rgba(255,255,255,0.06);
   object-fit:cover;flex-shrink:0;
 }
 .mc-champ-name{font-size:10px;color:var(--gold-light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px}
 .mc-role-badge{
-  font-size:8px;padding:1px 4px;border-radius:3px;
+  font-size:10px;padding:2px 6px;border-radius:3px;
   background:rgba(255,255,255,0.08);color:var(--silver);
   letter-spacing:0.5px;text-transform:uppercase;flex-shrink:0;
 }
@@ -245,33 +259,33 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
 /* Players column */
 .mc-players{
   flex:1;display:flex;flex-direction:column;justify-content:center;
-  gap:1px;padding:8px 6px 8px 0;min-width:0;
+  gap:3px;padding:8px 8px 8px 0;min-width:0;
 }
 .mc-player-row{
   display:flex;align-items:center;gap:4px;
-  font-size:11px;padding:1px 0;
+  font-size:13px;padding:2px 0;
 }
 .mc-player-dot{
-  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  width:9px;height:9px;border-radius:50%;flex-shrink:0;
 }
 .mc-player-name{
-  font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  max-width:80px;
+  font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:95px;
 }
 .mc-player-champ{
-  font-size:9px;color:var(--silver);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:11px;color:var(--silver);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 
 /* Meta column */
 .mc-meta{
   display:flex;flex-direction:column;align-items:flex-end;justify-content:center;
-  gap:4px;padding:8px 12px;flex-shrink:0;min-width:90px;text-align:right;
+  gap:5px;padding:8px 16px;flex-shrink:0;min-width:100px;text-align:right;
 }
-.mc-date{font-size:10px;color:var(--silver)}
-.mc-patch{font-size:9px;color:rgba(160,180,200,0.45);letter-spacing:0.5px}
+.mc-date{font-size:12px;color:var(--silver);font-weight:600}
+.mc-patch{font-size:11px;color:rgba(160,180,200,0.45);letter-spacing:0.5px}
 .mc-img-btn{
   background:rgba(11,196,227,0.1);border:1px solid rgba(11,196,227,0.25);
-  color:var(--teal);padding:2px 7px;border-radius:3px;font-size:9px;
+  color:var(--teal);padding:4px 9px;border-radius:3px;font-size:11px;
   cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;
   transition:all 0.15s;white-space:nowrap;
 }
@@ -466,17 +480,21 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
     </svg>
     Wodne Customy
   </div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('randomizer',this)">Skład</button>
+  <div class="nav-tabs" style="display:flex;align-items:center;gap:4px">
     <button class="nav-tab" onclick="showPage('profiles',this)">Profile</button>
     <button class="nav-tab" onclick="showPage('stats',this)">Statystyki</button>
     <button class="nav-tab" onclick="showPage('history',this)">Historia</button>
-    <button class="nav-tab" onclick="showPage('aliases',this)">Aliasy</button>
+    <!-- CENTER EMBLEM -->
+    <div class="nav-center-emblem">
+      <button class="nav-tab-center active" id="tabSkład" onclick="showPage('randomizer',this)">
+        <svg width="16" height="14" viewBox="0 0 36 30" fill="none" style="margin-right:5px;vertical-align:middle"><path d="M18 2 C18 2 10 12 10 17 A8 8 0 0 0 26 17 C26 12 18 2 18 2Z" fill="url(#nd)"/><path d="M2 24 Q7 21 12 24 Q17 27 22 24 Q27 21 34 24" stroke="#5DADE2" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.8"/><defs><linearGradient id="nd" x1="18" y1="2" x2="18" y2="25" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5DADE2"/><stop offset="100%" stop-color="#0BC4E3"/></linearGradient></defs></svg>
+        Skład
+      </button>
+    </div>
+    <button class="nav-tab" onclick="openScanModal()">🤖 AI Scan</button>
   </div>
   <div class="nav-right">
-    <button class="ai-badge" onclick="openScanModal()">🤖 AI Scan</button>
-    <button class="ai-badge" id="ghSyncBtn" onclick="openGhSettings()" style="background:rgba(200,170,110,0.1);border-color:rgba(200,170,110,0.35);color:var(--gold)" title="GitHub Sync">⚙ GitHub</button>
-    <button class="dev-badge" id="devBtn" onclick="toggleDev()">⚙ DEV</button>
+    <button class="ai-badge" id="ghSyncBtn" onclick="openGhSettings()" style="background:rgba(200,170,110,0.1);border-color:rgba(200,170,110,0.35);color:var(--gold)" title="DEV / GitHub Sync">⚙ DEV</button>
   </div>
 </nav>
 
@@ -598,26 +616,14 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
   </div>
 </div>
 
-<!-- ALIASES -->
-<div class="page" id="page-aliases">
-  <div class="panel" style="margin-bottom:16px">
-    <div class="panel-header">
-      Aliasy graczy (nick w aplikacji → nick w grze)
-      <button class="btn sbtn" style="padding:4px 12px;font-size:10px" onclick="saveAliases()">💾 Zapisz</button>
-    </div>
-    <div style="padding:12px;font-size:11px;color:var(--silver);border-bottom:1px solid var(--border)">
-      Wpisz nick z gry (Riot ID) żeby przy skanowaniu AI mógł dopasować gracza. Np. Resek → Cytrusia
-    </div>
-    <div class="alias-grid" id="aliasGrid"></div>
-  </div>
-</div>
+
 </div><!-- /app -->
 
 <!-- GITHUB SETTINGS MODAL -->
 <div id="ghModal" class="modal-overlay" style="display:none">
   <div class="modal-box" style="width:min(480px,95vw)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px">⚙ GitHub Sync</div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px">⚙ DEV — GitHub Sync</div>
       <button class="btn dbtn" style="padding:3px 10px;font-size:10px" onclick="closeGhSettings()">✕</button>
     </div>
 
@@ -727,18 +733,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:12px 2
   </div>
 </div>
 
-<!-- DEV PANEL -->
-<div class="dev-panel" id="devPanel">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-    <span style="font-family:'Cinzel',serif;font-size:12px;color:var(--danger);letter-spacing:2px">⚠ TRYB DEVELOPERSKI</span>
-    <button class="btn dbtn" style="padding:3px 10px;font-size:10px;margin-left:auto" onclick="toggleDev()">Zamknij</button>
-  </div>
-  <div style="font-size:10px;color:#5DADE2;letter-spacing:2px;margin-bottom:7px">— LEWA —</div>
-  <div class="dg" id="devB"></div>
-  <div style="font-size:10px;color:#E84855;letter-spacing:2px;margin:10px 0 7px">— PRAWA —</div>
-  <div class="dg" id="devR"></div>
-  <div style="margin-top:12px"><button class="btn primary" onclick="applyDev()">Zastosuj zmiany</button></div>
-</div>
+
 
 <!-- AI SCAN MODAL -->
 <div id="scanModal" class="modal-overlay" style="display:none">
@@ -2168,33 +2163,16 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 // =====================================================================
 // DEV MODE
 // =====================================================================
-function toggleDev(){devMode=!devMode;document.getElementById('devBtn').classList.toggle('active',devMode);document.getElementById('devPanel').classList.toggle('open',devMode);if(devMode)renderDev();}
-function renderDev(){
-  ['blue','red'].forEach(t=>{
-    const el=document.getElementById('dev'+(t==='blue'?'B':'R'));
-    el.innerHTML=ROLES.map((role,i)=>{const pid=CT[t][i]||'';const ch=CC[t][i]||'';return `<div class="ds"><label>${RI[role]} ${role}</label><select id="dp_${t}_${i}">${['',...AP].map(n=>`<option value="${n}" ${n===pid?'selected':''}>${n||'—'}</option>`).join('')}</select><select id="dc_${t}_${i}" style="margin-top:3px"><option value="">— brak —</option>${CHAMPS[role].map(c=>`<option value="${c}" ${c===ch?'selected':''}>${c}</option>`).join('')}</select></div>`;}).join('');
-  });
+function showPage(n,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  // clear all nav tabs including center emblem
+  document.querySelectorAll('.nav-tab,.nav-tab-center').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+n)?.classList.add('active');
+  if(btn) btn.classList.add('active');
 }
-function applyDev(){
-  ROLES.forEach((role,i)=>{
-    const bP=document.getElementById(`dp_blue_${i}`)?.value;
-    const rP=document.getElementById(`dp_red_${i}`)?.value;
-    const bC=document.getElementById(`dc_blue_${i}`)?.value;
-    const rC=document.getElementById(`dc_red_${i}`)?.value;
-    if(bP){
-      const existing=draftTeams.blue.find(p=>p.role===role);
-      if(existing)existing.name=bP;else draftTeams.blue.push({name:bP,role});
-    }
-    if(rP){
-      const existing=draftTeams.red.find(p=>p.role===role);
-      if(existing)existing.name=rP;else draftTeams.red.push({name:rP,role});
-    }
-    CC.blue[i]=bC||null;CC.red[i]=rC||null;
-  });
-  syncDraftToCT();
-  renderDraftTeams();renderPL();updateDraftCounts();
-  toast('Zmiany zastosowane!');
-}
+function toggleDev(){} // DEV panel removed
+function renderDev(){}
+function applyDev(){}
 
 // =====================================================================
 // ADD PLAYER
