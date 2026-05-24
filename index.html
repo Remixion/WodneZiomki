@@ -172,6 +172,54 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 /* PROFILE */
 .profile-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start}
 @media(max-width:900px){.profile-layout{grid-template-columns:1fr}}
+/* Profile V2 — dropdown selector */
+.pv2-selector-wrap{position:relative;max-width:420px;margin:0 auto 18px;z-index:50}
+.pv2-selector{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 16px;background:var(--panel);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.25s}
+.pv2-selector:hover{border-color:var(--teal);box-shadow:0 0 12px rgba(11,196,227,0.15)}
+.pv2-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:rgba(8,18,36,0.98);border:1px solid var(--border);border-radius:8px;padding:10px;max-height:320px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;animation:pv2SlideDown 0.22s ease}
+.pv2-dropdown.open{display:block}
+@keyframes pv2SlideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.pv2-player-opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background 0.15s}
+.pv2-player-opt:hover{background:rgba(200,170,110,0.07)}
+.pv2-player-opt.active{background:rgba(11,196,227,0.08);border:1px solid rgba(11,196,227,0.2)}
+/* Profile V2 — card */
+.pv2-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+/* Banner */
+.pv2-banner{position:relative;height:240px;overflow:hidden}
+.pv2-banner-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:all 0.5s}
+.pv2-banner-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,14,26,0.75) 0%,rgba(5,14,26,0.15) 40%,rgba(5,14,26,0.55) 100%)}
+.pv2-banner-bottom{position:absolute;bottom:0;left:0;right:0;height:90px;background:linear-gradient(0deg,var(--panel) 0%,transparent 100%)}
+/* Avatar in banner */
+.pv2-avatar{position:absolute;left:32px;top:50%;transform:translateY(-50%);width:96px;height:96px;border-radius:50%;border:3px solid;object-fit:cover;box-shadow:0 0 30px rgba(0,0,0,0.7);overflow:hidden;background:rgba(8,18,36,0.8);display:flex;align-items:center;justify-content:center}
+/* Settings btn */
+.pv2-settings-btn{position:absolute;bottom:12px;right:14px;background:rgba(5,14,26,0.8);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;color:var(--gold);font-size:11px;font-family:"Rajdhani",sans-serif;font-weight:600;letter-spacing:1px;backdrop-filter:blur(6px);transition:all 0.2s}
+.pv2-settings-btn:hover{border-color:var(--gold);background:rgba(200,170,110,0.12)}
+/* Name area */
+.pv2-namerow{padding:14px 32px 18px;display:flex;align-items:flex-end;gap:16px}
+/* Charts row */
+.pv2-charts{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.pv2-chart-cell{flex:1;padding:20px;text-align:center;border-right:1px solid var(--border)}
+.pv2-chart-cell:last-child{border-right:none}
+.pv2-chart-label{font-size:9px;color:var(--silver);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+/* Rank badge in center of pie */
+.pv2-rank-center{font-family:"Cinzel",serif;font-size:11px;font-weight:700;text-align:center}
+/* Bottom 2-col layout */
+.pv2-body{display:grid;grid-template-columns:220px 1fr;gap:0}
+.pv2-sidebar{padding:18px;border-right:1px solid var(--border)}
+.pv2-main{padding:18px}
+.pv2-section-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);opacity:0.6;margin-bottom:10px}
+/* Match list */
+.pv2-match{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;margin-bottom:4px;border:1px solid var(--border);transition:background 0.15s}
+.pv2-match:hover{background:rgba(200,170,110,0.04)}
+.pv2-match.pv2-win{border-left:3px solid #5DADE2;background:rgba(93,173,226,0.04)}
+.pv2-match.pv2-loss{border-left:3px solid #E84855;background:rgba(232,72,85,0.03)}
+/* Settings panel */
+.pv2-settings{display:none;border-top:1px solid var(--border);padding:20px;background:rgba(0,0,0,0.3)}
+.pv2-settings.open{display:block}
+.pv2-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pv2-field label{font-size:9px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px}
+.pv2-field input,.pv2-field select{width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--white);padding:6px 9px;border-radius:4px;font-family:"Rajdhani",sans-serif;font-size:12px}
+.pv2-field input:focus,.pv2-field select:focus{outline:none;border-color:var(--teal)}
 .pcard{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden}
 .phero{position:relative;height:165px;overflow:hidden}
 .phbg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(3px) brightness(0.35);transform:scale(1.1)}
@@ -636,15 +684,25 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 
 <!-- PROFILES -->
 <div class="page" id="page-profiles">
-  <div class="profile-layout">
-    <div><div class="panel">
-      <div class="panel-header">Gracze</div>
-      <div style="padding:7px 10px;border-bottom:1px solid var(--border)">
-        <input id="prSearch" class="ss" style="width:100%;padding:5px 9px 5px 28px;font-size:12px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0B4C8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:8px center" placeholder="Szukaj gracza..." oninput="renderProfileList()">
+  <!-- Dropdown player selector -->
+  <div class="pv2-selector-wrap" id="pv2SelectorWrap">
+    <div class="pv2-selector" onclick="toggleProfileSelector()">
+      <div id="pv2Selected" style="display:flex;align-items:center;gap:10px">
+        <span style="color:var(--silver);letter-spacing:1px">Wybierz gracza...</span>
       </div>
-      <div id="profileList" style="max-height:620px;overflow-y:auto"></div>
-    </div></div>
-    <div id="profileContent"><div style="display:flex;align-items:center;justify-content:center;height:380px;color:var(--silver);font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:0.45">Wybierz gracza z listy</div></div>
+      <svg id="pv2Arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;transition:transform 0.3s"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="pv2-dropdown" id="pv2Dropdown">
+      <input class="ss" id="pv2Search" placeholder="Szukaj..." oninput="renderProfileDropdown()" style="width:100%;margin-bottom:8px;padding:7px 10px;font-size:12px">
+      <div id="pv2List"></div>
+    </div>
+  </div>
+  <!-- Profile content -->
+  <div id="profileContent">
+    <div style="display:flex;align-items:center;justify-content:center;height:400px;color:var(--silver);font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:0.35;flex-direction:column;gap:16px">
+      <svg width="48" height="40" viewBox="0 0 36 30" fill="none" opacity="0.3"><path d="M18 2 C18 2 10 12 10 17 A8 8 0 0 0 26 17 C26 12 18 2 18 2Z" fill="#5DADE2"/><path d="M2 24 Q7 21 12 24 Q17 27 22 24 Q27 21 34 24" stroke="#5DADE2" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+      Wybierz gracza z listy powyżej
+    </div>
   </div>
 </div>
 
@@ -1581,10 +1639,16 @@ function randomizeTeams(){
   // Shuffle them and split 5/5, respecting teammate restrictions
   let pool=[...allDrafted];shuf(pool);
   let b=pool.slice(0,5),r=pool.slice(5,10);
-  for(let a=0;a<100;a++){
+  for(let a=0;a<200;a++){
     let ok=true;
     for(const rx of restr){
-      if(rx.type==='teammate'&&((b.includes(rx.playerA)&&b.includes(rx.playerB))||(r.includes(rx.playerA)&&r.includes(rx.playerB)))){ok=false;break;}
+      if(rx.type==='teammate'){
+        // Must NOT be on the same team
+        const sameB=b.includes(rx.playerA)&&b.includes(rx.playerB);
+        const sameR=r.includes(rx.playerA)&&r.includes(rx.playerB);
+        if(sameB||sameR){ok=false;break;}
+      }
+      // role restrictions handled after team split (in assignR)
     }
     if(ok)break;shuf(pool);b=pool.slice(0,5);r=pool.slice(5,10);
   }
@@ -1652,18 +1716,19 @@ function clearAll(){
 }
 
 function assignR(players){
-  const avail=[...ROLES];const res={};
-  players.forEach((n,i)=>{
-    const s=PS[n]||{roles:{},wins:{}};
-    const sorted=[...avail].sort((a,b)=>{
-      const ar=restr.find(rx=>rx.type==='role'&&rx.player===n&&rx.role===a);
-      const br=restr.find(rx=>rx.type==='role'&&rx.player===n&&rx.role===b);
-      if(ar&&!br)return 1;if(!ar&&br)return -1;
-      return (s.roles[b]||0)-(s.roles[a]||0);
-    });
-    const pick=sorted[0]||avail[0];res[i]=pick;const ri=avail.indexOf(pick);if(ri>=0)avail.splice(ri,1);
-  });
-  return res;
+  // Try up to 100 random shuffles to find a valid role assignment
+  const roles=[...ROLES].slice(0,players.length);
+  for(let attempt=0;attempt<100;attempt++){
+    shuf(roles);
+    let ok=true;
+    for(let i=0;i<players.length;i++){
+      if(restr.find(rx=>rx.type==='role'&&rx.player===players[i]&&rx.role===roles[i])){ok=false;break;}
+    }
+    if(ok) return roles.reduce((o,r,i)=>{o[i]=r;return o;},{});
+  }
+  // Fallback: assign ignoring restrictions
+  shuf(roles);
+  return roles.reduce((o,r,i)=>{o[i]=r;return o;},{});
 }
 
 function renderRAP(){} // removed — no separate role panel in unified mode
@@ -1866,26 +1931,117 @@ function saveAliases(){
 // PROFILE PAGE
 // =====================================================================
 function renderProfileList(){
-  const el=document.getElementById('profileList');
-  const q=(document.getElementById('prSearch')?.value||'').toLowerCase().trim();
-  const list=q ? AP.filter(n=>n.toLowerCase().includes(q)||getGameNick(n).toLowerCase().includes(q)) : AP;
+  // kept for compatibility — profile list now in pv2 dropdown
+  renderProfileDropdown();
+}
+
+function renderProfileDropdown(){
+  const q=(document.getElementById('pv2Search')?.value||'').toLowerCase();
+  const list=AP.filter(n=>!q||n.toLowerCase().includes(q)||(getGameNick(n)||'').toLowerCase().includes(q));
+  const el=document.getElementById('pv2List');if(!el)return;
   el.innerHTML=list.map(n=>{
-    const s=PS[n];const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const w=Object.values(s.wins).reduce((a,b)=>a+b,0);
-    const wr=g>0?Math.round(w/g*100):0;const c=PC[n]||'#C8AA6E';const gn=getGameNick(n);
-    return `<div class="pi ${selPr===n?'sel':''}" onclick="selProfile('${n}')">
-      <div class="av av32" style="border-color:${c}55;color:${c};background:${c}15;overflow:hidden;position:relative">
-        ${(PLAYER_META[n]||{}).avatarUrl
-          ?`<img src="${PLAYER_META[n].avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">`
-          :`${ini(n)}`}
+    const c=PC[n]||'#C8AA6E';
+    const meta=PLAYER_META[n]||{};
+    const s=PS[n];
+    const g=s?Object.values(s.roles).reduce((a,b)=>a+b,0):0;
+    return `<div class="pv2-player-opt ${selPr===n?'active':''}" onclick="selProfile('${n}');closeProfileSelector()">
+      <div style="width:34px;height:34px;border-radius:50%;border:2px solid ${c};background:${c}18;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${c};flex-shrink:0">
+        ${meta.avatarUrl?`<img src="${meta.avatarUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentNode.innerHTML='${ini(n)}'">`:ini(n)}
       </div>
-      <div><div class="pname">${n}${gn!==n?` <span style="color:var(--teal);font-size:10px">(${gn})</span>`:''}</div><div class="psub">${g}G · ${wr}%WR</div></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;color:${c};font-size:13px">${n}</div>
+        <div style="font-size:10px;color:var(--silver)">${g}G · ${calcMMR(n).rank}</div>
+      </div>
+      ${selPr===n?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>':''}
     </div>`;
   }).join('');
 }
 
-function selProfile(n){selPr=n;renderProfileList();renderProfile(n);}
+function toggleProfileSelector(){
+  const dd=document.getElementById('pv2Dropdown');
+  const arrow=document.getElementById('pv2Arrow');
+  const open=dd.classList.toggle('open');
+  if(arrow)arrow.style.transform=open?'rotate(180deg)':'rotate(0deg)';
+  if(open)setTimeout(()=>document.getElementById('pv2Search')?.focus(),50);
+}
 
-// Pie chart SVG helper — defined outside renderProfile to avoid strict mode issues
+function closeProfileSelector(){
+  document.getElementById('pv2Dropdown')?.classList.remove('open');
+  const arrow=document.getElementById('pv2Arrow');
+  if(arrow)arrow.style.transform='rotate(0deg)';
+}
+
+function selProfile(n){
+  selPr=n;
+  closeProfileSelector();
+  renderProfileDropdown();
+  // Update selector display
+  const c=PC[n]||'#C8AA6E';
+  const meta=PLAYER_META[n]||{};
+  const sel=document.getElementById('pv2Selected');
+  if(sel)sel.innerHTML=`
+    <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${c};background:${c}18;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${c};flex-shrink:0">
+      ${meta.avatarUrl?`<img src="${meta.avatarUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentNode.innerHTML='${ini(n)}'">`:ini(n)}
+    </div>
+    <span style="font-weight:700;color:${c};font-size:14px">${n}</span>
+    <span style="color:var(--silver);font-size:11px">${calcMMR(n).rank}</span>`;
+  renderProfile(n);
+}
+
+// ── MMR / RANK SYSTEM ──────────────────────────────────────────────────
+const RANK_TIERS=[
+  {name:'Iron IV',   mmr:0},  {name:'Iron III',   mmr:20}, {name:'Iron II',   mmr:40}, {name:'Iron I',   mmr:60},
+  {name:'Bronze IV', mmr:80}, {name:'Bronze III', mmr:100},{name:'Bronze II', mmr:120},{name:'Bronze I', mmr:140},
+  {name:'Silver IV', mmr:160},{name:'Silver III', mmr:180},{name:'Silver II', mmr:200},{name:'Silver I', mmr:220},
+  {name:'Gold IV',   mmr:240},{name:'Gold III',   mmr:260},{name:'Gold II',   mmr:280},{name:'Gold I',   mmr:300},
+  {name:'Platinum IV',mmr:320},{name:'Platinum III',mmr:340},{name:'Platinum II',mmr:360},{name:'Platinum I',mmr:380},
+  {name:'Emerald IV',mmr:400},{name:'Emerald III',mmr:420},{name:'Emerald II',mmr:440},{name:'Emerald I',mmr:460},
+  {name:'Diamond IV',mmr:480},{name:'Diamond III',mmr:500},{name:'Diamond II',mmr:520},{name:'Diamond I',mmr:540},
+  {name:'Master',    mmr:560},{name:'Grandmaster', mmr:600},{name:'Challenger',mmr:650},
+];
+const RANK_COLORS={Iron:'#8B8B8B',Bronze:'#CD7F32',Silver:'#C0C0C0',Gold:'#FFD700',Platinum:'#00BCD4',Emerald:'#2ECC71',Diamond:'#5DADE2',Master:'#9B59B6',Grandmaster:'#E84855',Challenger:'#00BCD4'};
+
+function calcMMR(n){
+  const s=PS[n];if(!s)return{mmr:0,rank:'Iron IV',color:'#8B8B8B'};
+  const matches=MH.filter(m=>Object.values(m.blue).includes(n)||Object.values(m.red).includes(n));
+  let mmr=0;
+  matches.forEach(m=>{
+    const inBlue=Object.values(m.blue).includes(n);
+    const won=(inBlue&&m.win==='LEWA')||(!inBlue&&m.win==='PRAWA');
+    mmr+=won?5:-5;
+  });
+  mmr=Math.max(0,mmr);
+  // Find rank
+  let rank=RANK_TIERS[0];
+  for(const t of RANK_TIERS){if(mmr>=t.mmr)rank=t;else break;}
+  const tier=rank.name.split(' ')[0];
+  return{mmr,rank:rank.name,color:RANK_COLORS[tier]||'#C8AA6E',tier};
+}
+
+// ── DONUT PIE CHART (role distribution) ────────────────────────────────────
+function makeDonut(segments, size=120, innerText='', innerSub=''){
+  // segments: [{pct, color, label}]
+  const cx=size/2, cy=size/2, R=size/2-10, thick=16;
+  const r=R-thick;
+  const circ=2*Math.PI*R;
+  let offset=0;
+  const arcs=segments.map(seg=>{
+    const arc=circ*seg.pct;
+    const s=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${seg.color}" stroke-width="${thick}"
+      stroke-dasharray="${Math.max(0,arc-1.5)} ${circ}" stroke-dashoffset="${circ/4-offset}"
+      transform="rotate(-90 ${cx} ${cy})"><title>${seg.label}</title></circle>`;
+    offset+=arc;
+    return s;
+  });
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="${thick}"/>
+    ${arcs.join('')}
+    ${innerText?`<text x="${cx}" y="${cy-3}" text-anchor="middle" fill="var(--white)" font-size="13" font-weight="700" font-family="Cinzel,serif">${innerText}</text>`:''}
+    ${innerSub?`<text x="${cx}" y="${cy+13}" text-anchor="middle" fill="var(--silver)" font-size="8" font-family="Rajdhani,sans-serif" letter-spacing="1">${innerSub}</text>`:''}
+  </svg>`;
+}
+
+
 function makePieChart(rg, rw, size=52){
   if(!rg) return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size/2}" cy="${size/2}" r="${size/2-5}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/><text x="${size/2}" y="${size/2+4}" text-anchor="middle" fill="rgba(160,180,200,0.35)" font-size="9" font-family="Rajdhani,sans-serif">—</text></svg>`;
   const pct=Math.round(rw/rg*100);
@@ -1904,167 +2060,176 @@ function renderProfile(n){
   const gn=getGameNick(n);
   const meta=PLAYER_META[n]||{};
   const matches=MH.filter(m=>Object.values(m.blue).includes(n)||Object.values(m.red).includes(n));
+  const mmrData=calcMMR(n);
 
-  // Synergy data
+  // Banner background
+  let bannerBg='';
+  if(meta.bannerUrl) bannerBg=`background-image:url('${meta.bannerUrl}')`;
+  else if(meta.monsterKey&&MONSTER_KEYS.includes(meta.monsterKey)) bannerBg=`background-image:url('${pickMonsterUrl(meta.monsterKey)}')`;
+  else bannerBg=`background:linear-gradient(135deg,${c}55 0%,#030810 60%,${c}22 100%)`;
+
+  // Avatar content
+  const avContent=meta.avatarUrl
+    ?`<img src="${meta.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">`
+    :`<span style="font-size:30px;font-weight:700;color:${c}">${ini(n)}</span>`;
+
+  // Role donut — role distribution
+  const roleColors={top:'#E84855',jng:'#1DE9B6',mid:'#5DADE2',adc:'#F39C12',supp:'#A78BFA'};
+  const roleSegs=ROLES.filter(r=>s.roles[r]>0).map(r=>({
+    pct:g>0?s.roles[r]/g:0,
+    color:roleColors[r],
+    label:`${RI[r]} ${r.toUpperCase()}: ${s.roles[r]}G`
+  }));
+
+  // WL donut
+  const wlSegs=g>0?[
+    {pct:w/g,color:'#5DADE2',label:`Wygrane: ${w}`},
+    {pct:(g-w)/g,color:'rgba(232,72,85,0.5)',label:`Przegrane: ${g-w}`}
+  ]:[{pct:1,color:'rgba(255,255,255,0.08)',label:'Brak gier'}];
+
+  // Synergy
   const symM={},enmM={};
   matches.forEach(m=>{
     const inB=Object.values(m.blue).includes(n);
     const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
-    Object.values(inB?m.blue:m.red).filter(x=>x!==n).forEach(x=>{if(!symM[x])symM[x]={g:0,w:0};symM[x].g++;if(won)symM[x].w++;});
-    Object.values(inB?m.red:m.blue).forEach(x=>{if(!enmM[x])enmM[x]={g:0,w:0};enmM[x].g++;if(won)enmM[x].w++;});
+    Object.values(inB?m.blue:m.red).filter(x=>x&&x!==n).forEach(x=>{
+      if(!symM[x])symM[x]={g:0,w:0};symM[x].g++;if(won)symM[x].w++;
+    });
+    Object.values(inB?m.red:m.blue).filter(x=>x).forEach(x=>{
+      if(!enmM[x])enmM[x]={g:0,w:0};enmM[x].g++;if(won)enmM[x].w++;
+    });
   });
-  const symA=Object.entries(symM).map(([x,v])=>({n:x,wr:v.g?Math.round(v.w/v.g*100):0,g:v.g})).sort((a,b)=>b.wr-a.wr);
-  const enmA=Object.entries(enmM).map(([x,v])=>({n:x,wr:v.g?Math.round(v.w/v.g*100):0,g:v.g})).sort((a,b)=>a.wr-b.wr);
+  const bestWith=Object.entries(symM).map(([x,v])=>({n:x,g:v.g,wr:v.g?Math.round(v.w/v.g*100):0})).filter(x=>x.g>=1).sort((a,b)=>b.wr-a.wr).slice(0,5);
+  const hardest=Object.entries(enmM).map(([x,v])=>({n:x,g:v.g,wr:v.g?Math.round(v.w/v.g*100):0})).filter(x=>x.g>=1).sort((a,b)=>a.wr-b.wr).slice(0,5);
+
+  // Restrictions
   const myR=restr.filter(r=>(r.type==='teammate'&&(r.playerA===n||r.playerB===n))||(r.type==='role'&&r.player===n));
-  const champArr=Object.entries(s.champs||{}).map(([ch,v])=>({ch,g:v.g,w:v.w,wr:v.g?Math.round(v.w/v.g*100):0,k:v.g>0?+(v.k/v.g).toFixed(1):0,d:v.g>0?+(v.d/v.g).toFixed(1):0,a:v.g>0?+(v.a/v.g).toFixed(1):0})).sort((a,b)=>b.g-a.g);
 
-  // Banner background
-  let bannerBg='';
-  if(meta.bannerUrl){
-    bannerBg=`background-image:url('${meta.bannerUrl}')`;
-  } else if(meta.monsterKey&&MONSTER_KEYS.includes(meta.monsterKey)){
-    bannerBg=`background-image:url('${pickMonsterUrl(meta.monsterKey)}')`;
-  } else {
-    bannerBg=`background:linear-gradient(135deg,${c}40 0%,#030810 60%,${c}18 100%)`;
-  }
-
-  // Avatar
-  const avContent=meta.avatarUrl
-    ? `<img src="${meta.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">`
-    : `<span style="font-size:28px;font-weight:700;color:${c}">${ini(n)}</span>`;
-
-
+  // Match history for player
+  const playerMatches=[...matches].reverse().slice(0,20);
 
   const el=document.getElementById('profileContent');
-  el.innerHTML=`
-  <div class="prof-wrap">
-    <div class="prof-banner">
-      <div class="prof-banner-bg" style="${bannerBg}"></div>
+  el.innerHTML=`<div class="pv2-card">
+    <div class="pv2-banner">
+      <div class="pv2-banner-bg" style="${bannerBg}"></div>
       ${meta.monsterKey?`<div style="position:absolute;inset:0;background:${c}33;mix-blend-mode:color;pointer-events:none"></div>`:''}
-      <div class="prof-banner-gradient"></div>
-      <div class="prof-banner-bottom"></div>
-      <div class="prof-av-wrap">
-        <div class="prof-av-img" style="border-color:${c};background:${c}18">${avContent}</div>
+      <div class="pv2-banner-overlay"></div>
+      <div class="pv2-banner-bottom"></div>
+      <div class="pv2-avatar" style="border-color:${c}">${avContent}</div>
+      <div style="position:absolute;left:148px;top:50%;transform:translateY(-50%)">
+        <div style="font-family:'Cinzel',serif;font-size:22px;color:var(--white);text-shadow:0 2px 8px rgba(0,0,0,0.8)">${n}</div>
+        ${gn!==n?`<div style="font-size:12px;color:var(--teal);margin-top:2px">🎮 ${gn}</div>`:''}
+        <div style="font-size:11px;color:${mmrData.color};margin-top:4px;font-weight:700">${mmrData.rank} · ${mmrData.mmr} MMR</div>
+        <div style="font-size:10px;color:var(--silver);margin-top:3px">${g} gier · ${wr}% WR</div>
       </div>
-      <button class="prof-settings-btn" onclick="toggleProfSettings('${n}')">⚙ Ustawienia</button>
+      <button class="pv2-settings-btn" onclick="toggleProfSettings('${n}')">⚙ Ustawienia</button>
     </div>
-    <div class="prof-settings-panel" id="profSettingsPanel_${n}">
-      <div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Ustawienia profilu — ${n}</div>
-      <div class="prof-settings-grid">
-        <div class="prof-field">
-          <label>Avatar (URL obrazka)</label>
-          <input id="ps_avatar_${n}" value="${meta.avatarUrl||''}" placeholder="https://...">
+    <div class="pv2-settings" id="profSettingsPanel_${n}">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">⚙ Ustawienia — ${n}</div>
+      <div class="pv2-settings-grid">
+        <div class="pv2-field"><label>Nick w LoL (Riot ID)</label><input id="ps_gn_${n}" value="${gn!==n?gn:''}" placeholder="NickWGrze"></div>
+        <div class="pv2-field"><label>Nick na Discordzie</label><input id="ps_discord_${n}" value="${meta.discordNick||''}" placeholder="nick#1234"></div>
+        <div class="pv2-field"><label>Avatar (URL)</label><input id="ps_avatar_${n}" value="${meta.avatarUrl||''}" placeholder="https://..."></div>
+        <div class="pv2-field"><label>Baner (URL)</label><input id="ps_banner_${n}" value="${meta.bannerUrl||''}" placeholder="https://..."></div>
+        <div class="pv2-field"><label>Stwór w tle</label>
+          <select id="ps_monster_${n}"><option value="">— brak —</option>${MONSTER_KEYS.map(k=>`<option value="${k}" ${meta.monsterKey===k?'selected':''}>${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('')}</select>
         </div>
-        <div class="prof-field">
-          <label>Baner (URL obrazka)</label>
-          <input id="ps_banner_${n}" value="${meta.bannerUrl||''}" placeholder="https://...">
-        </div>
-        <div class="prof-field">
-          <label>Stwór w tle</label>
-          <select id="ps_monster_${n}" class="ss" style="width:100%;font-size:12px">
-            <option value="">— brak —</option>
-            ${MONSTER_KEYS.map(k=>`<option value="${k}" ${meta.monsterKey===k?'selected':''}>${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('')}
-          </select>
-        </div>
-        <div class="prof-field">
-          <label>Kolor gracza</label>
-          <input type="color" id="ps_color_${n}" value="${c}" style="height:34px;width:100%;padding:2px;border-radius:4px;border:1px solid var(--border);background:rgba(0,0,0,0.4);cursor:pointer">
+        <div class="pv2-field"><label>Kolor gracza</label>
+          <input type="color" id="ps_color_${n}" value="${c}" style="height:34px;cursor:pointer">
         </div>
       </div>
-      <div style="margin-top:12px;display:flex;gap:8px">
-        <button class="btn primary" style="padding:6px 16px;font-size:11px" onclick="saveProfSettings('${n}')">💾 Zapisz</button>
-        <button class="btn" style="padding:6px 12px;font-size:11px" onclick="toggleProfSettings('${n}')">Zamknij</button>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="btn primary" onclick="saveProfSettings('${n}')">💾 Zapisz</button>
+        <button class="btn" onclick="toggleProfSettings('${n}')">Zamknij</button>
       </div>
-    </div>
-    <div class="prof-name-row">
-      <div class="prof-name-block">
-        <div class="prof-name">${n}</div>
-        ${gn!==n?`<div class="prof-gamenick">🎮 ${gn}</div>`:''}
-        <div class="prof-subline">${g} meczy · ${matches.length} z historii</div>
-      </div>
-    </div>
-    <div class="prof-stats-strip">
-      ${[['Mecze',g],['Wygrane',w],['Przegrane',g-w],['WR',wr+'%'],['Mecze hist.',matches.length]].map(([l,v])=>
-        `<div class="prof-stat-cell"><div class="prof-stat-val" style="color:${l==='WR'?(wr>=60?'var(--success)':wr>=45?'var(--gold)':'var(--danger)'):'var(--gold)'}">${v}</div><div class="prof-stat-lbl">${l}</div></div>`
-      ).join('')}
-    </div>
-    <!-- 5 role pie charts -->
-    <div class="prof-pies">
-      ${ROLES.map(role=>{
-        const rg=s.roles[role]||0;const rw=s.wins[role]||0;
-        return `<div class="prof-pie-cell">
-          <div class="prof-pie-label">${RI[role]} ${role.toUpperCase()}</div>
-          ${makePieChart(rg,rw)}
-          <div class="prof-pie-games">${rg>0?rg+'G':'—'}</div>
-        </div>`;
-      }).join('')}
-    </div>
-
-    <div class="prof-body">
-
-      ${champArr.length?`
-      <div class="prof-section">
-        <div class="prof-section-title">Zagrane postacie (AI Scan)</div>
-        <div style="overflow-x:auto">
-          <table class="kda-tbl">
-            <thead><tr><th>Postać</th><th>G</th><th>WR%</th><th>K</th><th>D</th><th>A</th><th>KDA</th></tr></thead>
-            <tbody>
-            ${champArr.map(ch=>{
-              const key=ch.ch.replace(/[' ]/g,'').replace(/\./g,'');
-              const kda=ch.d>0?+((ch.k+ch.a)/ch.d).toFixed(2):'∞';
-              const kc=typeof kda==='number'&&kda>=3?'var(--success)':typeof kda==='number'&&kda>=2?'var(--gold)':'var(--silver)';
-              return `<tr>
-                <td style="display:flex;align-items:center;gap:7px">
-                  <div class="champ-card-img"><img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${key}.png" onerror="this.style.display='none'" loading="lazy"></div>
-                  <span style="font-weight:600">${ch.ch}</span>
-                </td>
-                <td>${ch.g}</td>
-                <td style="color:${ch.wr>=60?'var(--success)':ch.wr>=45?'var(--gold)':'var(--danger)'}">${ch.wr}%</td>
-                <td>${ch.k||'—'}</td><td>${ch.d||'—'}</td><td>${ch.a||'—'}</td>
-                <td style="font-weight:700;color:${kc}">${typeof kda==='number'?kda+'x':'∞'}</td>
-              </tr>`;
-            }).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>`:''}
-
-      ${symA.length?`
-      <div class="prof-section">
-        <div class="prof-section-title">Najlepsza współpraca</div>
-        ${symA.slice(0,5).map(sy=>`<div class="syr"><div class="av av26" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15">${ini(sy.n)}</div><span style="font-size:12px;font-weight:600;min-width:80px">${sy.n}</span><div class="syb"><div style="height:100%;background:var(--success);border-radius:2px;width:${sy.wr}%"></div></div><span class="wp wg">${sy.wr}%</span><span style="font-size:9px;color:var(--silver)">${sy.g}G</span></div>`).join('')}
-        <div class="prof-section-title" style="margin-top:12px">Najtrudniejsi wrogowie</div>
-        ${enmA.slice(0,3).map(sy=>`<div class="syr"><div class="av av26" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15">${ini(sy.n)}</div><span style="font-size:12px;font-weight:600;min-width:80px">${sy.n}</span><div class="syb"><div style="height:100%;background:var(--danger);border-radius:2px;width:${100-sy.wr}%"></div></div><span class="wp wb">${sy.wr}%</span><span style="font-size:9px;color:var(--silver)">${sy.g}G</span></div>`).join('')}
-      </div>`:''}
-
-      <div class="prof-section">
-        <div class="prof-section-title">Aktywne blokady</div>
-        ${myR.length?myR.map(r=>{const ri=restr.indexOf(r);return`<div class="fr"><span style="font-size:13px">${r.type==='teammate'?'👥':'🚫'}</span><span style="font-size:12px">${r.type==='teammate'?`Nie gra z: <b>${r.playerA===n?r.playerB:r.playerA}</b>`:`Nie gra na: <b>${RI[r.role]} ${r.role.toUpperCase()}</b>`}</span><span style="margin-left:auto;cursor:pointer;color:var(--danger);font-size:15px" onclick="removeR(${ri})">×</span></div>`;}).join(''):'<div style="font-size:11px;color:var(--silver)">Brak blokad</div>'}
-        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <select id="nft" class="ss" onchange="tfui()"><option value="teammate">Gracz</option><option value="role">Rola</option></select>
-          <select id="nfta" class="ss">${AP.filter(x=>x!==n).map(x=>`<option>${x}</option>`).join('')}</select>
-          <select id="nfro" class="ss" style="display:none">${ROLES.map(r=>`<option value="${r}">${RI[r]} ${r.toUpperCase()}</option>`).join('')}</select>
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-size:10px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Blokady & Gwarancje</div>
+        <div id="profRestrList_${n}">${myR.length?myR.map(r=>{const ri=restr.indexOf(r);return`<div class="fr" style="margin-bottom:6px"><span>${r.type==='teammate'?'👥':'🚫'}</span><span style="flex:1;font-size:12px">${r.type==='teammate'?`Nie gra z: <b>${r.playerA===n?r.playerB:r.playerA}</b>`:`Nie gra na: <b>${RI[r.role]} ${r.role.toUpperCase()}</b>`}</span><span style="cursor:pointer;color:var(--danger)" onclick="removeR(${ri})">×</span></div>`;}).join(''):'<div style="font-size:11px;color:var(--silver);margin-bottom:8px">Brak blokad</div>'}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px">
+          <select id="nft" class="ss" onchange="tfui()" style="font-size:11px"><option value="teammate">Nie gra z graczem</option><option value="role">Nie gra na roli</option></select>
+          <select id="nfta" class="ss" style="font-size:11px">${AP.filter(x=>x!==n).map(x=>`<option>${x}</option>`).join('')}</select>
+          <select id="nfro" class="ss" style="display:none;font-size:11px">${ROLES.map(r=>`<option value="${r}">${RI[r]} ${r.toUpperCase()}</option>`).join('')}</select>
           <button class="btn" style="padding:5px 12px;font-size:10px" onclick="addF('${n}')">+ Blokada</button>
         </div>
       </div>
-
-      <div class="prof-section">
-        <div class="prof-section-title">Historia meczy (${matches.length})</div>
-        ${matches.length?[...matches].reverse().map(m=>{
-          const inB=Object.values(m.blue).includes(n);const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
-          const roleInM=Object.entries(inB?m.blue:m.red).find(([r,x])=>x===n)?.[0]||'?';
-          const teammates=Object.values(inB?m.blue:m.red).filter(x=>x!==n).join(', ');
-          const sr=m.scanResult?.[n];
-          const champStr=sr?.champ?` · <span style="color:var(--gold)">${sr.champ}</span>`:'';
-          const kdaStr=sr?.k!==undefined?` <span style="color:var(--silver);font-size:10px">${sr.k}/${sr.d}/${sr.a}</span>`:'';
-          return `<div class="mr"><div class="mb ${won?'mw':'ml'}">${won?'W':'L'}</div><div style="flex:1"><div style="font-size:12px;font-weight:600">${RI[roleInM]||''} ${roleInM.toUpperCase()}${champStr}${kdaStr}</div><div style="font-size:10px;color:var(--silver)">${m.date} · P${m.patch} · #${m.gid} · z: ${teammates}</div></div><div style="font-size:10px;color:${inB?'#5DADE2':'#E84855'}">${inB?'LEWA':'PRAWA'}</div></div>`;
-        }).join(''):'<div style="font-size:11px;color:var(--silver)">Brak meczy w historii.</div>'}
+    </div>
+    <div class="pv2-charts">
+      <div class="pv2-chart-cell">
+        <div class="pv2-chart-label">Stosunek W/L</div>
+        ${makeDonut(wlSegs,120,g>0?w+'/'+g:'—','GIER')}
+        <div style="margin-top:8px;display:flex;justify-content:center;gap:12px;font-size:10px">
+          <span style="color:#5DADE2">▮ ${w}W</span>
+          <span style="color:#E84855">▮ ${g-w}L</span>
+        </div>
       </div>
+      <div class="pv2-chart-cell" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+        <div style="font-family:'Cinzel',serif;font-size:26px;font-weight:700;color:${mmrData.color}">${mmrData.rank}</div>
+        <div style="font-size:12px;color:var(--silver)">${mmrData.mmr} MMR</div>
+        <div style="font-size:10px;color:var(--silver);opacity:0.6">+5 za wygraną · -5 za przegraną</div>
+        <div style="width:80%;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">
+          <div style="height:100%;background:${mmrData.color};border-radius:2px;width:${Math.min(100,((mmrData.mmr%20)/20)*100)}%;transition:width 0.5s"></div>
+        </div>
+      </div>
+      <div class="pv2-chart-cell">
+        <div class="pv2-chart-label">Rozkład ról</div>
+        ${makeDonut(roleSegs.length?roleSegs:[{pct:1,color:'rgba(255,255,255,0.07)',label:'Brak'}],120,g>0?wr+'%':'—',g>0?'WR':'')}
+        <div style="margin-top:8px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;font-size:9px">
+          ${ROLES.filter(r=>s.roles[r]>0).map(r=>`<span style="color:${roleColors[r]}">${RI[r]}${s.roles[r]}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="pv2-body">
+      <div class="pv2-sidebar">
+        <div class="pv2-section-title">Najlepiej z</div>
+        ${bestWith.length?bestWith.map(sy=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+          <div class="lbav" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15;width:26px;height:26px;font-size:9px">${ini(sy.n)}</div>
+          <span style="flex:1;font-size:12px;font-weight:600">${sy.n}</span>
+          <span style="font-size:11px;color:${sy.wr>=60?'var(--success)':sy.wr>=45?'var(--gold)':'var(--danger)'};font-weight:700">${sy.wr}%</span>
+        </div>`).join(''):'<div style="font-size:11px;color:var(--silver)">—</div>'}
 
+        <div class="pv2-section-title" style="margin-top:16px">Najtrudniej z</div>
+        ${hardest.length?hardest.map(sy=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+          <div class="lbav" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15;width:26px;height:26px;font-size:9px">${ini(sy.n)}</div>
+          <span style="flex:1;font-size:12px;font-weight:600">${sy.n}</span>
+          <span style="font-size:11px;color:${sy.wr>=60?'var(--success)':sy.wr>=45?'var(--gold)':'var(--danger)'};font-weight:700">${sy.wr}%</span>
+        </div>`).join(''):'<div style="font-size:11px;color:var(--silver)">—</div>'}
+      </div>
+      <div class="pv2-main">
+        <div class="pv2-section-title">Historia gier (${matches.length})</div>
+        ${playerMatches.length?playerMatches.map(m=>{
+          const inB=Object.values(m.blue).includes(n);
+          const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
+          const team=inB?m.blue:m.red;
+          const enemies=inB?m.red:m.blue;
+          const champs=inB?m.blueChamps:m.redChamps;
+          const roleInM=Object.entries(team).find(([r,p])=>p===n)?.[0]||'?';
+          const champKey=(champs?.[roleInM]||m.scanResult?.[n]?.champ||'').replace(/[' ]/g,'').replace(/\./g,'');
+          const allies=Object.values(team).filter(x=>x&&x!==n);
+          const enemyList=Object.values(enemies).filter(x=>x);
+          return `<div class="pv2-match ${won?'pv2-win':'pv2-loss'}">
+            <div style="width:32px;text-align:center;flex-shrink:0">
+              <div style="font-size:12px;font-weight:800;color:${won?'#5DADE2':'#E84855'}">${won?'W':'L'}</div>
+              <div style="font-size:9px;color:var(--silver)">#${m.gid}</div>
+            </div>
+            ${champKey?`<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${champKey}.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy" onerror="this.style.display='none'">`:'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--silver)">${RI[roleInM]||''}</div>'}
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:600">${champs?.[roleInM]||'—'} <span style="color:var(--silver);font-size:10px;font-weight:400">${RI[roleInM]||''} ${roleInM.toUpperCase()}</span></div>
+              <div style="font-size:10px;color:var(--silver);margin-top:2px">z: ${allies.join(', ')||'—'}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;min-width:70px">
+              <div style="font-size:10px;color:var(--silver)">${m.date}</div>
+              <div style="font-size:9px;color:rgba(160,180,200,0.4)">P${m.patch}</div>
+              <div style="font-size:9px;color:${inB?'#5DADE2':'#E84855'}">${inB?'LEWA':'PRAWA'}</div>
+            </div>
+          </div>`;
+        }).join(''):'<div style="font-size:11px;color:var(--silver)">Brak gier w historii.</div>'}
+      </div>
     </div>
   </div>`;
+
   document.getElementById('nft')?.addEventListener('change',tfui);
 }
+
 
 function toggleProfSettings(n){
   const el=document.getElementById(`profSettingsPanel_${n}`);
@@ -2072,18 +2237,23 @@ function toggleProfSettings(n){
 }
 
 function saveProfSettings(n){
-  const avatarUrl=document.getElementById(`ps_avatar_${n}`)?.value.trim();
-  const bannerUrl=document.getElementById(`ps_banner_${n}`)?.value.trim();
-  const monsterKey=document.getElementById(`ps_monster_${n}`)?.value;
+  const avatarUrl=document.getElementById(`ps_avatar_${n}`)?.value.trim()||'';
+  const bannerUrl=document.getElementById(`ps_banner_${n}`)?.value.trim()||'';
+  const monsterKey=document.getElementById(`ps_monster_${n}`)?.value||'';
   const color=document.getElementById(`ps_color_${n}`)?.value;
+  const gameNick=document.getElementById(`ps_gn_${n}`)?.value.trim()||'';
+  const discordNick=document.getElementById(`ps_discord_${n}`)?.value.trim()||'';
   if(!PLAYER_META[n]) PLAYER_META[n]={};
-  PLAYER_META[n].avatarUrl=avatarUrl||'';
-  PLAYER_META[n].bannerUrl=bannerUrl||'';
-  PLAYER_META[n].monsterKey=monsterKey||'';
+  PLAYER_META[n].avatarUrl=avatarUrl;
+  PLAYER_META[n].bannerUrl=bannerUrl;
+  PLAYER_META[n].monsterKey=monsterKey;
+  PLAYER_META[n].discordNick=discordNick;
   if(color) PC[n]=color;
+  // Update alias (game nick)
+  if(gameNick&&gameNick!==n) ALIASES[n]=gameNick;
+  else delete ALIASES[n];
   lsSave();
-  renderProfile(n);
-  renderProfileList();
+  selProfile(n); // re-render with updated data
   renderPL();
   toast(`Profil ${n} zaktualizowany!`);
 }
@@ -2163,37 +2333,29 @@ function renderHist(){
     const redLabelColor=blueWin?'rgba(232,72,85,0.35)':'#E84855';
 
     return `<div class="match-card" style="border-left:4px solid ${blueWin?'#5DADE2':'#E84855'}">
-      <!-- Vertical LEWA label at left edge -->
       <div style="width:18px;flex-shrink:0;background:${blueBg};display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(93,173,226,0.12)">
         <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;font-weight:800;letter-spacing:2px;color:${blueLabelColor};text-transform:uppercase;white-space:nowrap">${blueWin?'✓ ':''} LEWA</div>
       </div>
-      <!-- Blue champ icons -->
       <div class="mc-champs" style="background:${blueBg};${blueGlow}">
         ${champIcons(m.blue,m.blueChamps)}
       </div>
-      <!-- Blue players -->
       <div class="mc-players" style="background:${blueBg};border-right:1px solid rgba(255,255,255,0.05)">
         ${teamRows(m.blue,m.blueChamps)}
       </div>
-      <!-- VS + result center -->
       <div class="mc-vs" style="flex-direction:column;gap:3px">
         <div class="mc-result-badge ${blueWin?'win':'loss'}" style="font-size:13px">${m.win}</div>
         <div class="mc-vs-inner">VS</div>
         <div class="mc-gid">#${m.gid}</div>
       </div>
-      <!-- Red players -->
       <div class="mc-players" style="background:${redBg};border-left:1px solid rgba(255,255,255,0.05)">
         ${teamRows(m.red,m.redChamps)}
       </div>
-      <!-- Red champ icons -->
       <div class="mc-champs" style="background:${redBg};${redGlow}">
         ${champIcons(m.red,m.redChamps)}
       </div>
-      <!-- Vertical PRAWA label at right edge -->
       <div style="width:18px;flex-shrink:0;background:${redBg};display:flex;align-items:center;justify-content:center;border-left:1px solid rgba(232,72,85,0.12)">
         <div style="writing-mode:vertical-rl;font-size:8px;font-weight:800;letter-spacing:2px;color:${redLabelColor};text-transform:uppercase;white-space:nowrap">${!blueWin?'✓ ':''} PRAWA</div>
       </div>
-      <!-- Meta -->
       <div class="mc-meta">
         <div class="mc-date">${m.date}</div>
         <div class="mc-patch">P${m.patch}</div>
@@ -2719,19 +2881,16 @@ function renderAvatarToolList(){
     const discordSearchUrl=`https://discord.com/users/@me`; // opens Discord — user searches manually
 
     return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(0,0,0,0.25);border:1px solid ${hasAvatar?'rgba(29,233,182,0.2)':'var(--border)'};border-radius:6px">
-      <!-- Avatar preview -->
       <div style="width:40px;height:40px;border-radius:50%;border:2px solid ${c};background:${c}20;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${c}">
         ${hasAvatar
           ?`<img src="${meta.avatarUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`
           :ini(n)}
       </div>
-      <!-- Name + game nick -->
       <div style="min-width:90px;flex-shrink:0">
         <div style="font-size:13px;font-weight:700;color:${c}">${n}</div>
         ${gn!==n?`<div style="font-size:10px;color:var(--silver)">${gn}</div>`:''}
         ${hasAvatar?`<div style="font-size:9px;color:var(--success)">✓ Avatar ustawiony</div>`:`<div style="font-size:9px;color:var(--silver)">Brak avatara</div>`}
       </div>
-      <!-- Discord search buttons -->
       <div style="display:flex;gap:5px;flex-shrink:0">
         <a href="https://discord.com/channels/@me" target="_blank"
           style="background:rgba(88,101,242,0.2);border:1px solid rgba(88,101,242,0.4);color:#7289DA;padding:4px 9px;border-radius:4px;font-size:10px;font-weight:600;text-decoration:none;white-space:nowrap;font-family:'Rajdhani',sans-serif"
@@ -2743,12 +2902,10 @@ function renderAvatarToolList(){
           🔍
         </a>
       </div>
-      <!-- URL input -->
       <input id="avurl_${n}" class="ss" style="flex:1;font-size:11px;padding:5px 8px"
         placeholder="Wklej URL avatara..."
         value="${meta.avatarUrl||''}"
         oninput="previewAvatar('${n}')">
-      <!-- Save button -->
       <button class="btn tbtn" style="padding:5px 10px;font-size:10px;flex-shrink:0;white-space:nowrap"
         onclick="saveOneAvatar('${n}')">Zapisz</button>
     </div>`;
