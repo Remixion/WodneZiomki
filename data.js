@@ -104,6 +104,7 @@ function lsSave(){
     localStorage.setItem(LS_SCAN, JSON.stringify(scans));
     localStorage.setItem(LS_RESTR, JSON.stringify(restr));
     localStorage.setItem(LS_META, JSON.stringify(PLAYER_META));
+    if(typeof recentPlayers!=='undefined') localStorage.setItem('rd_recent', JSON.stringify(recentPlayers));
   }catch(e){console.warn('localStorage save failed',e);}
 }
 
@@ -121,6 +122,8 @@ function lsLoad(){
     if(r){ const loaded=JSON.parse(r); restr.splice(0,restr.length,...loaded); }
     const mt=localStorage.getItem(LS_META);
     if(mt) Object.assign(PLAYER_META, JSON.parse(mt));
+    const rc=localStorage.getItem('rd_recent');
+    if(rc&&typeof recentPlayers!=='undefined'){ const arr=JSON.parse(rc); recentPlayers.splice(0,recentPlayers.length,...arr); }
   }catch(e){console.warn('localStorage load failed',e);}
 }
 
