@@ -200,18 +200,18 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .pv2-charts{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .pv2-chart-cell{flex:1;padding:20px;text-align:center;border-right:1px solid var(--border)}
 .pv2-chart-cell:last-child{border-right:none}
-.pv2-chart-label{font-size:9px;color:var(--silver);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.pv2-chart-label{font-size:11px;color:var(--silver);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
 /* Rank badge in center of pie */
 .pv2-rank-center{font-family:"Cinzel",serif;font-size:11px;font-weight:700;text-align:center}
 /* Bottom 2-col layout */
 .pv2-body{display:grid;grid-template-columns:220px 1fr;gap:0}
 .pv2-sidebar{padding:18px;border-right:1px solid var(--border)}
 .pv2-main{padding:18px}
-.pv2-section-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);opacity:0.6;margin-bottom:10px}
+.pv2-section-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);opacity:0.6;margin-bottom:10px}
 /* Match list */
 .pv2-match{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;margin-bottom:4px;border:1px solid var(--border);transition:background 0.15s}
 .pv2-match:hover{background:rgba(200,170,110,0.04)}
-.pv2-match.pv2-win{border-left:3px solid #5DADE2;background:rgba(93,173,226,0.04)}
+.pv2-match.pv2-win{border-left:3px solid #5DADE2;background:rgba(93,173,226,0.04);font-size:13px}
 .pv2-match.pv2-loss{border-left:3px solid #E84855;background:rgba(232,72,85,0.03)}
 /* Settings panel */
 .pv2-settings{display:none;border-top:1px solid var(--border);padding:20px;background:rgba(0,0,0,0.3)}
@@ -1648,7 +1648,14 @@ function randomizeTeams(){
         const sameR=r.includes(rx.playerA)&&r.includes(rx.playerB);
         if(sameB||sameR){ok=false;break;}
       }
-      // role restrictions handled after team split (in assignR)
+      if(rx.type==='with'){
+        // MUST be on the same team
+        const bothInPool=pool.includes(rx.playerA)&&pool.includes(rx.playerB);
+        if(!bothInPool)continue; // skip if one not in draft
+        const sameB=b.includes(rx.playerA)&&b.includes(rx.playerB);
+        const sameR=r.includes(rx.playerA)&&r.includes(rx.playerB);
+        if(!sameB&&!sameR){ok=false;break;}
+      }
     }
     if(ok)break;shuf(pool);b=pool.slice(0,5);r=pool.slice(5,10);
   }
@@ -1780,7 +1787,7 @@ function rerollC(t,i,role,e){
 function renderRS(){
   const el=document.getElementById('rside');
   if(!restr.length){el.innerHTML='<div style="font-size:11px;color:var(--silver)">Brak.</div>';return;}
-  el.innerHTML=restr.map((r,i)=>`<div class="rchip"><span>${r.type==='teammate'?'👥':'🚫'}</span><span>${r.type==='teammate'?`${r.playerA} ≠ ${r.playerB}`:`${r.player}: nie ${RI[r.role]}${r.role}`}</span><span class="rx" onclick="removeR(${i})">×</span></div>`).join('');
+  el.innerHTML=restr.map((r,i)=>`<div class="rchip"><span>${r.type==='teammate'?'🚫':r.type==='with'?'🤝':'⛔'}</span><span>${r.type==='teammate'?r.playerA+' ≠ '+r.playerB:r.type==='with'?r.playerA+' + '+r.playerB:r.player+': nie '+RI[r.role]+r.role}</span><span class="rx" onclick="removeR(${i})">×</span></div>`).join('');
 }
 
 function removeR(i){restr.splice(i,1);renderRS();if(selPr)renderProfile(selPr);lsSave();}
@@ -2019,25 +2026,94 @@ function calcMMR(n){
 }
 
 // ── DONUT PIE CHART (role distribution) ────────────────────────────────────
+// Rank emblem SVG generator
+function rankEmblem(tier, color, size=56){
+  const c=color||'#C8AA6E';
+  const s=size;
+  const h=s/2;
+  // Different shapes per tier group
+  if(tier==='Challenger'||tier==='Grandmaster'){
+    // Crown + wings
+    return `<svg width="${s}" height="${s}" viewBox="0 0 56 56">
+      <polygon points="28,6 38,22 50,14 44,32 12,32 6,14 18,22" fill="${c}" opacity="0.9"/>
+      <polygon points="28,6 38,22 50,14 44,32 12,32 6,14 18,22" fill="none" stroke="${c}" stroke-width="1"/>
+      <rect x="10" y="32" width="36" height="8" rx="2" fill="${c}" opacity="0.8"/>
+      <circle cx="28" cy="22" r="5" fill="${tier==='Challenger'?'#00BCD4':'#C8AA6E'}" opacity="1"/>
+      <circle cx="28" cy="22" r="3" fill="white" opacity="0.6"/>
+    </svg>`;
+  }
+  if(tier==='Master'||tier==='Diamond'){
+    // Diamond shape
+    const col=tier==='Master'?'#9B59B6':'#5DADE2';
+    return `<svg width="${s}" height="${s}" viewBox="0 0 56 56">
+      <polygon points="28,4 52,28 28,52 4,28" fill="${col}" opacity="0.2"/>
+      <polygon points="28,4 52,28 28,52 4,28" fill="none" stroke="${col}" stroke-width="2.5"/>
+      <polygon points="28,12 44,28 28,44 12,28" fill="${col}" opacity="0.35"/>
+      <circle cx="28" cy="28" r="7" fill="${col}" opacity="0.9"/>
+      <circle cx="28" cy="28" r="4" fill="white" opacity="0.5"/>
+    </svg>`;
+  }
+  if(tier==='Emerald'||tier==='Platinum'){
+    const col=tier==='Emerald'?'#2ECC71':'#00BCD4';
+    return `<svg width="${s}" height="${s}" viewBox="0 0 56 56">
+      <polygon points="28,6 48,18 48,38 28,50 8,38 8,18" fill="${col}" opacity="0.15"/>
+      <polygon points="28,6 48,18 48,38 28,50 8,38 8,18" fill="none" stroke="${col}" stroke-width="2.5"/>
+      <polygon points="28,14 40,22 40,34 28,42 16,34 16,22" fill="${col}" opacity="0.35"/>
+      <circle cx="28" cy="28" r="7" fill="${col}" opacity="0.9"/>
+      <circle cx="28" cy="28" r="4" fill="white" opacity="0.5"/>
+    </svg>`;
+  }
+  if(tier==='Gold'){
+    return `<svg width="${s}" height="${s}" viewBox="0 0 56 56">
+      <polygon points="28,4 34,20 52,20 38,30 44,48 28,38 12,48 18,30 4,20 22,20" fill="#FFD700" opacity="0.25"/>
+      <polygon points="28,4 34,20 52,20 38,30 44,48 28,38 12,48 18,30 4,20 22,20" fill="none" stroke="#FFD700" stroke-width="2"/>
+      <circle cx="28" cy="28" r="8" fill="#FFD700" opacity="0.85"/>
+      <circle cx="28" cy="28" r="5" fill="white" opacity="0.4"/>
+    </svg>`;
+  }
+  if(tier==='Silver'){
+    return `<svg width="${s}" height="${s}" viewBox="0 0 56 56">
+      <circle cx="28" cy="28" r="22" fill="none" stroke="#C0C0C0" stroke-width="3" stroke-dasharray="4 3"/>
+      <circle cx="28" cy="28" r="15" fill="rgba(192,192,192,0.15)" stroke="#C0C0C0" stroke-width="2"/>
+      <circle cx="28" cy="28" r="8" fill="#C0C0C0" opacity="0.9"/>
+    </svg>`;
+  }
+  if(tier==='Bronze'){
+    return `<svg width="${s}" height="${s}" viewBox="0 0 56 56">
+      <polygon points="28,6 50,20 50,36 28,50 6,36 6,20" fill="rgba(205,127,50,0.15)" stroke="#CD7F32" stroke-width="2.5"/>
+      <circle cx="28" cy="28" r="10" fill="#CD7F32" opacity="0.85"/>
+      <circle cx="28" cy="28" r="6" fill="white" opacity="0.3"/>
+    </svg>`;
+  }
+  // Iron (default)
+  return `<svg width="${s}" height="${s}" viewBox="0 0 56 56">
+    <rect x="8" y="8" width="40" height="40" rx="4" fill="rgba(139,139,139,0.15)" stroke="#8B8B8B" stroke-width="2.5"/>
+    <rect x="16" y="16" width="24" height="24" rx="2" fill="rgba(139,139,139,0.2)" stroke="#8B8B8B" stroke-width="1.5"/>
+    <circle cx="28" cy="28" r="7" fill="#8B8B8B" opacity="0.8"/>
+  </svg>`;
+}
+
 function makeDonut(segments, size=120, innerText='', innerSub=''){
-  // segments: [{pct, color, label}]
-  const cx=size/2, cy=size/2, R=size/2-10, thick=16;
-  const r=R-thick;
+  // segments: [{pct, color, label}] — pcts must sum to 1.0; normalized below
+  const cx=size/2, cy=size/2, R=size/2-10, thick=18;
   const circ=2*Math.PI*R;
+  // normalize so segments always fill 100%
+  const total=segments.reduce((s,seg)=>s+seg.pct,0)||1;
   let offset=0;
+  const GAP=segments.length>1?1.5:0; // small gap between slices
   const arcs=segments.map(seg=>{
-    const arc=circ*seg.pct;
+    const arc=circ*(seg.pct/total);
     const s=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${seg.color}" stroke-width="${thick}"
-      stroke-dasharray="${Math.max(0,arc-1.5)} ${circ}" stroke-dashoffset="${circ/4-offset}"
-      transform="rotate(-90 ${cx} ${cy})"><title>${seg.label}</title></circle>`;
+      stroke-dasharray="${Math.max(0,arc-GAP)} ${circ-(arc-GAP)}"
+      stroke-dashoffset="${-(offset-circ/4)}"
+      stroke-linecap="${segments.length===1?'butt':'butt'}"><title>${seg.label}</title></circle>`;
     offset+=arc;
     return s;
   });
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="${thick}"/>
     ${arcs.join('')}
-    ${innerText?`<text x="${cx}" y="${cy-3}" text-anchor="middle" fill="var(--white)" font-size="13" font-weight="700" font-family="Cinzel,serif">${innerText}</text>`:''}
-    ${innerSub?`<text x="${cx}" y="${cy+13}" text-anchor="middle" fill="var(--silver)" font-size="8" font-family="Rajdhani,sans-serif" letter-spacing="1">${innerSub}</text>`:''}
+    ${innerText?`<text x="${cx}" y="${cy-5}" text-anchor="middle" fill="var(--white)" font-size="14" font-weight="700" font-family="Cinzel,serif">${innerText}</text>`:''}
+    ${innerSub?`<text x="${cx}" y="${cy+12}" text-anchor="middle" fill="var(--silver)" font-size="9" font-family="Rajdhani,sans-serif" letter-spacing="1">${innerSub}</text>`:''}
   </svg>`;
 }
 
@@ -2076,16 +2152,16 @@ function renderProfile(n){
   // Role donut — role distribution
   const roleColors={top:'#E84855',jng:'#1DE9B6',mid:'#5DADE2',adc:'#F39C12',supp:'#A78BFA'};
   const roleSegs=ROLES.filter(r=>s.roles[r]>0).map(r=>({
-    pct:g>0?s.roles[r]/g:0,
+    pct:s.roles[r], // raw counts — makeDonut normalizes to 100%
     color:roleColors[r],
-    label:`${RI[r]} ${r.toUpperCase()}: ${s.roles[r]}G`
+    label:RI[r]+' '+r.toUpperCase()+': '+s.roles[r]+'G'
   }));
 
   // WL donut
   const wlSegs=g>0?[
-    {pct:w/g,color:'#5DADE2',label:`Wygrane: ${w}`},
-    {pct:(g-w)/g,color:'rgba(232,72,85,0.5)',label:`Przegrane: ${g-w}`}
-  ]:[{pct:1,color:'rgba(255,255,255,0.08)',label:'Brak gier'}];
+    {pct:w,color:'#5DADE2',label:'Wygrane: '+w},
+    {pct:g-w,color:'#E84855',label:'Przegrane: '+(g-w)}
+  ]:[{pct:1,color:'rgba(255,255,255,0.12)',label:'Brak gier'}];
 
   // Synergy
   const symM={},enmM={};
@@ -2146,7 +2222,7 @@ function renderProfile(n){
         <div style="font-size:10px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Blokady & Gwarancje</div>
         <div id="profRestrList_${n}">${myR.length?myR.map(r=>{const ri=restr.indexOf(r);return`<div class="fr" style="margin-bottom:6px"><span>${r.type==='teammate'?'👥':'🚫'}</span><span style="flex:1;font-size:12px">${r.type==='teammate'?`Nie gra z: <b>${r.playerA===n?r.playerB:r.playerA}</b>`:`Nie gra na: <b>${RI[r.role]} ${r.role.toUpperCase()}</b>`}</span><span style="cursor:pointer;color:var(--danger)" onclick="removeR(${ri})">×</span></div>`;}).join(''):'<div style="font-size:11px;color:var(--silver);margin-bottom:8px">Brak blokad</div>'}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px">
-          <select id="nft" class="ss" onchange="tfui()" style="font-size:11px"><option value="teammate">Nie gra z graczem</option><option value="role">Nie gra na roli</option></select>
+          <select id="nft" class="ss" onchange="tfui()" style="font-size:11px"><option value="teammate">Nie gra z graczem</option><option value="with">Gra z graczem</option><option value="role">Nie gra na roli</option></select>
           <select id="nfta" class="ss" style="font-size:11px">${AP.filter(x=>x!==n).map(x=>`<option>${x}</option>`).join('')}</select>
           <select id="nfro" class="ss" style="display:none;font-size:11px">${ROLES.map(r=>`<option value="${r}">${RI[r]} ${r.toUpperCase()}</option>`).join('')}</select>
           <button class="btn" style="padding:5px 12px;font-size:10px" onclick="addF('${n}')">+ Blokada</button>
@@ -2162,13 +2238,14 @@ function renderProfile(n){
           <span style="color:#E84855">▮ ${g-w}L</span>
         </div>
       </div>
-      <div class="pv2-chart-cell" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-        <div style="font-family:'Cinzel',serif;font-size:26px;font-weight:700;color:${mmrData.color}">${mmrData.rank}</div>
-        <div style="font-size:12px;color:var(--silver)">${mmrData.mmr} MMR</div>
-        <div style="font-size:10px;color:var(--silver);opacity:0.6">+5 za wygraną · -5 za przegraną</div>
-        <div style="width:80%;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">
-          <div style="height:100%;background:${mmrData.color};border-radius:2px;width:${Math.min(100,((mmrData.mmr%20)/20)*100)}%;transition:width 0.5s"></div>
+      <div class="pv2-chart-cell" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+        ${rankEmblem(mmrData.tier,mmrData.color,56)}
+        <div style="font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:${mmrData.color};margin-top:2px">${mmrData.rank}</div>
+        <div style="font-size:13px;color:var(--gold);font-weight:600">${mmrData.mmr} MMR</div>
+        <div style="width:80%;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
+          <div style="height:100%;background:${mmrData.color};border-radius:3px;width:${Math.min(100,((mmrData.mmr%20)/20)*100)}%;transition:width 0.5s"></div>
         </div>
+        <div style="font-size:10px;color:var(--silver);opacity:0.55">+5 W · -5 L</div>
       </div>
       <div class="pv2-chart-cell">
         <div class="pv2-chart-label">Rozkład ról</div>
@@ -2258,8 +2335,32 @@ function saveProfSettings(n){
   toast(`Profil ${n} zaktualizowany!`);
 }
 
-function tfui(){const t=document.getElementById('nft')?.value;if(!t)return;document.getElementById('nfta').style.display=t==='role'?'none':'block';document.getElementById('nfro').style.display=t==='role'?'block':'none';}
-function addF(n){const t=document.getElementById('nft')?.value;if(!t)return;if(t==='teammate'){const ta=document.getElementById('nfta')?.value;if(!ta)return;restr.push({type:'teammate',playerA:n,playerB:ta});}else{const ro=document.getElementById('nfro')?.value;if(!ro)return;restr.push({type:'role',player:n,role:ro});}renderRS();renderProfile(n);toast('Blokada dodana!');lsSave();}
+function tfui(){
+  const t=document.getElementById('nft')?.value;if(!t)return;
+  const roleEl=document.getElementById('nfro');
+  const teamEl=document.getElementById('nfta');
+  if(roleEl) roleEl.style.display=t==='role'?'block':'none';
+  if(teamEl) teamEl.style.display=t==='role'?'none':'block';
+}
+function addF(n){
+  const t=document.getElementById('nft')?.value;if(!t)return;
+  if(t==='teammate'){
+    const ta=document.getElementById('nfta')?.value;if(!ta)return;
+    restr.push({type:'teammate',playerA:n,playerB:ta});
+  } else if(t==='role'){
+    const ro=document.getElementById('nfro')?.value;if(!ro)return;
+    restr.push({type:'role',player:n,role:ro});
+  } else if(t==='with'){
+    const ta=document.getElementById('nfta')?.value;if(!ta)return;
+    restr.push({type:'with',playerA:n,playerB:ta});
+  }
+  renderRS();
+  // Refresh only restriction list inside settings — keep panel open
+  const myR=restr.filter(r=>(r.type==='teammate'&&(r.playerA===n||r.playerB===n))||(r.type==='role'&&r.player===n)||(r.type==='with'&&(r.playerA===n||r.playerB===n)));
+  const listEl=document.getElementById('profRestrList_'+n);
+  if(listEl) listEl.innerHTML=myR.length?myR.map(r=>{const ri=restr.indexOf(r);return '<div class="fr" style="margin-bottom:6px"><span>'+(r.type==='teammate'?'🚫':r.type==='with'?'🤝':'⛔')+'</span><span style="flex:1;font-size:12px">'+(r.type==='teammate'?'Nie gra z: <b>'+(r.playerA===n?r.playerB:r.playerA)+'</b>':r.type==='with'?'Gra z: <b>'+(r.playerA===n?r.playerB:r.playerA)+'</b>':'Nie gra na: <b>'+RI[r.role]+' '+r.role.toUpperCase()+'</b>')+'</span><span style="cursor:pointer;color:var(--danger)" onclick="removeR('+ri+')">×</span></div>';}).join(''):'<div style="font-size:11px;color:var(--silver);margin-bottom:8px">Brak blokad</div>';
+  toast('Zapisano!');lsSave();
+}
 
 // =====================================================================
 // STATS
