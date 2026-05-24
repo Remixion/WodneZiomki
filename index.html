@@ -1967,16 +1967,92 @@ function renderProfile(n){
         `<div class="prof-stat-cell"><div class="prof-stat-val" style="color:${l==='WR'?(wr>=60?'var(--success)':wr>=45?'var(--gold)':'var(--danger)'):'var(--gold)'}">${v}</div><div class="prof-stat-lbl">${l}</div></div>`
       ).join('')}
     </div>
-    <div class="prof-pies">
-      ${ROLES.map(role=>{
-        const rg=s.roles[role]||0;const rw=s.wins[role]||0;
-        return `<div class="prof-pie-cell">
-          <div class="prof-pie-label">${RI[role]} ${role.toUpperCase()}</div>
-          ${makePieChart(rg,rw)}
-          <div class="prof-pie-games" style="color:var(--silver)">${rg>0?rg+'G':'—'}</div>
+    <!-- Combo role+champ donut chart -->
+    ${(()=>{
+      // Build segments: each unique role+champ combo (or role only if no champ data)
+      const segs=[];
+      const roleColors={top:'#E84855',jng:'#1DE9B6',mid:'#5DADE2',adc:'#F39C12',supp:'#A78BFA'};
+      ROLES.forEach(role=>{
+        const rg=s.roles[role]||0; if(!rg)return;
+        // If we have champ data, split role into champ slices
+        const champData=Object.entries(s.champs||{}).filter(([ch,v])=>{
+          // Approximate: we can't know which champ was played which role without scan data
+          // So show role+champ combos from blueChamps/redChamps in MH
+          return false; // placeholder — use role-level only + champ table separately
+        });
+        // Role slice
+        const rw=s.wins[role]||0;
+        segs.push({label:RI[role]+' '+role.toUpperCase(),games:rg,wins:rw,color:roleColors[role]});
+      });
+      // Build combo from match history (role+champ per match)
+      const combos={};
+      MH.forEach(m=>{
+        const side=Object.values(m.blue).includes(n)?'blue':Object.values(m.red).includes(n)?'red':null;
+        if(!side)return;
+        const team=side==='blue'?m.blue:m.red;
+        const champs=side==='blue'?m.blueChamps:m.redChamps;
+        const scanC=m.scanResult?.[n]?.champ||'';
+        const role=Object.entries(team).find(([r,p])=>p===n)?.[0]||'?';
+        const champ=champs?.[role]||scanC||'';
+        const key=role+'|'+(champ||'?');
+        const won=(side==='blue'&&m.win==='LEWA')||(side==='red'&&m.win==='PRAWA');
+        if(!combos[key])combos[key]={role,champ,games:0,wins:0};
+        combos[key].games++;if(won)combos[key].wins++;
+      });
+      const comboArr=Object.values(combos).sort((a,b)=>b.games-a.games);
+      const total=comboArr.reduce((s,c)=>s+c.games,0);
+      if(!total)return `<div style="padding:14px;text-align:center;font-size:11px;color:var(--silver)">Brak danych o rolach</div>`;
+
+      // SVG donut
+      const size=160;const cx=size/2;const cy=size/2;const R=62;const r=38;
+      const circum=2*Math.PI*R;
+      const roleColors2={top:'#E84855',jng:'#1DE9B6',mid:'#5DADE2',adc:'#F39C12',supp:'#A78BFA','?':'#888'};
+      let offset=0;
+      const arcs=comboArr.map(c=>{
+        const pct=c.games/total;
+        const arc=circum*pct;
+        const col=roleColors2[c.role]||'#888';
+        const wr=c.games?Math.round(c.wins/c.games*100):0;
+        const svg=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${col}" stroke-width="${R-r}"
+          stroke-dasharray="${arc-1} ${circum-(arc-1)}" stroke-dashoffset="${circum/4-offset}"
+          transform="rotate(-90 ${cx} ${cy})" opacity="${wr>=50?'1':'0.5'}">
+          <title>${c.champ||c.role} — ${c.games}G ${wr}%WR</title>
+        </circle>`;
+        offset+=arc;
+        return {svg,col,c};
+      });
+
+      const svgEl=`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex-shrink:0">
+        <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="${R-r}"/>
+        ${arcs.map(a=>a.svg).join('')}
+        <text x="${cx}" y="${cy-6}" text-anchor="middle" fill="var(--gold)" font-size="14" font-weight="700" font-family="Cinzel,serif">${total}</text>
+        <text x="${cx}" y="${cy+10}" text-anchor="middle" fill="var(--silver)" font-size="9" font-family="Rajdhani,sans-serif" letter-spacing="1">GIER</text>
+      </svg>`;
+
+      // Legend
+      const legend=comboArr.slice(0,8).map(c=>{
+        const wr=c.games?Math.round(c.wins/c.games*100):0;
+        const col=roleColors2[c.role]||'#888';
+        const wrColor=wr>=60?'var(--success)':wr>=45?'var(--gold)':'var(--danger)';
+        const champKey=(c.champ||'').replace(/[' ]/g,'').replace(/\./g,'');
+        const img=champKey?`<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${champKey}.png" style="width:18px;height:18px;border-radius:3px;object-fit:cover" loading="lazy">`:'';
+        return `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
+          ${img}
+          <span style="flex:1;font-weight:600">${c.champ||RI[c.role]+' '+c.role.toUpperCase()}</span>
+          <span style="color:var(--silver);font-size:10px">${c.games}G</span>
+          <span style="color:${wrColor};font-weight:700;font-size:10px;min-width:30px;text-align:right">${wr}%</span>
         </div>`;
-      }).join('')}
-    </div>
+      }).join('');
+
+      return `<div style="display:flex;gap:20px;align-items:flex-start;padding:16px 24px;border-bottom:1px solid var(--border)">
+        ${svgEl}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);opacity:0.7;margin-bottom:8px">Role & Postacie</div>
+          ${legend}
+        </div>
+      </div>`;
+    })()}
 
     <div class="prof-body">
 
@@ -2132,36 +2208,46 @@ function renderHist(){
       }).join('');
     }
 
-    // Highlight styles for winner/loser sides
-    const winBg='rgba(93,173,226,0.10)';
-    const lossBg='rgba(232,72,85,0.06)';
-    const blueBg=blueWin?winBg:lossBg;
-    const redBg=blueWin?lossBg:winBg;
-    const blueGlow=blueWin?'box-shadow:inset 0 0 20px rgba(93,173,226,0.12)':'';
-    const redGlow=blueWin?'':'box-shadow:inset 0 0 20px rgba(232,72,85,0.12)';
-    const blueLabel=blueWin?'#5DADE2':'rgba(232,72,85,0.5)';
-    const redLabel=blueWin?'rgba(93,173,226,0.5)':'#E84855';
+    // LEWA=blue always, PRAWA=red always; winner side gets bright bg + glow
+    const blueBg=blueWin?'rgba(93,173,226,0.13)':'rgba(93,173,226,0.03)';
+    const redBg=blueWin?'rgba(232,72,85,0.03)':'rgba(232,72,85,0.13)';
+    const blueGlow=blueWin?'box-shadow:inset 0 0 24px rgba(93,173,226,0.14)':'';
+    const redGlow=blueWin?'':'box-shadow:inset 0 0 24px rgba(232,72,85,0.14)';
+    const blueLabelColor=blueWin?'#5DADE2':'rgba(93,173,226,0.35)';
+    const redLabelColor=blueWin?'rgba(232,72,85,0.35)':'#E84855';
 
-    return `<div class="match-card ${blueWin?'win':'loss'}">
-      <div class="mc-result">
-        <div class="mc-result-badge ${blueWin?'win':'loss'}">${m.win}</div>
-        <div class="mc-gid">#${m.gid}</div>
+    return `<div class="match-card" style="border-left:4px solid ${blueWin?'#5DADE2':'#E84855'}">
+      <!-- Vertical LEWA label at left edge -->
+      <div style="width:18px;flex-shrink:0;background:${blueBg};display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(93,173,226,0.12)">
+        <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;font-weight:800;letter-spacing:2px;color:${blueLabelColor};text-transform:uppercase;white-space:nowrap">${blueWin?'✓ ':''} LEWA</div>
       </div>
-      <div class="mc-champs" style="background:${blueBg};border-right:1px solid rgba(93,173,226,0.12);${blueGlow}">
-        <div style="writing-mode:vertical-rl;text-orientation:mixed;font-size:8px;color:${blueLabel};letter-spacing:2px;font-weight:700;transform:rotate(180deg);margin-bottom:4px">LEWA${blueWin?' ✓':''}</div>
+      <!-- Blue champ icons -->
+      <div class="mc-champs" style="background:${blueBg};${blueGlow}">
         ${champIcons(m.blue,m.blueChamps)}
       </div>
-      <div class="mc-players" style="background:${blueBg};border-right:1px solid rgba(255,255,255,0.04)">
+      <!-- Blue players -->
+      <div class="mc-players" style="background:${blueBg};border-right:1px solid rgba(255,255,255,0.05)">
         ${teamRows(m.blue,m.blueChamps)}
       </div>
-      <div class="mc-vs"><div class="mc-vs-inner">VS</div></div>
-      <div class="mc-players" style="background:${redBg}">
+      <!-- VS + result center -->
+      <div class="mc-vs" style="flex-direction:column;gap:3px">
+        <div class="mc-result-badge ${blueWin?'win':'loss'}" style="font-size:13px">${m.win}</div>
+        <div class="mc-vs-inner">VS</div>
+        <div class="mc-gid">#${m.gid}</div>
+      </div>
+      <!-- Red players -->
+      <div class="mc-players" style="background:${redBg};border-left:1px solid rgba(255,255,255,0.05)">
         ${teamRows(m.red,m.redChamps)}
       </div>
-      <div class="mc-champs" style="background:${redBg};border-left:1px solid rgba(232,72,85,0.12);${redGlow}">
-        <div style="writing-mode:vertical-rl;text-orientation:mixed;font-size:8px;color:${redLabel};letter-spacing:2px;font-weight:700;margin-bottom:4px">PRAWA${!blueWin?' ✓':''}</div>
+      <!-- Red champ icons -->
+      <div class="mc-champs" style="background:${redBg};${redGlow}">
         ${champIcons(m.red,m.redChamps)}
       </div>
+      <!-- Vertical PRAWA label at right edge -->
+      <div style="width:18px;flex-shrink:0;background:${redBg};display:flex;align-items:center;justify-content:center;border-left:1px solid rgba(232,72,85,0.12)">
+        <div style="writing-mode:vertical-rl;font-size:8px;font-weight:800;letter-spacing:2px;color:${redLabelColor};text-transform:uppercase;white-space:nowrap">${!blueWin?'✓ ':''} PRAWA</div>
+      </div>
+      <!-- Meta -->
       <div class="mc-meta">
         <div class="mc-date">${m.date}</div>
         <div class="mc-patch">P${m.patch}</div>
