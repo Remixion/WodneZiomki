@@ -412,6 +412,28 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
   border:1px solid var(--danger);
 }
 .draft-cs:hover .remove-player{display:flex}
+/* Dice reroll button — top right, hidden until hover */
+.slot-dice{
+  position:absolute;top:3px;right:3px;z-index:12;
+  width:20px;height:20px;background:rgba(200,170,110,0.75);
+  border-radius:4px;display:none;align-items:center;justify-content:center;
+  font-size:11px;cursor:pointer;color:rgba(5,14,26,0.9);font-weight:700;
+  border:1px solid rgba(200,170,110,0.5);transition:all 0.2s;
+}
+.draft-cs:hover .slot-dice{display:flex}
+.slot-dice:hover{background:rgba(200,170,110,1);transform:scale(1.1)}
+.slot-dice.no-rolls{background:rgba(160,160,160,0.4);color:rgba(255,255,255,0.3);cursor:not-allowed}
+.slot-dice.no-rolls:hover{transform:none;background:rgba(160,160,160,0.4)}
+/* Reroll counter badge */
+.slot-rolls{
+  position:absolute;top:3px;right:3px;z-index:13;
+  background:rgba(5,14,26,0.85);border:1px solid rgba(200,170,110,0.4);
+  border-radius:3px;font-size:8px;color:var(--gold);
+  padding:1px 4px;font-family:'Rajdhani',sans-serif;font-weight:700;
+  pointer-events:none;display:none;
+}
+.draft-cs:hover .slot-rolls{display:none}
+.draft-cs .slot-rolls.visible{display:block}
 /* ── NEW PROFILE LAYOUT ───────────────────────────────────────── */
 .prof-wrap{display:flex;flex-direction:column;gap:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
 
@@ -521,20 +543,28 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 <div class="page active" id="page-randomizer">
 
   <!-- TOP ACTION BAR -->
-  <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;padding:0 0 14px;border-bottom:1px solid var(--border);margin-bottom:14px">
-    <button class="btn sbtn" onclick="copyToDiscord()">📋 Kopiuj Discord</button>
-    <button class="btn primary" onclick="openSave()">💾 Zapisz wynik</button>
-    <div style="width:1px;height:24px;background:var(--border);margin:0 4px"></div>
-    <button class="btn" onclick="randomizeDraftRoles()" title="Losuje role dla przypisanych graczy">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-      Losuj role
-    </button>
-    <button class="btn primary" onclick="randomizeTeams()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-      Losuj drużyny
-    </button>
-    <button class="btn" onclick="randomizeChamps()">🎲 Losuj postacie</button>
-    <button class="btn dbtn" onclick="clearAll()" style="margin-left:auto">✕ Wyczyść</button>
+  <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:0 0 14px;border-bottom:1px solid var(--border);margin-bottom:14px">
+    <!-- Left: Discord + Save -->
+    <div style="display:flex;gap:7px">
+      <button class="btn sbtn" onclick="copyToDiscord()">📋 Kopiuj Discord</button>
+      <button class="btn primary" onclick="openSave()">💾 Zapisz wynik</button>
+    </div>
+    <!-- Center: Losuj buttons -->
+    <div style="display:flex;gap:7px;justify-content:center;align-items:center">
+      <button class="btn" onclick="randomizeDraftRoles()" title="Losuje role dla przypisanych graczy">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+        Losuj role
+      </button>
+      <button class="btn primary" onclick="randomizeTeams()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+        Losuj drużyny
+      </button>
+      <button class="btn" onclick="randomizeChamps()">🎲 Losuj postacie</button>
+    </div>
+    <!-- Right: Clear -->
+    <div>
+      <button class="btn dbtn" onclick="clearAll()">✕ Wyczyść</button>
+    </div>
   </div>
 
   <div class="main-grid">
@@ -1618,15 +1648,42 @@ function assignR(players){
 function renderRAP(){} // removed — no separate role panel in unified mode
 
 function randomizeChamps(){
-  RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};const used=[];
+  if(!draftTeams.blue.length){toast('Najpierw przypisz graczy do drużyn!');return;}
+  // If champs already exist, count this as a reroll (use up 1 from each slot's counter)
+  const alreadyRolled=CC.blue.some(c=>c)||CC.red.some(c=>c);
+  if(alreadyRolled){
+    // Decrement reroll counters (but only if any remain)
+    let anyLeft=false;
+    ROLES.forEach((_,i)=>{
+      if(RR.blue[i]<MXR){RR.blue[i]++;anyLeft=true;}
+      if(RR.red[i]<MXR){RR.red[i]++;anyLeft=true;}
+    });
+    if(!anyLeft){toast('Brak rerollów dla wszystkich slotów!');return;}
+  } else {
+    RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};
+  }
+  const used=[];
   ROLES.forEach((role,i)=>{
     const bc=pch(role,used);used.push(bc);CC.blue[i]=bc;
     const rc=pch(role,used);used.push(rc);CC.red[i]=rc;
   });
-  if(draftTeams.blue.length){renderDraftTeams();}toast('Postacie wylosowane!');
+  renderDraftTeams();
+  toast(alreadyRolled?'Postacie przetasowane!':'Postacie wylosowane!');
 }
 
 function pch(role,exc){const pool=CHAMPS[role].filter(c=>!exc.includes(c));return pool[Math.floor(Math.random()*pool.length)]||CHAMPS[role][0];}
+
+// Per-slot dice reroll (hidden button top-right of each card)
+function rerollSlotChamp(team,i,role,e){
+  e.stopPropagation();
+  if(RR[team][i]>=MXR){toast('Brak rerollów dla tego slotu!');return;}
+  RR[team][i]++;
+  const all=[...CC.blue,...CC.red].filter(c=>c);
+  CC[team][i]=pch(role,all);
+  renderDraftTeamGrid(team);
+  const left=MXR-RR[team][i];
+  toast(`Reroll! Pozostało ${left}x`);
+}
 
 function rerollC(t,i,role,e){
   e.stopPropagation();if(RR[t][i]>=MXR){toast('Brak rerollów!');return;}
@@ -2578,6 +2635,15 @@ function renderDraftTeamGrid(team, animate){
         </div>
       </div>
       ${name?`<div class="remove-player" onclick="removeFromDraft('${name}','${team}')">✕</div>`:''}
+      ${name?(()=>{
+        const rolls=RR[team][i]||0;
+        const left=MXR-rolls;
+        const noRolls=left<=0;
+        return `<div class="slot-dice ${noRolls?'no-rolls':''}"
+          onclick="rerollSlotChamp('${team}',${i},'${role}',event)"
+          title="${noRolls?'Brak rerollów':'Losuj inną postać ('+left+'x pozostało)'}">🎲</div>
+        ${rolls>0?`<div class="slot-rolls visible" style="display:block">${left}x</div>`:''}`;
+      })():''}
     </div>`;
   }).join('');
 }
