@@ -77,8 +77,6 @@ const CHAMPS={
   adc:["Ashe","Caitlyn","Draven","Ezreal","Jinx","Kai'Sa","Lucian","Miss Fortune","Samira","Tristana","Twitch","Vayne","Sivir","Xayah","Zeri","Jhin","Varus","Nilah","Aphelios","Kog'Maw","Corki","Kalista","Kindred","Seraphine","Senna","Smolder","Swain","Taliyah","Ziggs","Ziggs"],
   supp:["Alistar","Blitzcrank","Brand","Janna","Karma","Leona","Lulu","Morgana","Nami","Nautilus","Pyke","Rakan","Senna","Thresh","Yuumi","Soraka","Renata","Milio","Bard","Zyra","Lux","Seraphine","Xerath","Vel'Koz","Sona","Swain","Heimerdinger","Tahm Kench","Taric","Zilean"]
 };
-const PC={Arek:'#C8AA6E',Resek:'#5DADE2',Kosior:'#1DE9B6',Songo:'#E84855',Radio:'#9B59B6',Jusko:'#F39C12',Limcia:'#2ECC71',Pajfu:'#E67E22',Jagoda:'#FF69B4',Toffic:'#00BCD4',Kamila:'#FF6B9D',Shot:'#A78BFA',Ezra:'#34D399',Derko:'#FCD34D',Maciej:'#60A5FA',Abrose:'#F87171',Ban:'#818CF8',Ashdevil:'#FB923C',Koharu:'#4ADE80',Funfel:'#38BDF8',Salencja:'#E879F9',Falafel:'#FACC15',EloŻelo:'#A3E635',Jumcia:'#FB7185',Fsmesdek:'#67E8F9',Emoś:'#86EFAC'};
-const ini=n=>n?n.slice(0,2).toUpperCase():'??';
 
 // =====================================================================
 // MATCH HISTORY
@@ -95,9 +93,6 @@ const LS_SCAN   ='rd_scan';
 const LS_RESTR  ='rd_restr';
 const LS_META   ='rd_meta'; // per-player: avatarUrl, bannerUrl, monsterKey
 
-let EXTRA_PLAYERS=[];
-// PLAYER_META: { playerName: { avatarUrl, bannerUrl, monsterKey } }
-let PLAYER_META={};
 
 function lsSave(){
   try{
@@ -132,7 +127,6 @@ function lsLoad(){
 // =====================================================================
 // ALIASES: appName -> gameNick
 // =====================================================================
-let ALIASES = {Resek:'Cytrusia'};
 function getAppName(gameNick) {
   for(const [app,game] of Object.entries(ALIASES)) {
     if(game.toLowerCase()===gameNick.toLowerCase()) return app;

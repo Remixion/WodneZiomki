@@ -727,11 +727,21 @@ window.GH_CONFIG = window.GH_CONFIG || {
 // Fallback globals in case data.js loads after this script runs
 window.PLAYER_META = window.PLAYER_META || {};
 </script>
+<script src="players.js?v=1"></script>
 <script src="data.js?v=2"></script>
 <script>
 
 function buildPS(){
   const ps={};
+  // Seed ALL players from players.js (PC) — they appear even with 0 games
+  Object.keys(PC).forEach(n=>{
+    ps[n]={name:n,roles:{top:0,jng:0,mid:0,adc:0,supp:0},wins:{top:0,jng:0,mid:0,adc:0,supp:0},champs:{},kda:{}};
+  });
+  // Also include any manually-added extra players
+  EXTRA_PLAYERS.forEach(n=>{
+    if(!ps[n])ps[n]={name:n,roles:{top:0,jng:0,mid:0,adc:0,supp:0},wins:{top:0,jng:0,mid:0,adc:0,supp:0},champs:{},kda:{}};
+  });
+  // Accumulate stats from match history
   MH.forEach(m=>{
     const bw=m.win==='LEWA',rw=m.win==='PRAWA';
     ROLES.forEach(r=>{
@@ -742,11 +752,10 @@ function buildPS(){
       });
     });
   });
-  // inject champ + KDA data from scanned results
+  // Inject champ + KDA from AI scan results
   MH.forEach(m=>{
     if(!m.scanResult)return;
-    const sr=m.scanResult; // {playerName: {champ,k,d,a}}
-    Object.entries(sr).forEach(([appName,data])=>{
+    Object.entries(m.scanResult).forEach(([appName,data])=>{
       if(!ps[appName])return;
       const {champ,k,d,a}=data;
       if(champ){
@@ -758,10 +767,6 @@ function buildPS(){
         if(k!==undefined){ps[appName].champs[champ].k+=k;ps[appName].champs[champ].d+=d;ps[appName].champs[champ].a+=a;}
       }
     });
-  });
-  // ensure manually-added players always appear even with 0 games
-  EXTRA_PLAYERS.forEach(n=>{
-    if(!ps[n])ps[n]={name:n,roles:{top:0,jng:0,mid:0,adc:0,supp:0},wins:{top:0,jng:0,mid:0,adc:0,supp:0},champs:{},kda:{}};
   });
   return ps;
 }
