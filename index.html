@@ -2211,7 +2211,7 @@ function renderProfile(n){
               <div style="font-size:12px;font-weight:800;color:${won?'#5DADE2':'#E84855'}">${won?'W':'L'}</div>
               <div style="font-size:9px;color:var(--silver)">#${m.gid}</div>
             </div>
-            ${champKey?`<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${champKey}.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy" onerror="this.style.display='none'">`:'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--silver)">${RI[roleInM]||''}</div>'}
+            ${champKey?('<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+champKey+'.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">'):'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--silver)">'+(RI[roleInM]||'')+'</div>'}
             <div style="flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600">${champs?.[roleInM]||'—'} <span style="color:var(--silver);font-size:10px;font-weight:400">${RI[roleInM]||''} ${roleInM.toUpperCase()}</span></div>
               <div style="font-size:10px;color:var(--silver);margin-top:2px">z: ${allies.join(', ')||'—'}</div>
@@ -3309,7 +3309,6 @@ async function ghAutoFetch(){
 // =====================================================================
 // NAV + UTILS
 // =====================================================================
-function showPage(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+n)?.classList.add('active');btn?.classList.add('active');}
 function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);}
 
