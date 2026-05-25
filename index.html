@@ -2316,13 +2316,15 @@ function makeDonut(segments, size=120, innerText='', innerSub='', chartId=''){
   const arcs=segments.map((seg,si)=>{
     const arc=circ*(seg.pct/total);
     const pct=Math.round((seg.pct/total)*100);
+    // Use data attributes to avoid escaping nightmares
+    const label=seg.label.replace(/"/g,'&quot;').replace(/</g,'&lt;');
     const s=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${seg.color}" stroke-width="${thick}"
       stroke-dasharray="${Math.max(0,arc-GAP)} ${circ-(arc-GAP)}"
       stroke-dashoffset="${-(offset-circ/4)}"
       stroke-linecap="butt"
-      style="cursor:pointer;transition:stroke-width 0.15s,opacity 0.15s"
-      onmouseenter="donutHover('${id}',${si},'${seg.label.replace(/'/g,'\\\'').replace(/\n/g,' ')}',${pct},this)"
-      onmouseleave="donutLeave('${id}',this)">
+      data-label="${label}" data-pct="${pct}" data-chart="${id}"
+      style="cursor:pointer;transition:stroke-width 0.15s"
+      onmouseenter="donutHover(this)" onmouseleave="donutLeave(this)">
     </circle>`;
     offset+=arc;
     return s;
@@ -2330,25 +2332,29 @@ function makeDonut(segments, size=120, innerText='', innerSub='', chartId=''){
   return `<div style="position:relative;display:inline-block">
     <svg id="${id}" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
       ${arcs.join('')}
-      <text id="${id}_t1" x="${cx}" y="${cy-5}" text-anchor="middle" fill="var(--white)" font-size="14" font-weight="700" font-family="Cinzel,serif">${innerText}</text>
-      <text id="${id}_t2" x="${cx}" y="${cy+12}" text-anchor="middle" fill="var(--silver)" font-size="9" font-family="Rajdhani,sans-serif" letter-spacing="1">${innerSub}</text>
+      <text id="${id}_t1" x="${cx}" y="${cy-5}" text-anchor="middle" fill="var(--white)" font-size="14" font-weight="700" font-family="Cinzel,serif" data-orig="${innerText}">${innerText}</text>
+      <text id="${id}_t2" x="${cx}" y="${cy+12}" text-anchor="middle" fill="var(--silver)" font-size="9" font-family="Rajdhani,sans-serif" letter-spacing="1" data-orig="${innerSub}">${innerSub}</text>
     </svg>
-    <div id="${id}_tip" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(5,14,26,0.95);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:12px;white-space:nowrap;pointer-events:none;color:var(--white);z-index:100;font-family:'Rajdhani',sans-serif"></div>
+    <div id="${id}_tip" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(5,14,26,0.95);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:13px;white-space:nowrap;pointer-events:none;color:var(--white);z-index:100;font-family:'Rajdhani',sans-serif"></div>
   </div>`;
 }
 
-function donutHover(id, si, label, pct, el){
-  el.setAttribute('stroke-width', '22');
+function donutHover(el){
+  const label=el.dataset.label||'';
+  const pct=el.dataset.pct||'';
+  const id=el.dataset.chart||'';
+  el.setAttribute('stroke-width','22');
   const tip=document.getElementById(id+'_tip');
   if(tip){tip.style.display='block';tip.innerHTML=label+' &mdash; <b>'+pct+'%</b>';}
   const t1=document.getElementById(id+'_t1');
   const t2=document.getElementById(id+'_t2');
-  if(t1){t1.setAttribute('data-orig',t1.textContent);t1.textContent=pct+'%';}
-  if(t2){t2.setAttribute('data-orig',t2.textContent);t2.textContent=label.split(':')[0]||label;}
+  if(t1) t1.textContent=pct+'%';
+  if(t2) t2.textContent=label.split(':')[0]||label;
 }
 
-function donutLeave(id, el){
-  el.setAttribute('stroke-width', '18');
+function donutLeave(el){
+  const id=el.dataset.chart||'';
+  el.setAttribute('stroke-width','18');
   const tip=document.getElementById(id+'_tip');
   if(tip) tip.style.display='none';
   const t1=document.getElementById(id+'_t1');
@@ -3540,29 +3546,36 @@ async function ghPushData(reason='save'){
 
 // Parse CSV text → array of match objects
 function parseSheetCSV(csv){
+  // Parse CSV properly — handles quoted fields, no lookbehind regex
+  function parseLine(line){
+    const cols=[];let cur='';let inQ=false;
+    for(let i=0;i<line.length;i++){
+      const ch=line[i];
+      if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+      else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}
+      else cur+=ch;
+    }
+    cols.push(cur.trim());
+    return cols;
+  }
   const lines=csv.trim().split('\n');
   if(lines.length<2)return[];
-  const header=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
   const matches=[];
   for(let i=1;i<lines.length;i++){
-    // Handle quoted fields
-    const cols=lines[i].match(/(".*?"|[^,]+|(?<=,)(?=,)|(?<=,)$|^(?=,))/g)||[];
-    const row=cols.map(c=>c.replace(/^"|"$/g,'').trim());
-    if(!row[0]||!row[0].match(/^\d+$/))continue;
-    const get=(idx)=>row[idx]||'';
+    const row=parseLine(lines[i]);
+    const get=(idx)=>(row[idx]||'').replace(/^"|"$/g,'').trim();
+    if(!get(0)||!get(0).match(/^\d+$/))continue;
     const m={
       gid:get(0), patch:get(1)||getCurrentPatch(get(2)), date:get(2), win:get(3),
       blue:{top:get(4),jng:get(5),mid:get(6),adc:get(7),supp:get(8)},
       red: {top:get(9),jng:get(10),mid:get(11),adc:get(12),supp:get(13)},
     };
-    // Optional champ columns (14-23)
     const bct=get(14),bcj=get(15),bcm=get(16),bca=get(17),bcs=get(18);
     const rct=get(19),rcj=get(20),rcm=get(21),rca=get(22),rcs=get(23);
     if(bct||bcj||bcm||bca||bcs) m.blueChamps={top:bct,jng:bcj,mid:bcm,adc:bca,supp:bcs};
     if(rct||rcj||rcm||rca||rcs) m.redChamps={top:rct,jng:rcj,mid:rcm,adc:rca,supp:rcs};
-    const imgUrl=get(24)||get(14); // fallback: col 14 might be imgUrl in old format
+    const imgUrl=get(24);
     if(imgUrl&&imgUrl.startsWith('http'))m.imgUrl=imgUrl;
-    // preserve any local scanResult
     const existing=MH.find(x=>x.gid===m.gid);
     if(existing?.scanResult)m.scanResult=existing.scanResult;
     matches.push(m);
