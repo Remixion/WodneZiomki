@@ -3514,7 +3514,7 @@ function saveMatchImg(){
   else{imgPreview.style.display='none';imgEmpty.style.display='block';}
   renderHist();
   toast('Screenshot zapisany!');
-  gsWrite(m).catch(()=>{});
+  gsUpdate(m);
 }
 
 function saveMatchChamps(){
@@ -3557,7 +3557,7 @@ function saveMatchChamps(){
   renderHist();
   if(selPr)renderProfile(selPr);
   toast('Postacie zapisane!');
-  gsWrite(m).catch(()=>{});
+  gsUpdate(m);
 }
 
 function renderAvatarToolList(){
@@ -3945,8 +3945,7 @@ async function gsFetch(silent=false){
 async function gsWrite(matchData){
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
   if(!scriptUrl){
-    // No script URL — save locally only, remind user
-    toast('⚠ Brak Apps Script URL — mecz zapisany lokalnie');
+    toast('⚠ Brak Apps Script URL — zapis tylko lokalny');
     gsLog('Brak scriptUrl — zapis tylko lokalny','var(--warn)');
     return false;
   }
@@ -3958,6 +3957,7 @@ async function gsWrite(matchData){
       matchData.red.top||'',  matchData.red.jng||'',  matchData.red.mid||'',  matchData.red.adc||'',  matchData.red.supp||'',
       matchData.blueChamps?.top||'', matchData.blueChamps?.jng||'', matchData.blueChamps?.mid||'', matchData.blueChamps?.adc||'', matchData.blueChamps?.supp||'',
       matchData.redChamps?.top||'',  matchData.redChamps?.jng||'',  matchData.redChamps?.mid||'',  matchData.redChamps?.adc||'',  matchData.redChamps?.supp||'',
+      matchData.imgUrl||'',
     ];
     const r=await fetch(scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(row)));
     const res=await r.json();
@@ -3971,6 +3971,33 @@ async function gsWrite(matchData){
   }catch(e){
     gsLog('✗ Sheets write: '+e.message,'var(--danger)');
     toast('Błąd zapisu Sheets: '+e.message);
+    return false;
+  }
+}
+
+// Update existing row in Sheets (by GID)
+async function gsUpdate(matchData){
+  const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
+  if(!scriptUrl){toast('⚠ Brak Apps Script URL');return false;}
+  try{
+    const row=[
+      matchData.gid, matchData.patch, matchData.date, matchData.win,
+      matchData.blue.top||'', matchData.blue.jng||'', matchData.blue.mid||'', matchData.blue.adc||'', matchData.blue.supp||'',
+      matchData.red.top||'',  matchData.red.jng||'',  matchData.red.mid||'',  matchData.red.adc||'',  matchData.red.supp||'',
+      matchData.blueChamps?.top||'', matchData.blueChamps?.jng||'', matchData.blueChamps?.mid||'', matchData.blueChamps?.adc||'', matchData.blueChamps?.supp||'',
+      matchData.redChamps?.top||'',  matchData.redChamps?.jng||'',  matchData.redChamps?.mid||'',  matchData.redChamps?.adc||'',  matchData.redChamps?.supp||'',
+      matchData.imgUrl||'',
+    ];
+    const r=await fetch(scriptUrl+'?action=updateRow&gid='+encodeURIComponent(matchData.gid)+'&row='+encodeURIComponent(JSON.stringify(row)));
+    const res=await r.json();
+    if(res.status==='ok'){
+      toast('✓ Zaktualizowano w Sheets!');
+      return true;
+    } else {
+      throw new Error(res.error||'nieznany błąd');
+    }
+  }catch(e){
+    toast('Błąd aktualizacji Sheets: '+e.message);
     return false;
   }
 }
