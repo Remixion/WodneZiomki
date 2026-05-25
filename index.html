@@ -3905,7 +3905,25 @@ function parseSheetCSV(csv){
     if(bct||bcj||bcm||bca||bcs) m.blueChamps={top:bct,jng:bcj,mid:bcm,adc:bca,supp:bcs};
     if(rct||rcj||rcm||rca||rcs) m.redChamps={top:rct,jng:rcj,mid:rcm,adc:rca,supp:rcs};
     const imgUrl=get(24);
-    if(imgUrl&&imgUrl.startsWith('http'))m.imgUrl=imgUrl;
+    // Handle multiple formats:
+    // 1. Plain URL: "https://..."
+    // 2. HYPERLINK formula exported as text: =HYPERLINK("url","name")
+    // 3. Google Sheets exports hyperlink cell as the display text, not URL
+    //    → user should paste URL directly, but try to extract if formula leaked
+    const extractUrl=(raw)=>{
+      if(!raw)return'';
+      // Direct URL
+      if(raw.startsWith('http'))return raw;
+      // HYPERLINK formula: =HYPERLINK("url","text") or HYPERLINK("url","text")
+      const hm=raw.match(/HYPERLINK\s*\(\s*"([^"]+)"/i);
+      if(hm)return hm[1];
+      // Sometimes exports as: url (display text) — try finding http inside
+      const urlMatch=raw.match(/https?:\/\/[^\s"')]+/);
+      if(urlMatch)return urlMatch[0];
+      return'';
+    };
+    const resolvedUrl=extractUrl(imgUrl);
+    if(resolvedUrl)m.imgUrl=resolvedUrl;
     const existing=MH.find(x=>x.gid===m.gid);
     if(existing?.scanResult)m.scanResult=existing.scanResult;
     matches.push(m);
@@ -3929,6 +3947,25 @@ async function gsFetch(silent=false){
     MH.forEach(m=>{if(m.scanResult)localScans[m.gid]=m.scanResult;});
     MH.splice(0,MH.length,...parsed);
     MH.forEach(m=>{if(localScans[m.gid])m.scanResult=localScans[m.gid];});
+    // Also try fetching ImgUrls via Apps Script (to bypass hyperlink export issue)
+    const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
+    if(scriptUrl){
+      try{
+        const ir=await fetch(scriptUrl+'?action=getImgUrls');
+        if(ir.ok){
+          const imgData=await ir.json();
+          if(imgData.status==='ok'&&imgData.urls){
+            MH.forEach(m=>{
+              if(imgData.urls[m.gid]&&imgData.urls[m.gid].startsWith('http')){
+                m.imgUrl=imgData.urls[m.gid];
+              }
+            });
+            if(!silent)gsLog('✓ Screenshoty pobrane','var(--success)');
+          }
+        }
+      }catch(e){/* silent fail - imgurls optional */}
+    }
+
     lsSave();
     PS=buildPS();AP=Object.keys(PS).sort();
     renderPL();renderProfileList();renderStats();renderHist();
