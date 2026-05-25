@@ -21,10 +21,10 @@ body{font-family:'Rajdhani',sans-serif;background:var(--blue-deep);color:var(--w
 .hex-bg{position:fixed;inset:0;z-index:0;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpolygon points='30,2 58,17 58,35 30,50 2,35 2,17' fill='none' stroke='%23C8AA6E' stroke-width='1'/%3E%3C/svg%3E");background-size:60px 52px}
 .app{position:relative;z-index:1;min-height:100vh}
 nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padding:10px 24px;background:rgba(3,8,18,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;gap:0}
-.nav-logo{font-family:'Pacifico',cursive;font-size:18px;color:#5DADE2;letter-spacing:1px;display:flex;align-items:center;gap:10px;text-shadow:0 0 20px rgba(93,173,226,0.4)}
+.nav-logo{font-family:'Pacifico',cursive;font-size:21px;color:#5DADE2;letter-spacing:1px;display:flex;align-items:center;gap:10px;text-shadow:0 0 20px rgba(93,173,226,0.4)}
 .nav-logo svg{width:32px;height:28px}
 .nav-tabs{display:flex;gap:2px;flex-wrap:wrap;align-items:center}
-.nav-tab{padding:6px 14px;background:transparent;border:1px solid transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s}
+.nav-tab{padding:6px 14px;background:transparent;border:1px solid transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s}
 .nav-tab:hover{color:var(--gold);border-color:var(--border)}
 .nav-tab.active{color:var(--gold);border-color:var(--border-bright);background:rgba(200,170,110,0.07)}
 /* OCTOPUS NAV — Skład centered, tabs in tentacles */
@@ -44,7 +44,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
   background:linear-gradient(135deg,rgba(11,196,227,0.18),rgba(93,173,226,0.12));
   border:1.5px solid rgba(11,196,227,0.5);
   color:var(--teal);
-  cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;
   letter-spacing:3px;text-transform:uppercase;border-radius:8px;
   transition:all 0.25s;display:flex;align-items:center;gap:7px;
   box-shadow:0 0 14px rgba(11,196,227,0.18),0 0 0 1px rgba(11,196,227,0.08);
@@ -52,15 +52,15 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .nav-tab-center:hover{background:linear-gradient(135deg,rgba(11,196,227,0.28),rgba(93,173,226,0.2));box-shadow:0 0 24px rgba(11,196,227,0.35)}
 .nav-tab-center.active{border-color:var(--teal);box-shadow:0 0 22px rgba(11,196,227,0.32),inset 0 0 14px rgba(11,196,227,0.1);color:var(--white);background:linear-gradient(135deg,rgba(11,196,227,0.24),rgba(93,173,226,0.16))}
 .nav-right{display:flex;gap:6px;align-items:center}
-.dev-badge{padding:4px 12px;background:rgba(232,72,85,0.12);border:1px solid rgba(232,72,85,0.35);color:var(--danger);font-size:11px;letter-spacing:2px;border-radius:20px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Rajdhani',sans-serif}
+.dev-badge{padding:4px 12px;background:rgba(232,72,85,0.12);border:1px solid rgba(232,72,85,0.35);color:var(--danger);font-size:14px;letter-spacing:2px;border-radius:20px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Rajdhani',sans-serif}
 .dev-badge.active{background:rgba(232,72,85,0.28);box-shadow:0 0 14px rgba(232,72,85,0.35)}
-.ai-badge{padding:4px 12px;background:rgba(11,196,227,0.1);border:1px solid rgba(11,196,227,0.35);color:var(--teal);font-size:11px;letter-spacing:2px;border-radius:20px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Rajdhani',sans-serif}
+.ai-badge{padding:4px 12px;background:rgba(11,196,227,0.1);border:1px solid rgba(11,196,227,0.35);color:var(--teal);font-size:14px;letter-spacing:2px;border-radius:20px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Rajdhani',sans-serif}
 .ai-badge:hover{background:rgba(11,196,227,0.2)}
 .page{display:none;padding:20px 24px;max-width:1420px;margin:0 auto}
 .page.active{display:block}
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;backdrop-filter:blur(10px);overflow:hidden}
-.panel-header{padding:12px 18px;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;justify-content:space-between;gap:8px}
-.btn{padding:8px 20px;border:1px solid var(--border);background:transparent;color:var(--gold);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+.panel-header{padding:12px 18px;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.btn{padding:8px 20px;border:1px solid var(--border);background:transparent;color:var(--gold);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
 .btn:hover{background:rgba(200,170,110,0.1);border-color:var(--gold)}
 .btn.primary{background:rgba(200,170,110,0.13);border-color:var(--gold)}
 .btn.primary:hover{background:rgba(200,170,110,0.22);box-shadow:0 0 18px rgba(200,170,110,0.25)}
@@ -80,7 +80,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 @media(max-width:900px){.main-grid{grid-template-columns:220px 1fr}}
 @media(max-width:800px){.main-grid{grid-template-columns:1fr}}
 /* Sort buttons */
-.sort-btn{flex:1;padding:5px 0;background:transparent;border:none;border-right:1px solid var(--border);color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s}
+.sort-btn{flex:1;padding:5px 0;background:transparent;border:none;border-right:1px solid var(--border);color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s}
 .sort-btn:last-child{border-right:none}
 .sort-btn:hover{color:var(--gold);background:rgba(200,170,110,0.05)}
 .sort-btn.active{color:var(--teal);background:rgba(11,196,227,0.07)}
@@ -89,16 +89,16 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .pi:hover{background:rgba(200,170,110,0.05)}
 .pi.sel{background:rgba(11,196,227,0.07);border-left:2px solid var(--teal)}
 .av{border-radius:50%;background:var(--blue-mid);border:1.5px solid;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;overflow:hidden}
-.av32{width:32px;height:32px;font-size:11px}
-.av26{width:26px;height:26px;font-size:9px}
-.av72{width:72px;height:72px;font-size:24px}
-.pname{font-size:13px;font-weight:600;flex:1;line-height:1.2}
-.psub{font-size:10px;color:var(--silver)}
-.pgame{font-size:10px;color:var(--teal);opacity:0.8}
+.av32{width:32px;height:32px;font-size:14px}
+.av26{width:26px;height:26px;font-size:12px}
+.av72{width:72px;height:72px;font-size:27px}
+.pname{font-size:16px;font-weight:600;flex:1;line-height:1.2}
+.psub{font-size:13px;color:var(--silver)}
+.pgame{font-size:13px;color:var(--teal);opacity:0.8}
 /* TEAMS */
 .team-display{border-radius:8px;overflow:hidden;border:1px solid var(--border)}
 .team-hdr{padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
-.team-title{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px}
+.team-title{font-family:'Cinzel',serif;font-size:15px;letter-spacing:2px}
 .tb{background:rgba(5,18,45,0.92)}.tr{background:rgba(28,5,14,0.92)}
 .tb .team-title{color:#5DADE2}.tr .team-title{color:#E84855}
 .cg{display:grid;grid-template-columns:repeat(5,1fr)}
@@ -110,11 +110,11 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .ci{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:6px 4px 7px}
 .ci-top{/* nick area at top */}
 .ci-bottom{/* role area at bottom */text-align:center}
-.cn{font-size:9px;font-weight:700;color:var(--gold-light);line-height:1.2;text-shadow:0 1px 4px rgba(0,0,0,0.8)}
-.cp{font-family:'Russo One',sans-serif;font-size:18px;color:var(--white);text-align:center;line-height:1.1;text-shadow:0 2px 8px rgba(0,0,0,0.9),0 0 20px rgba(0,0,0,0.6);padding:0 2px;word-break:break-word}
-.crole{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-shadow:0 1px 6px rgba(0,0,0,0.95),0 0 12px rgba(0,0,0,0.8);text-align:center;padding:2px 4px;background:rgba(0,0,0,0.45);border-radius:3px;display:inline-block}
-.ckda{font-size:8px;color:rgba(160,180,200,0.8);margin-top:1px;text-shadow:0 1px 3px rgba(0,0,0,0.9)}
-.crb{position:absolute;top:2px;right:2px;background:rgba(3,8,20,0.82);border:1px solid var(--border);border-radius:3px;padding:2px 4px;font-size:8px;cursor:pointer;color:var(--gold);transition:all 0.2s;display:none;font-family:'Rajdhani',sans-serif;font-weight:700}
+.cn{font-size:12px;font-weight:700;color:var(--gold-light);line-height:1.2;text-shadow:0 1px 4px rgba(0,0,0,0.8)}
+.cp{font-family:'Russo One',sans-serif;font-size:21px;color:var(--white);text-align:center;line-height:1.1;text-shadow:0 2px 8px rgba(0,0,0,0.9),0 0 20px rgba(0,0,0,0.6);padding:0 2px;word-break:break-word}
+.crole{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-shadow:0 1px 6px rgba(0,0,0,0.95),0 0 12px rgba(0,0,0,0.8);text-align:center;padding:2px 4px;background:rgba(0,0,0,0.45);border-radius:3px;display:inline-block}
+.ckda{font-size:11px;color:rgba(160,180,200,0.8);margin-top:1px;text-shadow:0 1px 3px rgba(0,0,0,0.9)}
+.crb{position:absolute;top:2px;right:2px;background:rgba(3,8,20,0.82);border:1px solid var(--border);border-radius:3px;padding:2px 4px;font-size:11px;cursor:pointer;color:var(--gold);transition:all 0.2s;display:none;font-family:'Rajdhani',sans-serif;font-weight:700}
 .cs:hover .crb{display:block}
 .crb:hover{background:rgba(200,170,110,0.18)}
 /* WATERFALL REVEAL ANIMATION */
@@ -163,12 +163,12 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .cb-monster{background-position:center center!important;background-size:cover!important;opacity:0.88}
 /* CENTER */
 .cctrl{display:flex;flex-direction:column;align-items:center;gap:9px;padding:8px 0}
-.vs{font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:var(--gold);text-shadow:0 0 25px rgba(200,170,110,0.4)}
+.vs{font-family:'Cinzel',serif;font-size:27px;font-weight:700;color:var(--gold);text-shadow:0 0 25px rgba(200,170,110,0.4)}
 .ctr{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
 .rtr{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(0,0,0,0.18);border:1px solid var(--border);border-radius:4px;gap:9px}
-.rlbl{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
-.rchip{display:flex;align-items:center;gap:6px;padding:5px 9px;background:rgba(232,72,85,0.08);border:1px solid rgba(232,72,85,0.2);border-radius:4px;font-size:11px;color:#f08090;margin-bottom:4px}
-.rx{margin-left:auto;cursor:pointer;color:var(--danger);font-size:14px;opacity:0.7;transition:opacity 0.2s}.rx:hover{opacity:1}
+.rlbl{display:flex;align-items:center;gap:7px;font-size:16px;font-weight:600}
+.rchip{display:flex;align-items:center;gap:6px;padding:5px 9px;background:rgba(232,72,85,0.08);border:1px solid rgba(232,72,85,0.2);border-radius:4px;font-size:14px;color:#f08090;margin-bottom:4px}
+.rx{margin-left:auto;cursor:pointer;color:var(--danger);font-size:17px;opacity:0.7;transition:opacity 0.2s}.rx:hover{opacity:1}
 /* PROFILE */
 .profile-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start}
 @media(max-width:900px){.profile-layout{grid-template-columns:1fr}}
@@ -192,7 +192,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 /* Avatar in banner */
 .pv2-avatar{position:absolute;left:32px;top:50%;transform:translateY(-50%);width:96px;height:96px;border-radius:50%;border:3px solid;object-fit:cover;box-shadow:0 0 30px rgba(0,0,0,0.7);overflow:hidden;background:rgba(8,18,36,0.8);display:flex;align-items:center;justify-content:center}
 /* Settings btn */
-.pv2-settings-btn{position:absolute;bottom:12px;right:14px;background:rgba(5,14,26,0.8);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;color:var(--gold);font-size:11px;font-family:"Rajdhani",sans-serif;font-weight:600;letter-spacing:1px;backdrop-filter:blur(6px);transition:all 0.2s}
+.pv2-settings-btn{position:absolute;bottom:12px;right:14px;background:rgba(5,14,26,0.8);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;color:var(--gold);font-size:14px;font-family:"Rajdhani",sans-serif;font-weight:600;letter-spacing:1px;backdrop-filter:blur(6px);transition:all 0.2s}
 .pv2-settings-btn:hover{border-color:var(--gold);background:rgba(200,170,110,0.12)}
 /* Name area */
 .pv2-namerow{padding:14px 32px 18px;display:flex;align-items:flex-end;gap:16px}
@@ -200,25 +200,25 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .pv2-charts{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .pv2-chart-cell{flex:1;padding:20px;text-align:center;border-right:1px solid var(--border)}
 .pv2-chart-cell:last-child{border-right:none}
-.pv2-chart-label{font-size:13px;color:var(--silver);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.pv2-chart-label{font-size:16px;color:var(--silver);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
 /* Rank badge in center of pie */
-.pv2-rank-center{font-family:"Cinzel",serif;font-size:11px;font-weight:700;text-align:center}
+.pv2-rank-center{font-family:"Cinzel",serif;font-size:14px;font-weight:700;text-align:center}
 /* Bottom 2-col layout */
 .pv2-body{display:grid;grid-template-columns:220px 1fr;gap:0}
 .pv2-sidebar{padding:18px;border-right:1px solid var(--border)}
 .pv2-main{padding:18px}
-.pv2-section-title{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);opacity:0.6;margin-bottom:10px}
+.pv2-section-title{font-size:16px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);opacity:0.6;margin-bottom:10px}
 /* Match list */
 .pv2-match{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;margin-bottom:4px;border:1px solid var(--border);transition:background 0.15s}
 .pv2-match:hover{background:rgba(200,170,110,0.04)}
-.pv2-match.pv2-win{border-left:3px solid #5DADE2;background:rgba(93,173,226,0.04);font-size:15px}
+.pv2-match.pv2-win{border-left:3px solid #5DADE2;background:rgba(93,173,226,0.04);font-size:18px}
 .pv2-match.pv2-loss{border-left:3px solid #E84855;background:rgba(232,72,85,0.03)}
 /* Settings panel */
 .pv2-settings{display:none;border-top:1px solid var(--border);padding:20px;background:rgba(0,0,0,0.3)}
 .pv2-settings.open{display:block}
 .pv2-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.pv2-field label{font-size:9px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px}
-.pv2-field input,.pv2-field select{width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--white);padding:6px 9px;border-radius:4px;font-family:"Rajdhani",sans-serif;font-size:12px}
+.pv2-field label{font-size:12px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px}
+.pv2-field input,.pv2-field select{width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--white);padding:6px 9px;border-radius:4px;font-family:"Rajdhani",sans-serif;font-size:15px}
 .pv2-field input:focus,.pv2-field select:focus{outline:none;border-color:var(--teal)}
 .pcard{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden}
 .phero{position:relative;height:165px;overflow:hidden}
@@ -226,46 +226,46 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .phov{position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,14,26,1) 0%,rgba(5,14,26,0.1) 100%)}
 .pavl{position:absolute;bottom:-24px;left:18px;border:2.5px solid var(--gold);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 16px rgba(200,170,110,0.22)}
 .pinfo{padding:34px 18px 14px}
-.pn{font-family:'Cinzel',serif;font-size:19px;color:var(--gold)}
-.pm{font-size:11px;color:var(--silver);margin-top:2px}
-.pgame-nick{font-size:12px;color:var(--teal);margin-top:2px;letter-spacing:1px}
+.pn{font-family:'Cinzel',serif;font-size:22px;color:var(--gold)}
+.pm{font-size:14px;color:var(--silver);margin-top:2px}
+.pgame-nick{font-size:15px;color:var(--teal);margin-top:2px;letter-spacing:1px}
 .sg4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 18px 14px}
 .sb{background:rgba(0,0,0,0.28);border:1px solid var(--border);border-radius:6px;padding:9px;text-align:center}
-.sv{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold)}
-.sl{font-size:9px;color:var(--silver);margin-top:1px;letter-spacing:1px;text-transform:uppercase}
-.slbl{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--silver);padding:8px 18px 5px;opacity:0.65}
+.sv{font-family:'Cinzel',serif;font-size:21px;font-weight:700;color:var(--gold)}
+.sl{font-size:12px;color:var(--silver);margin-top:1px;letter-spacing:1px;text-transform:uppercase}
+.slbl{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--silver);padding:8px 18px 5px;opacity:0.65}
 .ror{display:flex;align-items:center;gap:9px;padding:6px 18px;border-bottom:1px solid rgba(200,170,110,0.05)}
 .ror:last-child{border-bottom:none}
 .rbt{flex:1;height:4px;background:rgba(255,255,255,0.09);border-radius:2px;overflow:hidden}
 .rbf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--blue-bright));transition:width 0.8s}
-.wv{font-size:12px;font-weight:700;min-width:36px;text-align:right}
-.gs{font-size:10px;color:var(--silver);min-width:48px}
+.wv{font-size:15px;font-weight:700;min-width:36px;text-align:right}
+.gs{font-size:13px;color:var(--silver);min-width:48px}
 .syr{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,0,0,0.18);border-radius:4px;margin-bottom:4px}
 .syb{flex:1;height:3px;background:rgba(255,255,255,0.09);border-radius:2px;overflow:hidden}
-.wp{padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;min-width:36px;text-align:center}
+.wp{padding:2px 7px;border-radius:20px;font-size:13px;font-weight:700;min-width:36px;text-align:center}
 .wg{background:rgba(29,233,182,0.13);color:var(--success);border:1px solid rgba(29,233,182,0.28)}
 .wb{background:rgba(232,72,85,0.13);color:var(--danger);border:1px solid rgba(232,72,85,0.28)}
 .fr{display:flex;align-items:center;gap:8px;padding:7px 11px;background:rgba(232,72,85,0.06);border:1px solid rgba(232,72,85,0.16);border-radius:4px;margin-bottom:4px}
-.mr{display:flex;align-items:center;gap:9px;padding:7px 18px;border-bottom:1px solid rgba(200,170,110,0.04);font-size:11px}
-.mb{width:26px;height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.mr{display:flex;align-items:center;gap:9px;padding:7px 18px;border-bottom:1px solid rgba(200,170,110,0.04);font-size:14px}
+.mb{width:26px;height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .mw{background:rgba(29,233,182,0.13);color:var(--success);border:1px solid rgba(29,233,182,0.28)}
 .ml{background:rgba(232,72,85,0.13);color:var(--danger);border:1px solid rgba(232,72,85,0.28)}
 /* KDA champion card */
 .champ-card{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:4px;padding:5px 8px;display:flex;align-items:center;gap:7px;margin-bottom:3px}
-.champ-card-img{width:28px;height:28px;border-radius:3px;background:var(--blue-mid);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--silver)}
+.champ-card-img{width:28px;height:28px;border-radius:3px;background:var(--blue-mid);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--silver)}
 .champ-card-img img{width:100%;height:100%;object-fit:cover}
 /* STATS */
 .bsc{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center}
 .bv{font-family:'Cinzel',serif;font-size:32px;font-weight:700;color:var(--gold)}
-.bl{font-size:10px;color:var(--silver);margin-top:4px;letter-spacing:2px;text-transform:uppercase}
+.bl{font-size:13px;color:var(--silver);margin-top:4px;letter-spacing:2px;text-transform:uppercase}
 .lbr{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid rgba(200,170,110,0.05);transition:background 0.15s}
 .lbr:hover{background:rgba(200,170,110,0.03)}
-.lbn{font-family:'Cinzel',serif;font-size:14px;font-weight:700;width:24px;text-align:center}
+.lbn{font-family:'Cinzel',serif;font-size:17px;font-weight:700;width:24px;text-align:center}
 .r1{color:#FFD700}.r2{color:#C0C0C0}.r3{color:#CD7F32}
-.lbav{width:26px;height:26px;border-radius:50%;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.lbav{width:26px;height:26px;border-radius:50%;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
 .lbbt{width:90px;height:4px;background:rgba(255,255,255,0.09);border-radius:2px;overflow:hidden}
 .lbbf{height:100%;border-radius:2px}
-.lbw{font-size:12px;font-weight:700;min-width:42px;text-align:right}
+.lbw{font-size:15px;font-weight:700;min-width:42px;text-align:right}
 /* ── HISTORY — OP.GG style ─────────────────────────────────────── */
 .match-card{
   display:flex;align-items:stretch;
@@ -286,11 +286,11 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
   gap:3px;padding:8px 4px;
 }
 .mc-result-badge{
-  font-size:18px;font-weight:800;letter-spacing:2px;
+  font-size:21px;font-weight:800;letter-spacing:2px;
 }
 .mc-result-badge.win{color:#5DADE2}
 .mc-result-badge.loss{color:#E84855}
-.mc-gid{font-size:11px;color:rgba(160,180,200,0.45);letter-spacing:0.5px;text-align:center}
+.mc-gid{font-size:14px;color:rgba(160,180,200,0.45);letter-spacing:0.5px;text-align:center}
 
 /* Champ icons column */
 .mc-champs{
@@ -303,9 +303,9 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
   background:rgba(255,255,255,0.06);
   object-fit:cover;flex-shrink:0;
 }
-.mc-champ-name{font-size:10px;color:var(--gold-light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px}
+.mc-champ-name{font-size:13px;color:var(--gold-light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px}
 .mc-role-badge{
-  font-size:10px;padding:2px 6px;border-radius:3px;
+  font-size:13px;padding:2px 6px;border-radius:3px;
   background:rgba(255,255,255,0.08);color:var(--silver);
   letter-spacing:0.5px;text-transform:uppercase;flex-shrink:0;
 }
@@ -316,7 +316,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
   padding:0 6px;flex-shrink:0;
 }
 .mc-vs-inner{
-  font-size:10px;font-weight:700;color:rgba(160,180,200,0.3);
+  font-size:13px;font-weight:700;color:rgba(160,180,200,0.3);
   letter-spacing:1px;writing-mode:vertical-rl;
 }
 
@@ -327,17 +327,17 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 }
 .mc-player-row{
   display:flex;align-items:center;gap:4px;
-  font-size:13px;padding:2px 0;
+  font-size:16px;padding:2px 0;
 }
 .mc-player-dot{
   width:9px;height:9px;border-radius:50%;flex-shrink:0;
 }
 .mc-player-name{
   font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  max-width:105px;font-size:15px;
+  max-width:105px;font-size:18px;
 }
 .mc-player-champ{
-  font-size:11px;color:var(--silver);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:14px;color:var(--silver);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 
 /* Meta column */
@@ -345,11 +345,11 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:5px;padding:8px 16px;flex-shrink:0;min-width:100px;text-align:center;
 }
-.mc-date{font-size:12px;color:var(--silver);font-weight:600}
-.mc-patch{font-size:11px;color:rgba(160,180,200,0.45);letter-spacing:0.5px}
+.mc-date{font-size:15px;color:var(--silver);font-weight:600}
+.mc-patch{font-size:14px;color:rgba(160,180,200,0.45);letter-spacing:0.5px}
 .mc-img-btn{
   background:rgba(11,196,227,0.1);border:1px solid rgba(11,196,227,0.25);
-  color:var(--teal);padding:4px 9px;border-radius:3px;font-size:11px;
+  color:var(--teal);padding:4px 9px;border-radius:3px;font-size:14px;
   cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;
   transition:all 0.15s;white-space:nowrap;
 }
@@ -358,44 +358,44 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .modal-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center}
 .modal-box{background:rgba(8,18,36,0.98);border:1px solid var(--border-bright);border-radius:10px;padding:24px;width:min(700px,95vw);max-height:85vh;overflow-y:auto}
 .scan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:12px}
-.scan-card{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:6px;overflow:hidden;font-size:11px}
+.scan-card{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:6px;overflow:hidden;font-size:14px}
 .scan-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:rgba(0,0,0,0.5)}
 .scan-info{padding:8px}
-.scan-status{padding:3px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:1px;display:inline-block;margin-bottom:6px}
+.scan-status{padding:3px 8px;border-radius:3px;font-size:13px;font-weight:700;letter-spacing:1px;display:inline-block;margin-bottom:6px}
 .ss-pending{background:rgba(160,180,200,0.15);color:var(--silver)}
 .ss-scanning{background:rgba(11,196,227,0.15);color:var(--teal)}
 .ss-done{background:rgba(29,233,182,0.15);color:var(--success)}
 .ss-error{background:rgba(232,72,85,0.15);color:var(--danger)}
-.scan-champs{font-size:10px;color:var(--white);line-height:1.6;white-space:pre-wrap}
+.scan-champs{font-size:13px;color:var(--white);line-height:1.6;white-space:pre-wrap}
 /* ALIASES PAGE */
 .alias-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;padding:16px}
 .alias-card{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:6px;padding:12px;display:flex;align-items:center;gap:10px}
-.alias-input{background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--white);padding:5px 9px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:12px;width:110px}
+.alias-input{background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--white);padding:5px 9px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:15px;width:110px}
 .alias-input:focus{outline:none;border-color:var(--teal)}
 /* DEV */
 .dev-panel{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(4,4,10,0.97);border-top:1px solid rgba(232,72,85,0.35);padding:12px 24px;transform:translateY(100%);transition:transform 0.3s;max-height:48vh;overflow-y:auto}
 .dev-panel.open{transform:translateY(0)}
 .dg{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
 .ds{background:rgba(232,72,85,0.04);border:1px solid rgba(232,72,85,0.16);border-radius:4px;padding:7px}
-.ds label{font-size:9px;color:var(--silver);display:block;margin-bottom:3px;letter-spacing:1px;text-transform:uppercase}
-.ds select{width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);color:var(--white);padding:3px 5px;font-size:10px;border-radius:3px;font-family:'Rajdhani',sans-serif}
+.ds label{font-size:12px;color:var(--silver);display:block;margin-bottom:3px;letter-spacing:1px;text-transform:uppercase}
+.ds select{width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);color:var(--white);padding:3px 5px;font-size:13px;border-radius:3px;font-family:'Rajdhani',sans-serif}
 /* TOAST */
-.toast{position:fixed;bottom:20px;right:20px;z-index:300;background:rgba(11,196,227,0.13);border:1px solid var(--teal);color:var(--teal);padding:9px 16px;border-radius:6px;font-size:14px;font-weight:600;letter-spacing:1px;transform:translateX(130%);transition:transform 0.3s;backdrop-filter:blur(8px)}
+.toast{position:fixed;bottom:20px;right:20px;z-index:300;background:rgba(11,196,227,0.13);border:1px solid var(--teal);color:var(--teal);padding:9px 16px;border-radius:6px;font-size:17px;font-weight:600;letter-spacing:1px;transform:translateX(130%);transition:transform 0.3s;backdrop-filter:blur(8px)}
 .toast.show{transform:translateX(0)}
 /* PROGRESS */
 .progress-bar{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;margin:8px 0}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue-bright));border-radius:2px;transition:width 0.3s}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:rgba(0,0,0,0.18)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.ss{background:rgba(0,0,0,0.42);border:1px solid var(--border);color:var(--white);padding:5px 9px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:12px}
+.ss{background:rgba(0,0,0,0.42);border:1px solid var(--border);color:var(--white);padding:5px 9px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:15px}
 /* ADD PLAYER */
 .color-picker-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .color-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.2s;flex-shrink:0}
 .color-dot.picked{border-color:var(--white);transform:scale(1.2)}
-.pi-del{margin-left:auto;color:rgba(232,72,85,0.5);cursor:pointer;font-size:14px;line-height:1;transition:color 0.2s;padding:2px 4px;flex-shrink:0}
+.pi-del{margin-left:auto;color:rgba(232,72,85,0.5);cursor:pointer;font-size:17px;line-height:1;transition:color 0.2s;padding:2px 4px;flex-shrink:0}
 .pi-del:hover{color:var(--danger)}
 /* DRAFT MODE */
 .mode-switch{display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.15)}
-.mode-btn{flex:1;padding:6px 0;border:1px solid var(--border);background:transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s;text-align:center}
+.mode-btn{flex:1;padding:6px 0;border:1px solid var(--border);background:transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s;text-align:center}
 .mode-btn.active{background:rgba(200,170,110,0.12);border-color:var(--gold);color:var(--gold)}
 /* draggable player chip */
 .pi[draggable=true]{cursor:grab}
@@ -431,7 +431,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .player-chip{
   display:inline-flex;align-items:center;gap:6px;
   padding:5px 9px;border-radius:4px;cursor:grab;
-  border:1px solid;font-size:14px;font-weight:600;
+  border:1px solid;font-size:17px;font-weight:600;
   transition:all 0.18s;user-select:none;
   background:rgba(0,0,0,0.3);
 }
@@ -447,7 +447,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .draft-cs.drag-over::after{
   content:'UPUŚĆ';position:absolute;inset:0;
   display:flex;align-items:center;justify-content:center;
-  font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;
+  font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;
   color:var(--teal);background:rgba(11,196,227,0.15);
   border:2px dashed rgba(11,196,227,0.5);
   pointer-events:none;
@@ -456,7 +456,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
   position:absolute;top:3px;left:3px;z-index:12;
   width:18px;height:18px;background:rgba(232,72,85,0.8);
   border-radius:50%;display:none;align-items:center;justify-content:center;
-  font-size:10px;cursor:pointer;color:white;font-weight:700;
+  font-size:13px;cursor:pointer;color:white;font-weight:700;
   border:1px solid var(--danger);
 }
 .draft-cs:hover .remove-player{display:flex}
@@ -465,7 +465,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
   position:absolute;top:3px;right:3px;z-index:12;
   width:20px;height:20px;background:rgba(200,170,110,0.75);
   border-radius:4px;display:none;align-items:center;justify-content:center;
-  font-size:11px;cursor:pointer;color:rgba(5,14,26,0.9);font-weight:700;
+  font-size:14px;cursor:pointer;color:rgba(5,14,26,0.9);font-weight:700;
   border:1px solid rgba(200,170,110,0.5);transition:all 0.2s;
 }
 .draft-cs:hover .slot-dice{display:flex}
@@ -476,7 +476,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .slot-rolls{
   position:absolute;top:3px;right:3px;z-index:13;
   background:rgba(5,14,26,0.85);border:1px solid rgba(200,170,110,0.4);
-  border-radius:3px;font-size:8px;color:var(--gold);
+  border-radius:3px;font-size:11px;color:var(--gold);
   padding:1px 4px;font-family:'Rajdhani',sans-serif;font-weight:700;
   pointer-events:none;display:none;
 }
@@ -494,47 +494,47 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .prof-av-wrap{position:absolute;bottom:-32px;left:28px;z-index:5}
 .prof-av-img{width:80px;height:80px;border-radius:50%;border:3px solid var(--gold);object-fit:cover;background:var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;overflow:hidden;box-shadow:0 0 24px rgba(0,0,0,0.6)}
 /* settings cog on banner */
-.prof-settings-btn{position:absolute;bottom:10px;right:12px;z-index:5;background:rgba(5,14,26,0.75);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;color:var(--gold);font-size:12px;letter-spacing:1px;font-family:'Rajdhani',sans-serif;font-weight:600;transition:all 0.2s;backdrop-filter:blur(6px)}
+.prof-settings-btn{position:absolute;bottom:10px;right:12px;z-index:5;background:rgba(5,14,26,0.75);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;color:var(--gold);font-size:15px;letter-spacing:1px;font-family:'Rajdhani',sans-serif;font-weight:600;transition:all 0.2s;backdrop-filter:blur(6px)}
 .prof-settings-btn:hover{background:rgba(200,170,110,0.15);border-color:var(--gold)}
 
 /* NAME ROW */
 .prof-name-row{padding:44px 28px 16px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
 .prof-name-block{flex:1}
-.prof-name{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);line-height:1.1}
-.prof-gamenick{font-size:12px;color:var(--teal);margin-top:3px;letter-spacing:1px}
-.prof-subline{font-size:11px;color:var(--silver);margin-top:2px}
+.prof-name{font-family:'Cinzel',serif;font-size:25px;color:var(--gold);line-height:1.1}
+.prof-gamenick{font-size:15px;color:var(--teal);margin-top:3px;letter-spacing:1px}
+.prof-subline{font-size:14px;color:var(--silver);margin-top:2px}
 /* top stats strip */
 .prof-stats-strip{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .prof-stat-cell{flex:1;padding:12px 8px;text-align:center;border-right:1px solid var(--border)}
 .prof-stat-cell:last-child{border-right:none}
-.prof-stat-val{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold)}
-.prof-stat-lbl{font-size:9px;color:var(--silver);margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.prof-stat-val{font-family:'Cinzel',serif;font-size:21px;font-weight:700;color:var(--gold)}
+.prof-stat-lbl{font-size:12px;color:var(--silver);margin-top:2px;letter-spacing:1px;text-transform:uppercase}
 
 /* PIE CHARTS row */
 .prof-pies{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid var(--border)}
 .prof-pie-cell{padding:14px 8px;text-align:center;border-right:1px solid var(--border);position:relative}
 .prof-pie-cell:last-child{border-right:none}
 .prof-pie-svg{display:block;margin:0 auto 6px;overflow:visible}
-.prof-pie-label{font-size:9px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
-.prof-pie-wr{font-size:13px;font-weight:700}
-.prof-pie-games{font-size:9px;color:var(--silver);margin-top:1px}
+.prof-pie-label{font-size:12px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.prof-pie-wr{font-size:16px;font-weight:700}
+.prof-pie-games{font-size:12px;color:var(--silver);margin-top:1px}
 
 /* BODY SECTIONS */
 .prof-body{padding:0}
 .prof-section{padding:14px 24px;border-bottom:1px solid rgba(200,170,110,0.07)}
 .prof-section:last-child{border-bottom:none}
-.prof-section-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--silver);opacity:0.7;margin-bottom:10px}
+.prof-section-title{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--silver);opacity:0.7;margin-bottom:10px}
 
 /* SETTINGS INLINE PANEL */
 .prof-settings-panel{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:16px;margin:0 24px 16px;display:none}
 .prof-settings-panel.open{display:block}
 .prof-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.prof-field label{font-size:9px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px}
-.prof-field input{width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--white);padding:6px 9px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:12px}
+.prof-field label{font-size:12px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px}
+.prof-field input{width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--white);padding:6px 9px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:15px}
 .prof-field input:focus{outline:none;border-color:var(--teal)}
 /* KDA table */
-.kda-tbl{width:100%;border-collapse:collapse;font-size:11px}
-.kda-tbl th{padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.kda-tbl{width:100%;border-collapse:collapse;font-size:14px}
+.kda-tbl th{padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;font-weight:600}
 .kda-tbl td{padding:5px 8px;border-bottom:1px solid rgba(200,170,110,0.04)}
 .kda-tbl tr:hover td{background:rgba(200,170,110,0.03)}
 </style>
@@ -621,12 +621,12 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
     <div>
       <div class="panel">
         <div class="panel-header">
-          Gracze <span id="sc" style="font-size:10px;color:var(--silver)">0/10</span>
-          <button class="btn sbtn" style="padding:2px 10px;font-size:10px;margin-left:auto" onclick="openAddPlayer()">+ Dodaj</button>
+          Gracze <span id="sc" style="font-size:13px;color:var(--silver)">0/10</span>
+          <button class="btn sbtn" style="padding:2px 10px;font-size:13px;margin-left:auto" onclick="openAddPlayer()">+ Dodaj</button>
         </div>
         <!-- Search -->
         <div style="padding:6px 10px;border-bottom:1px solid var(--border)">
-          <input id="plSearch" class="ss" style="width:100%;padding:5px 9px 5px 28px;font-size:12px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0B4C8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:8px center" placeholder="Szukaj gracza..." oninput="renderPL()">
+          <input id="plSearch" class="ss" style="width:100%;padding:5px 9px 5px 28px;font-size:15px;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0B4C8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:8px center" placeholder="Szukaj gracza..." oninput="renderPL()">
         </div>
         <!-- Sort controls -->
         <div style="display:flex;gap:0;border-bottom:1px solid var(--border)">
@@ -635,14 +635,14 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
           <button id="sort-active" class="sort-btn" onclick="setSort('active')" title="Ostatnio grający">Aktywni</button>
         </div>
         <div id="playerList" style="max-height:440px;overflow-y:auto"></div>
-        <div style="padding:7px 12px;border-top:1px solid var(--border);font-size:10px;color:rgba(11,196,227,0.6);line-height:1.5">
+        <div style="padding:7px 12px;border-top:1px solid var(--border);font-size:13px;color:rgba(11,196,227,0.6);line-height:1.5">
           ✋ Przeciągnij na slot drużyny
         </div>
       </div>
       <div class="panel" style="margin-top:12px">
         <div class="panel-header">Blokady</div>
         <div id="rside" style="padding:9px;max-height:130px;overflow-y:auto">
-          <div style="font-size:11px;color:var(--silver)">Brak.</div>
+          <div style="font-size:14px;color:var(--silver)">Brak.</div>
         </div>
       </div>
     </div>
@@ -657,7 +657,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
         ondrop="onDropTeam(event,'blue')">
         <div class="team-hdr">
           <span class="team-title">◆ DRUŻYNA LEWA</span>
-          <span id="blueCount" style="font-size:10px;color:var(--silver)"></span>
+          <span id="blueCount" style="font-size:13px;color:var(--silver)"></span>
         </div>
         <div class="cg" id="blueTeam"></div>
       </div>
@@ -673,7 +673,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
         ondrop="onDropTeam(event,'red')">
         <div class="team-hdr">
           <span class="team-title">◆ DRUŻYNA PRAWA</span>
-          <span id="redCount" style="font-size:10px;color:var(--silver)"></span>
+          <span id="redCount" style="font-size:13px;color:var(--silver)"></span>
         </div>
         <div class="cg" id="redTeam"></div>
       </div>
@@ -693,13 +693,13 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
       <svg id="pv2Arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;transition:transform 0.3s"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="pv2-dropdown" id="pv2Dropdown">
-      <input class="ss" id="pv2Search" placeholder="Szukaj..." oninput="renderProfileDropdown()" style="width:100%;margin-bottom:8px;padding:7px 10px;font-size:12px">
+      <input class="ss" id="pv2Search" placeholder="Szukaj..." oninput="renderProfileDropdown()" style="width:100%;margin-bottom:8px;padding:7px 10px;font-size:15px">
       <div id="pv2List"></div>
     </div>
   </div>
   <!-- Profile content -->
   <div id="profileContent">
-    <div style="display:flex;align-items:center;justify-content:center;height:400px;color:var(--silver);font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:0.35;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:center;height:400px;color:var(--silver);font-size:15px;letter-spacing:3px;text-transform:uppercase;opacity:0.35;flex-direction:column;gap:16px">
       <svg width="48" height="40" viewBox="0 0 36 30" fill="none" opacity="0.3"><path d="M18 2 C18 2 10 12 10 17 A8 8 0 0 0 26 17 C26 12 18 2 18 2Z" fill="#5DADE2"/><path d="M2 24 Q7 21 12 24 Q17 27 22 24 Q27 21 34 24" stroke="#5DADE2" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
       Wybierz gracza z listy powyżej
     </div>
@@ -723,7 +723,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 <div class="page" id="page-history">
   <div class="panel">
     <div class="panel-header" id="histhdr">Historia meczy
-      <button class="btn" style="padding:4px 12px;font-size:10px" onclick="exportCSV()">↓ CSV</button>
+      <button class="btn" style="padding:4px 12px;font-size:13px" onclick="exportCSV()">↓ CSV</button>
     </div>
     <div id="histList"></div>
   </div>
@@ -736,10 +736,10 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 <div id="avatarToolModal" class="modal-overlay" style="display:none">
   <div class="modal-box" style="width:min(600px,96vw);max-height:90vh;display:flex;flex-direction:column">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-shrink:0">
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px">🖼 Avatary Graczy</div>
-      <button class="btn dbtn" style="padding:3px 10px;font-size:10px" onclick="closeAvatarTool()">✕</button>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:2px">🖼 Avatary Graczy</div>
+      <button class="btn dbtn" style="padding:3px 10px;font-size:13px" onclick="closeAvatarTool()">✕</button>
     </div>
-    <div style="font-size:11px;color:var(--silver);margin-bottom:14px;line-height:1.6;flex-shrink:0">
+    <div style="font-size:14px;color:var(--silver);margin-bottom:14px;line-height:1.6;flex-shrink:0">
       Kliknij <b style="color:var(--teal)">Discord →</b> żeby otworzyć profil gracza, skopiuj link do avatara (PPM na avatar → Kopiuj adres obrazka), wklej poniżej i zapisz.
     </div>
     <div id="avatarToolList" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px;padding-right:4px"></div>
@@ -754,33 +754,33 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 <div id="ghModal" class="modal-overlay" style="display:none">
   <div class="modal-box" style="width:min(480px,95vw)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px">⚙ DEV — GitHub Sync</div>
-      <button class="btn dbtn" style="padding:3px 10px;font-size:10px" onclick="closeGhSettings()">✕</button>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:2px">⚙ DEV — GitHub Sync</div>
+      <button class="btn dbtn" style="padding:3px 10px;font-size:13px" onclick="closeGhSettings()">✕</button>
     </div>
 
     <!-- STATUS -->
-    <div id="ghStatus" style="padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:12px;line-height:1.7;background:rgba(0,0,0,0.3);border:1px solid var(--border)">
+    <div id="ghStatus" style="padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:15px;line-height:1.7;background:rgba(0,0,0,0.3);border:1px solid var(--border)">
       <div id="ghStatusText">Sprawdzam połączenie...</div>
     </div>
 
     <!-- REPO CONFIG INFO -->
-    <div style="margin-bottom:14px;padding:10px 14px;background:rgba(200,170,110,0.05);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--silver);line-height:1.8">
+    <div style="margin-bottom:14px;padding:10px 14px;background:rgba(200,170,110,0.05);border:1px solid var(--border);border-radius:6px;font-size:14px;color:var(--silver);line-height:1.8">
       <div>📁 Repozytorium: <span id="ghRepoDisplay" style="color:var(--gold);font-weight:600"></span></div>
       <div>🌿 Branch: <span style="color:var(--teal)">main</span> &nbsp;·&nbsp; 📄 Plik: <span style="color:var(--teal)">data.js</span></div>
-      <div style="margin-top:4px;font-size:10px;opacity:0.7">Konfiguracja repozytorium jest w pliku <code>data.js</code> (GH_CONFIG)</div>
+      <div style="margin-top:4px;font-size:13px;opacity:0.7">Konfiguracja repozytorium jest w pliku <code>data.js</code> (GH_CONFIG)</div>
     </div>
 
     <!-- TOKEN INPUT -->
     <div style="margin-bottom:16px">
-      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">
+      <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">
         Personal Access Token
-        <a href="https://github.com/settings/tokens/new?scopes=repo&description=rift-draft" target="_blank" style="color:var(--teal);margin-left:8px;font-size:10px">Wygeneruj token →</a>
+        <a href="https://github.com/settings/tokens/new?scopes=repo&description=rift-draft" target="_blank" style="color:var(--teal);margin-left:8px;font-size:13px">Wygeneruj token →</a>
       </div>
       <div style="display:flex;gap:8px">
         <input id="ghTokenInput" class="ss" type="password" style="flex:1" placeholder="ghp_xxxxxxxxxxxx">
-        <button class="btn tbtn" style="padding:5px 14px;font-size:11px" onclick="saveGhToken()">Zapisz</button>
+        <button class="btn tbtn" style="padding:5px 14px;font-size:14px" onclick="saveGhToken()">Zapisz</button>
       </div>
-      <div style="font-size:10px;color:var(--silver);margin-top:5px;opacity:0.7">
+      <div style="font-size:13px;color:var(--silver);margin-top:5px;opacity:0.7">
         Token wymagany tylko do <b>zapisu</b>. Odczyt działa bez tokena. Token jest zapisany tylko w Twojej przeglądarce (localStorage).
       </div>
     </div>
@@ -798,21 +798,21 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
     <div style="border-top:1px solid var(--border);margin:18px 0"></div>
 
     <!-- GOOGLE SHEETS SECTION -->
-    <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--teal);letter-spacing:2px;margin-bottom:12px">📊 Google Sheets</div>
+    <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--teal);letter-spacing:2px;margin-bottom:12px">📊 Google Sheets</div>
 
-    <div style="margin-bottom:12px;padding:10px 12px;background:rgba(11,196,227,0.05);border:1px solid rgba(11,196,227,0.2);border-radius:6px;font-size:11px;color:var(--silver);line-height:1.8">
-      <div>📥 CSV (odczyt): <a href="${GS_CONFIG.csvUrl}" target="_blank" style="color:var(--teal);font-size:10px">arkusz publiczny ✓</a></div>
+    <div style="margin-bottom:12px;padding:10px 12px;background:rgba(11,196,227,0.05);border:1px solid rgba(11,196,227,0.2);border-radius:6px;font-size:14px;color:var(--silver);line-height:1.8">
+      <div>📥 CSV (odczyt): <a href="${GS_CONFIG.csvUrl}" target="_blank" style="color:var(--teal);font-size:13px">arkusz publiczny ✓</a></div>
       <div id="gsScriptStatus">📤 Apps Script: <span style="color:var(--warn)">nie skonfigurowany</span></div>
     </div>
 
     <div style="margin-bottom:12px">
-      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">
+      <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">
         Apps Script URL (do zapisu)
-        <a href="#" onclick="showAppsScriptGuide();return false" style="color:var(--teal);margin-left:8px;font-size:10px">Jak to skonfigurować? →</a>
+        <a href="#" onclick="showAppsScriptGuide();return false" style="color:var(--teal);margin-left:8px;font-size:13px">Jak to skonfigurować? →</a>
       </div>
       <div style="display:flex;gap:8px">
         <input id="gsScriptInput" class="ss" style="flex:1" placeholder="https://script.google.com/macros/s/...">
-        <button class="btn tbtn" style="padding:5px 12px;font-size:11px" onclick="saveGsScript()">Zapisz</button>
+        <button class="btn tbtn" style="padding:5px 12px;font-size:14px" onclick="saveGsScript()">Zapisz</button>
       </div>
     </div>
 
@@ -828,7 +828,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
       </button>
     </div>
 
-    <div id="gsLog" style="margin-top:12px;max-height:120px;overflow-y:auto;font-size:10px;color:var(--silver);font-family:monospace;line-height:1.6;padding:7px;background:rgba(0,0,0,0.3);border-radius:4px;display:none"></div>
+    <div id="gsLog" style="margin-top:12px;max-height:120px;overflow-y:auto;font-size:13px;color:var(--silver);font-family:monospace;line-height:1.6;padding:7px;background:rgba(0,0,0,0.3);border-radius:4px;display:none"></div>
   </div>
 </div>
 
@@ -836,28 +836,28 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 <div id="addPlayerModal" class="modal-overlay" style="display:none">
   <div class="modal-box" style="width:min(400px,95vw)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px" id="addPlayerTitle">Dodaj nowego gracza</div>
-      <button class="btn dbtn" style="padding:3px 10px;font-size:10px" onclick="closeAddPlayer()">✕</button>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:2px" id="addPlayerTitle">Dodaj nowego gracza</div>
+      <button class="btn dbtn" style="padding:3px 10px;font-size:13px" onclick="closeAddPlayer()">✕</button>
     </div>
 
     <div style="margin-bottom:12px">
-      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Nick w aplikacji *</div>
+      <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Nick w aplikacji *</div>
       <input id="apName" class="ss" style="width:100%" placeholder="np. Janusz" oninput="updateAddPreview()">
     </div>
 
     <div style="margin-bottom:12px">
-      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Nick w grze (Riot ID)</div>
+      <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Nick w grze (Riot ID)</div>
       <input id="apGameNick" class="ss" style="width:100%" placeholder="np. Janusz#EUW">
     </div>
 
     <div style="margin-bottom:16px">
-      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Kolor gracza</div>
+      <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Kolor gracza</div>
       <div class="color-picker-row" id="colorPickerRow"></div>
       <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
-        <div id="apPreviewAv" style="width:40px;height:40px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">??</div>
+        <div id="apPreviewAv" style="width:40px;height:40px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;flex-shrink:0">??</div>
         <div>
-          <div id="apPreviewName" style="font-size:14px;font-weight:600;color:var(--white)">Podgląd</div>
-          <div style="font-size:10px;color:var(--silver)">0 meczy · 0% WR</div>
+          <div id="apPreviewName" style="font-size:17px;font-weight:600;color:var(--white)">Podgląd</div>
+          <div style="font-size:13px;color:var(--silver)">0 meczy · 0% WR</div>
         </div>
         <input type="color" id="apCustomColor" value="#C8AA6E" style="margin-left:auto;width:32px;height:32px;border:none;background:transparent;cursor:pointer;border-radius:4px" oninput="pickCustomColor(this.value)" title="Własny kolor">
       </div>
@@ -876,18 +876,18 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 <div id="scanModal" class="modal-overlay" style="display:none">
   <div class="modal-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--teal);letter-spacing:2px">🤖 AI — Skanowanie Screenów</div>
-      <button class="btn dbtn" style="padding:3px 10px;font-size:10px" onclick="closeScanModal()">✕</button>
+      <div style="font-family:'Cinzel',serif;font-size:17px;color:var(--teal);letter-spacing:2px">🤖 AI — Skanowanie Screenów</div>
+      <button class="btn dbtn" style="padding:3px 10px;font-size:13px" onclick="closeScanModal()">✕</button>
     </div>
-    <div style="font-size:12px;color:var(--silver);margin-bottom:12px;line-height:1.6">
+    <div style="font-size:15px;color:var(--silver);margin-bottom:12px;line-height:1.6">
       AI przeanalizuje każdy screenshot meczu i wyodrębni: <span style="color:var(--teal)">graną postać</span> i <span style="color:var(--gold)">KDA</span> dla każdego gracza. Upewnij się, że aliasy (np. Resek→Cytrusia) są ustawione na stronie Aliasy.
     </div>
     <div id="scanApiKeyRow" style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
       <input id="scanApiKey" class="ss" style="flex:1" placeholder="Klucz API Anthropic (opcjonalnie — aplikacja używa wbudowanego)" type="password">
-      <button class="btn tbtn" style="padding:5px 14px;font-size:11px" onclick="startScan()">▶ Skanuj wszystko</button>
+      <button class="btn tbtn" style="padding:5px 14px;font-size:14px" onclick="startScan()">▶ Skanuj wszystko</button>
     </div>
     <div id="scanProgress" style="display:none">
-      <div style="font-size:11px;color:var(--silver)" id="scanProgressText">Skanowanie 0/0...</div>
+      <div style="font-size:14px;color:var(--silver)" id="scanProgressText">Skanowanie 0/0...</div>
       <div class="progress-bar"><div class="progress-fill" id="scanProgressFill" style="width:0%"></div></div>
     </div>
     <div class="scan-grid" id="scanGrid"></div>
@@ -897,27 +897,27 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 <!-- SAVE MODAL -->
 <div id="saveModal" class="modal-overlay" style="display:none">
   <div class="modal-box" style="width:min(640px,95vw);max-height:88vh;overflow-y:auto">
-    <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px;margin-bottom:16px">💾 Zapisz wynik meczu</div>
+    <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:2px;margin-bottom:16px">💾 Zapisz wynik meczu</div>
 
     <!-- WINNER + PATCH row -->
     <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:16px;align-items:end">
       <div>
-        <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Kto wygrał?</div>
+        <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Kto wygrał?</div>
         <div style="display:flex;gap:7px">
           <button id="wbB" class="btn" style="flex:1;justify-content:center" onclick="setW('LEWA')">◆ LEWA</button>
           <button id="wbR" class="btn" style="flex:1;justify-content:center" onclick="setW('PRAWA')">◆ PRAWA</button>
         </div>
       </div>
       <div>
-        <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Patch <span style="color:var(--teal);font-size:9px;font-weight:400;letter-spacing:0">(auto)</span></div>
+        <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Patch <span style="color:var(--teal);font-size:12px;font-weight:400;letter-spacing:0">(auto)</span></div>
         <input id="pi" class="ss" style="width:90px" value="26.02" title="Wykrywany automatycznie z daty — możesz zmienić ręcznie">
       </div>
     </div>
 
     <!-- CHAMPIONS GRID -->
     <div style="margin-bottom:16px">
-      <div style="font-size:10px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">
-        Grane postacie <span style="opacity:0.5;font-size:9px">(opcjonalne)</span>
+      <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">
+        Grane postacie <span style="opacity:0.5;font-size:12px">(opcjonalne)</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="champInputsGrid">
         <!-- populated by openSave() -->
@@ -1078,12 +1078,12 @@ function renderPL(){
           :`${ini(n)}`}
       </div>
       <div style="flex:1;min-width:0">
-        <div class="pname">${n}${gn!==n?` <span style='color:var(--teal);font-size:9px'>(${gn})</span>`:''}</div>
+        <div class="pname">${n}${gn!==n?` <span style='color:var(--teal);font-size:12px'>(${gn})</span>`:''}</div>
         <div class="psub">${g}G · ${wr}%WR</div>
       </div>
-      ${inBlue?`<span style="font-size:9px;color:#5DADE2;font-weight:700;flex-shrink:0">LEWA</span>`:''}
-      ${inRed?`<span style="font-size:9px;color:#E84855;font-weight:700;flex-shrink:0">PRAWA</span>`:''}
-      ${!isPlaced?`<span title="Edytuj" style="color:rgba(200,170,110,0.4);cursor:pointer;font-size:13px;padding:2px 3px;flex-shrink:0" onmouseenter="this.style.color='var(--gold)'" onmouseleave="this.style.color='rgba(200,170,110,0.4)'" onclick="event.stopPropagation();openAddPlayer('${n}')">✎</span>
+      ${inBlue?`<span style="font-size:12px;color:#5DADE2;font-weight:700;flex-shrink:0">LEWA</span>`:''}
+      ${inRed?`<span style="font-size:12px;color:#E84855;font-weight:700;flex-shrink:0">PRAWA</span>`:''}
+      ${!isPlaced?`<span title="Edytuj" style="color:rgba(200,170,110,0.4);cursor:pointer;font-size:16px;padding:2px 3px;flex-shrink:0" onmouseenter="this.style.color='var(--gold)'" onmouseleave="this.style.color='rgba(200,170,110,0.4)'" onclick="event.stopPropagation();openAddPlayer('${n}')">✎</span>
       <span class="pi-del" title="Usuń" onclick="deletePlayer('${n}',event)">✕</span>`:''}
     </div>`;
   }).join('');
@@ -1997,7 +1997,7 @@ function rerollC(t,i,role,e){
 
 function renderRS(){
   const el=document.getElementById('rside');
-  if(!restr.length){el.innerHTML='<div style="font-size:11px;color:var(--silver)">Brak.</div>';return;}
+  if(!restr.length){el.innerHTML='<div style="font-size:14px;color:var(--silver)">Brak.</div>';return;}
   el.innerHTML=restr.map((r,i)=>`<div class="rchip"><span>${r.type==='teammate'?'🚫':r.type==='with'?'🤝':'⛔'}</span><span>${r.type==='teammate'?r.playerA+' ≠ '+r.playerB:r.type==='with'?r.playerA+' + '+r.playerB:r.player+': nie '+RI[r.role]+r.role}</span><span class="rx" onclick="removeR(${i})">×</span></div>`).join('');
 }
 
@@ -2030,7 +2030,7 @@ function openSave(){
   const allRoles=[...ROLES];
 
   // Blue team section
-  let html=`<div style="grid-column:1/-1;font-size:10px;color:#5DADE2;letter-spacing:2px;text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid rgba(93,173,226,0.2)">◆ Lewa</div>`;
+  let html=`<div style="grid-column:1/-1;font-size:13px;color:#5DADE2;letter-spacing:2px;text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid rgba(93,173,226,0.2)">◆ Lewa</div>`;
   allRoles.forEach(role=>{
     const p=draftTeams.blue.find(x=>x.role===role);
     if(!p)return;
@@ -2038,16 +2038,16 @@ function openSave(){
     const preChamp=CC.blue[idx]||'';
     const c=PC[p.name]||'#C8AA6E';
     html+=`<div style="display:flex;align-items:center;gap:7px">
-      <div class="av" style="width:26px;height:26px;font-size:9px;flex-shrink:0;border-color:${c}55;color:${c};background:${c}15">${ini(p.name)}</div>
+      <div class="av" style="width:26px;height:26px;font-size:12px;flex-shrink:0;border-color:${c}55;color:${c};background:${c}15">${ini(p.name)}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:10px;color:${c};font-weight:600;margin-bottom:2px">${p.name} <span style="color:var(--silver);font-weight:400">${RI[role]} ${role.toUpperCase()}</span></div>
-        <input id="champ_blue_${role}" class="ss" style="width:100%;font-size:11px;padding:4px 7px" placeholder="postać..." value="${preChamp}" list="champList">
+        <div style="font-size:13px;color:${c};font-weight:600;margin-bottom:2px">${p.name} <span style="color:var(--silver);font-weight:400">${RI[role]} ${role.toUpperCase()}</span></div>
+        <input id="champ_blue_${role}" class="ss" style="width:100%;font-size:14px;padding:4px 7px" placeholder="postać..." value="${preChamp}" list="champList">
       </div>
     </div>`;
   });
 
   // Red team section
-  html+=`<div style="grid-column:1/-1;font-size:10px;color:#E84855;letter-spacing:2px;text-transform:uppercase;padding:8px 0 4px;border-bottom:1px solid rgba(232,72,85,0.2)">◆ Prawa</div>`;
+  html+=`<div style="grid-column:1/-1;font-size:13px;color:#E84855;letter-spacing:2px;text-transform:uppercase;padding:8px 0 4px;border-bottom:1px solid rgba(232,72,85,0.2)">◆ Prawa</div>`;
   allRoles.forEach(role=>{
     const p=draftTeams.red.find(x=>x.role===role);
     if(!p)return;
@@ -2055,10 +2055,10 @@ function openSave(){
     const preChamp=CC.red[idx]||'';
     const c=PC[p.name]||'#C8AA6E';
     html+=`<div style="display:flex;align-items:center;gap:7px">
-      <div class="av" style="width:26px;height:26px;font-size:9px;flex-shrink:0;border-color:${c}55;color:${c};background:${c}15">${ini(p.name)}</div>
+      <div class="av" style="width:26px;height:26px;font-size:12px;flex-shrink:0;border-color:${c}55;color:${c};background:${c}15">${ini(p.name)}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:10px;color:${c};font-weight:600;margin-bottom:2px">${p.name} <span style="color:var(--silver);font-weight:400">${RI[role]} ${role.toUpperCase()}</span></div>
-        <input id="champ_red_${role}" class="ss" style="width:100%;font-size:11px;padding:4px 7px" placeholder="postać..." value="${preChamp}" list="champList">
+        <div style="font-size:13px;color:${c};font-weight:600;margin-bottom:2px">${p.name} <span style="color:var(--silver);font-weight:400">${RI[role]} ${role.toUpperCase()}</span></div>
+        <input id="champ_red_${role}" class="ss" style="width:100%;font-size:14px;padding:4px 7px" placeholder="postać..." value="${preChamp}" list="champList">
       </div>
     </div>`;
   });
@@ -2133,7 +2133,7 @@ function renderAliases(){
           :`${ini(n)}`}
       </div>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;margin-bottom:4px">${n}</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:4px">${n}</div>
         <input class="alias-input" id="alias_${n}" value="${gn}" placeholder="Nick w grze...">
       </div>
     </div>`;
@@ -2163,12 +2163,12 @@ function renderProfileDropdown(){
     const s=PS[n];
     const g=s?Object.values(s.roles).reduce((a,b)=>a+b,0):0;
     return `<div class="pv2-player-opt ${selPr===n?'active':''}" onclick="selProfile('${n}');closeProfileSelector()">
-      <div style="width:34px;height:34px;border-radius:50%;border:2px solid ${c};background:${c}18;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${c};flex-shrink:0">
+      <div style="width:34px;height:34px;border-radius:50%;border:2px solid ${c};background:${c}18;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${c};flex-shrink:0">
         ${meta.avatarUrl?`<img src="${meta.avatarUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentNode.innerHTML='${ini(n)}'">`:ini(n)}
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:700;color:${c};font-size:13px">${n}</div>
-        <div style="font-size:10px;color:var(--silver)">${g}G · ${calcMMR(n).rank}</div>
+        <div style="font-weight:700;color:${c};font-size:16px">${n}</div>
+        <div style="font-size:13px;color:var(--silver)">${g}G · ${calcMMR(n).rank}</div>
       </div>
       ${selPr===n?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>':''}
     </div>`;
@@ -2198,11 +2198,11 @@ function selProfile(n){
   const meta=PLAYER_META[n]||{};
   const sel=document.getElementById('pv2Selected');
   if(sel)sel.innerHTML=`
-    <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${c};background:${c}18;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${c};flex-shrink:0">
+    <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${c};background:${c}18;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${c};flex-shrink:0">
       ${meta.avatarUrl?`<img src="${meta.avatarUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentNode.innerHTML='${ini(n)}'">`:ini(n)}
     </div>
-    <span style="font-weight:700;color:${c};font-size:14px">${n}</span>
-    <span style="color:var(--silver);font-size:11px">${calcMMR(n).rank}</span>`;
+    <span style="font-weight:700;color:${c};font-size:17px">${n}</span>
+    <span style="color:var(--silver);font-size:14px">${calcMMR(n).rank}</span>`;
   renderProfile(n);
 }
 
@@ -2407,14 +2407,14 @@ function renderProfile(n){
       <div class="pv2-avatar" style="border-color:${c}">${avContent}</div>
       <div style="position:absolute;left:148px;top:50%;transform:translateY(-50%)">
         <div style="font-family:'Cinzel',serif;font-size:26px;color:var(--white);text-shadow:0 2px 8px rgba(0,0,0,0.8)">${n}</div>
-        ${gn!==n?`<div style="font-size:12px;color:var(--teal);margin-top:2px">🎮 ${gn}</div>`:''}
-        <div style="font-size:14px;color:${mmrData.color};margin-top:4px;font-weight:700">${mmrData.rank} · ${mmrData.mmr} MMR</div>
-        <div style="font-size:12px;color:var(--silver);margin-top:4px">${g} gier · ${wr}% WR</div>
+        ${gn!==n?`<div style="font-size:15px;color:var(--teal);margin-top:2px">🎮 ${gn}</div>`:''}
+        <div style="font-size:17px;color:${mmrData.color};margin-top:4px;font-weight:700">${mmrData.rank} · ${mmrData.mmr} MMR</div>
+        <div style="font-size:15px;color:var(--silver);margin-top:4px">${g} gier · ${wr}% WR</div>
       </div>
       <button class="pv2-settings-btn" onclick="toggleProfSettings('${n}')">⚙ Ustawienia</button>
     </div>
     <div class="pv2-settings" id="profSettingsPanel_${n}">
-      <div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">⚙ Ustawienia — ${n}</div>
+      <div style="font-size:13px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">⚙ Ustawienia — ${n}</div>
       <div class="pv2-settings-grid">
         <div class="pv2-field"><label>Nick w LoL (Riot ID)</label><input id="ps_gn_${n}" value="${gn!==n?gn:''}" placeholder="NickWGrze"></div>
         <div class="pv2-field"><label>Nick na Discordzie</label><input id="ps_discord_${n}" value="${meta.discordNick||''}" placeholder="nick#1234"></div>
@@ -2432,13 +2432,13 @@ function renderProfile(n){
         <button class="btn" onclick="toggleProfSettings('${n}')">Zamknij</button>
       </div>
       <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
-        <div style="font-size:10px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Blokady & Gwarancje</div>
-        <div id="profRestrList_${n}">${myR.length?myR.map(r=>{const ri=restr.indexOf(r);return`<div class="fr" style="margin-bottom:6px"><span>${r.type==='teammate'?'👥':'🚫'}</span><span style="flex:1;font-size:12px">${r.type==='teammate'?`Nie gra z: <b>${r.playerA===n?r.playerB:r.playerA}</b>`:`Nie gra na: <b>${RI[r.role]} ${r.role.toUpperCase()}</b>`}</span><span style="cursor:pointer;color:var(--danger)" onclick="removeR(${ri})">×</span></div>`;}).join(''):'<div style="font-size:11px;color:var(--silver);margin-bottom:8px">Brak blokad</div>'}</div>
+        <div style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Blokady & Gwarancje</div>
+        <div id="profRestrList_${n}">${myR.length?myR.map(r=>{const ri=restr.indexOf(r);return`<div class="fr" style="margin-bottom:6px"><span>${r.type==='teammate'?'👥':'🚫'}</span><span style="flex:1;font-size:15px">${r.type==='teammate'?`Nie gra z: <b>${r.playerA===n?r.playerB:r.playerA}</b>`:`Nie gra na: <b>${RI[r.role]} ${r.role.toUpperCase()}</b>`}</span><span style="cursor:pointer;color:var(--danger)" onclick="removeR(${ri})">×</span></div>`;}).join(''):'<div style="font-size:14px;color:var(--silver);margin-bottom:8px">Brak blokad</div>'}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px">
-          <select id="nft" class="ss" onchange="tfui()" style="font-size:11px"><option value="teammate">Nie gra z graczem</option><option value="with">Gra z graczem</option><option value="role">Nie gra na roli</option></select>
-          <select id="nfta" class="ss" style="font-size:11px">${AP.filter(x=>x!==n).map(x=>`<option>${x}</option>`).join('')}</select>
-          <select id="nfro" class="ss" style="display:none;font-size:11px">${ROLES.map(r=>`<option value="${r}">${RI[r]} ${r.toUpperCase()}</option>`).join('')}</select>
-          <button class="btn" style="padding:5px 12px;font-size:10px" onclick="addF('${n}')">+ Blokada</button>
+          <select id="nft" class="ss" onchange="tfui()" style="font-size:14px"><option value="teammate">Nie gra z graczem</option><option value="with">Gra z graczem</option><option value="role">Nie gra na roli</option></select>
+          <select id="nfta" class="ss" style="font-size:14px">${AP.filter(x=>x!==n).map(x=>`<option>${x}</option>`).join('')}</select>
+          <select id="nfro" class="ss" style="display:none;font-size:14px">${ROLES.map(r=>`<option value="${r}">${RI[r]} ${r.toUpperCase()}</option>`).join('')}</select>
+          <button class="btn" style="padding:5px 12px;font-size:13px" onclick="addF('${n}')">+ Blokada</button>
         </div>
       </div>
     </div>
@@ -2446,24 +2446,24 @@ function renderProfile(n){
       <div class="pv2-chart-cell">
         <div class="pv2-chart-label">Stosunek W/L</div>
         ${makeDonut(wlSegs,120,g>0?w+'/'+g:'—','GIER')}
-        <div style="margin-top:8px;display:flex;justify-content:center;gap:12px;font-size:10px">
+        <div style="margin-top:8px;display:flex;justify-content:center;gap:12px;font-size:13px">
           <span style="color:#5DADE2">▮ ${w}W</span>
           <span style="color:#E84855">▮ ${g-w}L</span>
         </div>
       </div>
       <div class="pv2-chart-cell" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
         ${rankEmblem(mmrData.tier,mmrData.color,56)}
-        <div style="font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:${mmrData.color};margin-top:2px">${mmrData.rank}</div>
-        <div style="font-size:15px;color:var(--gold);font-weight:600">${mmrData.mmr} MMR</div>
+        <div style="font-family:'Cinzel',serif;font-size:25px;font-weight:700;color:${mmrData.color};margin-top:2px">${mmrData.rank}</div>
+        <div style="font-size:18px;color:var(--gold);font-weight:600">${mmrData.mmr} MMR</div>
         <div style="width:80%;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
           <div style="height:100%;background:${mmrData.color};border-radius:3px;width:${Math.min(100,((mmrData.mmr%40)/40)*100)}%;transition:width 0.5s"></div>
         </div>
-        <div style="font-size:10px;color:var(--silver);opacity:0.55">+20 W · -20 L · start: Silver IV</div>
+        <div style="font-size:13px;color:var(--silver);opacity:0.55">+20 W · -20 L · start: Silver IV</div>
       </div>
       <div class="pv2-chart-cell">
         <div class="pv2-chart-label">Rozkład ról</div>
         ${makeDonut(roleSegs.length?roleSegs:[{pct:1,color:'rgba(255,255,255,0.07)',label:'Brak'}],120,g>0?wr+'%':'—',g>0?'WR':'')}
-        <div style="margin-top:8px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;font-size:9px">
+        <div style="margin-top:8px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;font-size:12px">
           ${ROLES.filter(r=>s.roles[r]>0).map(r=>`<span style="color:${roleColors[r]}">${RI[r]}${s.roles[r]}</span>`).join('')}
         </div>
       </div>
@@ -2472,17 +2472,17 @@ function renderProfile(n){
       <div class="pv2-sidebar">
         <div class="pv2-section-title">Najlepiej z</div>
         ${bestWith.length?bestWith.map(sy=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
-          <div class="lbav" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15;width:26px;height:26px;font-size:9px">${ini(sy.n)}</div>
-          <span style="flex:1;font-size:14px;font-weight:600">${sy.n}</span>
-          <span style="font-size:11px;color:${sy.wr>=60?'var(--success)':sy.wr>=45?'var(--gold)':'var(--danger)'};font-weight:700">${sy.wr}%</span>
-        </div>`).join(''):'<div style="font-size:11px;color:var(--silver)">—</div>'}
+          <div class="lbav" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15;width:26px;height:26px;font-size:12px">${ini(sy.n)}</div>
+          <span style="flex:1;font-size:17px;font-weight:600">${sy.n}</span>
+          <span style="font-size:14px;color:${sy.wr>=60?'var(--success)':sy.wr>=45?'var(--gold)':'var(--danger)'};font-weight:700">${sy.wr}%</span>
+        </div>`).join(''):'<div style="font-size:14px;color:var(--silver)">—</div>'}
 
         <div class="pv2-section-title" style="margin-top:16px">Najtrudniej z</div>
         ${hardest.length?hardest.map(sy=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
-          <div class="lbav" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15;width:26px;height:26px;font-size:9px">${ini(sy.n)}</div>
-          <span style="flex:1;font-size:14px;font-weight:600">${sy.n}</span>
-          <span style="font-size:11px;color:${sy.wr>=60?'var(--success)':sy.wr>=45?'var(--gold)':'var(--danger)'};font-weight:700">${sy.wr}%</span>
-        </div>`).join(''):'<div style="font-size:11px;color:var(--silver)">—</div>'}
+          <div class="lbav" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15;width:26px;height:26px;font-size:12px">${ini(sy.n)}</div>
+          <span style="flex:1;font-size:17px;font-weight:600">${sy.n}</span>
+          <span style="font-size:14px;color:${sy.wr>=60?'var(--success)':sy.wr>=45?'var(--gold)':'var(--danger)'};font-weight:700">${sy.wr}%</span>
+        </div>`).join(''):'<div style="font-size:14px;color:var(--silver)">—</div>'}
       </div>
       <div class="pv2-main">
         <div class="pv2-section-title">Historia gier (${matches.length})</div>
@@ -2498,21 +2498,21 @@ function renderProfile(n){
           const enemyList=Object.values(enemies).filter(x=>x);
           return `<div class="pv2-match ${won?'pv2-win':'pv2-loss'}">
             <div style="width:32px;text-align:center;flex-shrink:0">
-              <div style="font-size:12px;font-weight:800;color:${won?'#5DADE2':'#E84855'}">${won?'W':'L'}</div>
-              <div style="font-size:9px;color:var(--silver)">#${m.gid}</div>
+              <div style="font-size:15px;font-weight:800;color:${won?'#5DADE2':'#E84855'}">${won?'W':'L'}</div>
+              <div style="font-size:12px;color:var(--silver)">#${m.gid}</div>
             </div>
-            ${champKey?('<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+champKey+'.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">'):'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--silver)">'+(RI[roleInM]||'')+'</div>'}
+            ${champKey?('<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+champKey+'.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">'):'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--silver)">'+(RI[roleInM]||'')+'</div>'}
             <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:600">${champs?.[roleInM]||'—'} <span style="color:var(--silver);font-size:10px;font-weight:400">${RI[roleInM]||''} ${roleInM.toUpperCase()}</span></div>
-              <div style="font-size:12px;color:var(--silver);margin-top:3px">z: ${allies.join(', ')||'—'}</div>
+              <div style="font-size:17px;font-weight:600">${champs?.[roleInM]||'—'} <span style="color:var(--silver);font-size:13px;font-weight:400">${RI[roleInM]||''} ${roleInM.toUpperCase()}</span></div>
+              <div style="font-size:15px;color:var(--silver);margin-top:3px">z: ${allies.join(', ')||'—'}</div>
             </div>
             <div style="text-align:right;flex-shrink:0;min-width:70px">
-              <div style="font-size:12px;color:var(--silver)">${m.date}</div>
-              <div style="font-size:11px;color:rgba(160,180,200,0.4)">P${m.patch}</div>
-              <div style="font-size:11px;color:${inB?'#5DADE2':'#E84855'}">${inB?'LEWA':'PRAWA'}</div>
+              <div style="font-size:15px;color:var(--silver)">${m.date}</div>
+              <div style="font-size:14px;color:rgba(160,180,200,0.4)">P${m.patch}</div>
+              <div style="font-size:14px;color:${inB?'#5DADE2':'#E84855'}">${inB?'LEWA':'PRAWA'}</div>
             </div>
           </div>`;
-        }).join(''):'<div style="font-size:11px;color:var(--silver)">Brak gier w historii.</div>'}
+        }).join(''):'<div style="font-size:14px;color:var(--silver)">Brak gier w historii.</div>'}
       </div>
     </div>
   </div>`;
@@ -2571,7 +2571,7 @@ function addF(n){
   // Refresh only restriction list inside settings — keep panel open
   const myR=restr.filter(r=>(r.type==='teammate'&&(r.playerA===n||r.playerB===n))||(r.type==='role'&&r.player===n)||(r.type==='with'&&(r.playerA===n||r.playerB===n)));
   const listEl=document.getElementById('profRestrList_'+n);
-  if(listEl) listEl.innerHTML=myR.length?myR.map(r=>{const ri=restr.indexOf(r);return '<div class="fr" style="margin-bottom:6px"><span>'+(r.type==='teammate'?'🚫':r.type==='with'?'🤝':'⛔')+'</span><span style="flex:1;font-size:12px">'+(r.type==='teammate'?'Nie gra z: <b>'+(r.playerA===n?r.playerB:r.playerA)+'</b>':r.type==='with'?'Gra z: <b>'+(r.playerA===n?r.playerB:r.playerA)+'</b>':'Nie gra na: <b>'+RI[r.role]+' '+r.role.toUpperCase()+'</b>')+'</span><span style="cursor:pointer;color:var(--danger)" onclick="removeR('+ri+')">×</span></div>';}).join(''):'<div style="font-size:11px;color:var(--silver);margin-bottom:8px">Brak blokad</div>';
+  if(listEl) listEl.innerHTML=myR.length?myR.map(r=>{const ri=restr.indexOf(r);return '<div class="fr" style="margin-bottom:6px"><span>'+(r.type==='teammate'?'🚫':r.type==='with'?'🤝':'⛔')+'</span><span style="flex:1;font-size:15px">'+(r.type==='teammate'?'Nie gra z: <b>'+(r.playerA===n?r.playerB:r.playerA)+'</b>':r.type==='with'?'Gra z: <b>'+(r.playerA===n?r.playerB:r.playerA)+'</b>':'Nie gra na: <b>'+RI[r.role]+' '+r.role.toUpperCase()+'</b>')+'</span><span style="cursor:pointer;color:var(--danger)" onclick="removeR('+ri+')">×</span></div>';}).join(''):'<div style="font-size:14px;color:var(--silver);margin-bottom:8px">Brak blokad</div>';
   toast('Zapisano!');lsSave();
 }
 
@@ -2586,25 +2586,25 @@ function renderStats(){
   const ranked=AP.map(n=>{const s=PS[n];const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const w=Object.values(s.wins).reduce((a,b)=>a+b,0);return{n,g,w,wr:g>0?Math.round(w/g*100):0};});
   const wrR=[...ranked].sort((a,b)=>b.wr-a.wr||b.g-a.g);const gR=[...ranked].sort((a,b)=>b.g-a.g);const mg=gR[0]?.g||1;
   const rc=i=>i===0?'r1':i===1?'r2':i===2?'r3':'';
-  const lbrow=(p,i,bw,bc,vt,vc)=>`<div class="lbr"><span class="lbn ${rc(i)}">${i+1}</span><div class="lbav" style="border-color:${PC[p.n]||'#C8AA6E'}55;color:${PC[p.n]||'#C8AA6E'};background:${PC[p.n]||'#C8AA6E'}15">${ini(p.n)}</div><span style="flex:1;font-size:13px;font-weight:600">${p.n}</span><div class="lbbt"><div class="lbbf" style="width:${bw}%;background:${bc}"></div></div><span class="lbw" style="color:${vc}">${vt}</span></div>`;
+  const lbrow=(p,i,bw,bc,vt,vc)=>`<div class="lbr"><span class="lbn ${rc(i)}">${i+1}</span><div class="lbav" style="border-color:${PC[p.n]||'#C8AA6E'}55;color:${PC[p.n]||'#C8AA6E'};background:${PC[p.n]||'#C8AA6E'}15">${ini(p.n)}</div><span style="flex:1;font-size:16px;font-weight:600">${p.n}</span><div class="lbbt"><div class="lbbf" style="width:${bw}%;background:${bc}"></div></div><span class="lbw" style="color:${vc}">${vt}</span></div>`;
   document.getElementById('lbwr').innerHTML=wrR.map((p,i)=>lbrow(p,i,p.wr,'linear-gradient(90deg,var(--teal),var(--blue-bright))',p.wr+'%',p.wr>=60?'var(--success)':p.wr>=45?'var(--gold)':'var(--danger)')).join('');
   document.getElementById('lbg').innerHTML=gR.map((p,i)=>lbrow(p,i,Math.round(p.g/mg*100),'linear-gradient(90deg,var(--gold-dark),var(--gold))',p.g+'G','var(--gold)')).join('');
   const sM={};
   MH.forEach(m=>{const pt=(tm,won)=>{const ns=Object.values(tm);for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){const k=[ns[i],ns[j]].sort().join('|');if(!sM[k])sM[k]={g:0,w:0};sM[k].g++;if(won)sM[k].w++;}};pt(m.blue,m.win==='LEWA');pt(m.red,m.win==='PRAWA');});
   const sA=Object.entries(sM).map(([k,v])=>({pair:k.split('|'),g:v.g,wr:v.g?Math.round(v.w/v.g*100):0})).filter(s=>s.g>=2).sort((a,b)=>b.wr-a.wr).slice(0,8);
-  document.getElementById('syt').innerHTML=sA.length?`<div style="display:flex;flex-direction:column;gap:7px">${sA.map(s=>`<div class="syr"><div class="av av26" style="border-color:${PC[s.pair[0]]||'#C8AA6E'}55;color:${PC[s.pair[0]]||'#C8AA6E'};background:${PC[s.pair[0]]||'#C8AA6E'}15">${ini(s.pair[0])}</div><span style="font-size:11px;font-weight:600">${s.pair[0]}</span><span style="color:var(--gold);font-size:10px">+</span><div class="av av26" style="border-color:${PC[s.pair[1]]||'#C8AA6E'}55;color:${PC[s.pair[1]]||'#C8AA6E'};background:${PC[s.pair[1]]||'#C8AA6E'}15">${ini(s.pair[1])}</div><span style="font-size:11px;font-weight:600">${s.pair[1]}</span><div class="syb" style="flex:1"><div style="height:100%;background:${s.wr>=55?'var(--success)':s.wr>=45?'var(--gold)':'var(--danger)'};border-radius:2px;width:${s.wr}%"></div></div><span class="wp ${s.wr>=55?'wg':'wb'}">${s.wr}%</span><span style="font-size:9px;color:var(--silver)">${s.g}G</span></div>`).join('')}</div>`:'<div style="font-size:11px;color:var(--silver)">Za mało danych.</div>';
+  document.getElementById('syt').innerHTML=sA.length?`<div style="display:flex;flex-direction:column;gap:7px">${sA.map(s=>`<div class="syr"><div class="av av26" style="border-color:${PC[s.pair[0]]||'#C8AA6E'}55;color:${PC[s.pair[0]]||'#C8AA6E'};background:${PC[s.pair[0]]||'#C8AA6E'}15">${ini(s.pair[0])}</div><span style="font-size:14px;font-weight:600">${s.pair[0]}</span><span style="color:var(--gold);font-size:13px">+</span><div class="av av26" style="border-color:${PC[s.pair[1]]||'#C8AA6E'}55;color:${PC[s.pair[1]]||'#C8AA6E'};background:${PC[s.pair[1]]||'#C8AA6E'}15">${ini(s.pair[1])}</div><span style="font-size:14px;font-weight:600">${s.pair[1]}</span><div class="syb" style="flex:1"><div style="height:100%;background:${s.wr>=55?'var(--success)':s.wr>=45?'var(--gold)':'var(--danger)'};border-radius:2px;width:${s.wr}%"></div></div><span class="wp ${s.wr>=55?'wg':'wb'}">${s.wr}%</span><span style="font-size:12px;color:var(--silver)">${s.g}G</span></div>`).join('')}</div>`:'<div style="font-size:14px;color:var(--silver)">Za mało danych.</div>';
   // KDA top
   const kdaRows=[];
   AP.forEach(n=>{Object.entries(PS[n].champs||{}).forEach(([ch,v])=>{if(v.g>=1&&v.d>=0){const kda=v.d>0?+((v.k+v.a)/v.d).toFixed(2):v.k+v.a;kdaRows.push({player:n,champ:ch,g:v.g,kda,k:v.g>0?+(v.k/v.g).toFixed(1):0,d:v.g>0?+(v.d/v.g).toFixed(1):0,a:v.g>0?+(v.a/v.g).toFixed(1):0});}});});
   kdaRows.sort((a,b)=>b.kda-a.kda);
-  document.getElementById('kdaTop').innerHTML=kdaRows.length?`<table class="kda-tbl" style="width:100%"><thead><tr><th>Gracz</th><th>Postać</th><th>G</th><th>KDA</th></tr></thead><tbody>${kdaRows.slice(0,10).map(r=>{const c=PC[r.player]||'#C8AA6E';return`<tr><td><span style="color:${c};font-weight:600">${r.player}</span></td><td>${r.champ}</td><td>${r.g}</td><td style="font-weight:700;color:${r.kda>=3?'var(--success)':r.kda>=2?'var(--gold)':'var(--silver)'}">${r.kda}x</td></tr>`;}).join('')}</tbody></table>`:'<div style="font-size:11px;color:var(--silver)">Uruchom AI Scan żeby zobaczyć KDA.</div>';
+  document.getElementById('kdaTop').innerHTML=kdaRows.length?`<table class="kda-tbl" style="width:100%"><thead><tr><th>Gracz</th><th>Postać</th><th>G</th><th>KDA</th></tr></thead><tbody>${kdaRows.slice(0,10).map(r=>{const c=PC[r.player]||'#C8AA6E';return`<tr><td><span style="color:${c};font-weight:600">${r.player}</span></td><td>${r.champ}</td><td>${r.g}</td><td style="font-weight:700;color:${r.kda>=3?'var(--success)':r.kda>=2?'var(--gold)':'var(--silver)'}">${r.kda}x</td></tr>`;}).join('')}</tbody></table>`:'<div style="font-size:14px;color:var(--silver)">Uruchom AI Scan żeby zobaczyć KDA.</div>';
 }
 
 // =====================================================================
 // HISTORY
 // =====================================================================
 function renderHist(){
-  document.getElementById('histhdr').innerHTML=`Historia meczy (${MH.length}) <button class="btn" style="padding:3px 10px;font-size:10px" onclick="exportCSV()">↓ CSV</button>`;
+  document.getElementById('histhdr').innerHTML=`Historia meczy (${MH.length}) <button class="btn" style="padding:3px 10px;font-size:13px" onclick="exportCSV()">↓ CSV</button>`;
 
   document.getElementById('histList').innerHTML=[...MH].reverse().map(m=>{
     const blueWin=m.win==='LEWA';
@@ -2633,7 +2633,7 @@ function renderHist(){
         return `<div class="mc-champ-row">
           ${src
             ?`<img class="mc-champ-img" src="${src}" alt="${champ}" loading="lazy" onerror="this.style.background='${c}30';this.src=''">`
-            :`<div class="mc-champ-img" style="background:${c}20;display:flex;align-items:center;justify-content:center;font-size:9px;color:${c}">${ini(name)}</div>`}
+            :`<div class="mc-champ-img" style="background:${c}20;display:flex;align-items:center;justify-content:center;font-size:12px;color:${c}">${ini(name)}</div>`}
         </div>`;
       }).join('');
     }
@@ -2648,7 +2648,7 @@ function renderHist(){
 
     return `<div class="match-card" style="border-left:4px solid ${blueWin?'#5DADE2':'#E84855'}">
       <div style="width:18px;flex-shrink:0;background:${blueBg};display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(93,173,226,0.12)">
-        <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;font-weight:800;letter-spacing:2px;color:${blueLabelColor};text-transform:uppercase;white-space:nowrap">${blueWin?'✓ ':''} LEWA</div>
+        <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:800;letter-spacing:2px;color:${blueLabelColor};text-transform:uppercase;white-space:nowrap">${blueWin?'✓ ':''} LEWA</div>
       </div>
       <div class="mc-champs" style="background:${blueBg};${blueGlow}">
         ${champIcons(m.blue,m.blueChamps)}
@@ -2657,7 +2657,7 @@ function renderHist(){
         ${teamRows(m.blue,m.blueChamps)}
       </div>
       <div class="mc-vs" style="flex-direction:column;gap:3px">
-        <div class="mc-result-badge ${blueWin?'win':'loss'}" style="font-size:13px">${m.win}</div>
+        <div class="mc-result-badge ${blueWin?'win':'loss'}" style="font-size:16px">${m.win}</div>
         <div class="mc-vs-inner">VS</div>
         <div class="mc-gid">#${m.gid}</div>
       </div>
@@ -2668,13 +2668,13 @@ function renderHist(){
         ${champIcons(m.red,m.redChamps)}
       </div>
       <div style="width:18px;flex-shrink:0;background:${redBg};display:flex;align-items:center;justify-content:center;border-left:1px solid rgba(232,72,85,0.12)">
-        <div style="writing-mode:vertical-rl;font-size:8px;font-weight:800;letter-spacing:2px;color:${redLabelColor};text-transform:uppercase;white-space:nowrap">${!blueWin?'✓ ':''} PRAWA</div>
+        <div style="writing-mode:vertical-rl;font-size:11px;font-weight:800;letter-spacing:2px;color:${redLabelColor};text-transform:uppercase;white-space:nowrap">${!blueWin?'✓ ':''} PRAWA</div>
       </div>
       <div class="mc-meta">
         <div class="mc-date">${m.date}</div>
         <div class="mc-patch">P${m.patch}</div>
         ${m.imgUrl?`<button class="mc-img-btn" onclick="openImgPreview('${m.imgUrl}')">🖼 Screen</button>`:''}
-        ${m.scanResult?`<div style="font-size:9px;color:var(--success)">✓ AI</div>`:''}
+        ${m.scanResult?`<div style="font-size:12px;color:var(--success)">✓ AI</div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -2695,10 +2695,10 @@ function buildScanGrid(){
       <img class="scan-img" src="${m.imgUrl}" alt="GID ${m.gid}" loading="lazy" onerror="this.style.background='#0A1830';this.src=''">
       <div class="scan-info">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-          <span style="font-size:11px;font-weight:600">GID #${m.gid} · ${m.date}</span>
+          <span style="font-size:14px;font-weight:600">GID #${m.gid} · ${m.date}</span>
           <span class="scan-status ${hasScan?'ss-done':'ss-pending'}" id="ss_${m.gid}">${hasScan?'✓ DONE':'PENDING'}</span>
         </div>
-        <div style="font-size:10px;color:var(--silver);margin-bottom:4px">${[...Object.values(m.blue),...Object.values(m.red)].join(', ')}</div>
+        <div style="font-size:13px;color:var(--silver);margin-bottom:4px">${[...Object.values(m.blue),...Object.values(m.red)].join(', ')}</div>
         <div class="scan-champs" id="sc_res_${m.gid}">${hasScan?formatScanResult(m):''}</div>
       </div>
     </div>`;
@@ -2929,7 +2929,7 @@ function deletePlayer(name,e){
     const r=restr[i];
     if((r.type==='teammate'&&(r.playerA===name||r.playerB===name))||(r.type==='role'&&r.player===name)) restr.splice(i,1);
   }
-  if(selPr===name){selPr=null;document.getElementById('profileContent').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:380px;color:var(--silver);font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:0.45">Wybierz gracza z listy</div>';}
+  if(selPr===name){selPr=null;document.getElementById('profileContent').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:380px;color:var(--silver);font-size:15px;letter-spacing:3px;text-transform:uppercase;opacity:0.45">Wybierz gracza z listy</div>';}
   renderPL();renderProfileList();renderAliases();renderRS();renderStats();
   toast(`Gracz "${name}" usunięty.`);lsSave();
   ghPushData('usunięcie gracza '+name);
@@ -3131,7 +3131,7 @@ function renderDraftTeamGrid(team, animate){
         <div class="ci-top">
           ${name
             ? `<div class="cp">${name}</div>`
-            : `<div style="font-size:11px;color:rgba(160,180,200,0.3);text-align:center;padding-top:4px;font-family:'Rajdhani',sans-serif;letter-spacing:1px">UPUŚĆ</div>`
+            : `<div style="font-size:14px;color:rgba(160,180,200,0.3);text-align:center;padding-top:4px;font-family:'Rajdhani',sans-serif;letter-spacing:1px">UPUŚĆ</div>`
           }
         </div>
         <div class="ci-bottom">
@@ -3195,32 +3195,32 @@ function renderAvatarToolList(){
     const discordSearchUrl=`https://discord.com/users/@me`; // opens Discord — user searches manually
 
     return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(0,0,0,0.25);border:1px solid ${hasAvatar?'rgba(29,233,182,0.2)':'var(--border)'};border-radius:6px">
-      <div style="width:40px;height:40px;border-radius:50%;border:2px solid ${c};background:${c}20;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${c}">
+      <div style="width:40px;height:40px;border-radius:50%;border:2px solid ${c};background:${c}20;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:${c}">
         ${hasAvatar
           ?`<img src="${meta.avatarUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`
           :ini(n)}
       </div>
       <div style="min-width:90px;flex-shrink:0">
-        <div style="font-size:13px;font-weight:700;color:${c}">${n}</div>
-        ${gn!==n?`<div style="font-size:10px;color:var(--silver)">${gn}</div>`:''}
-        ${hasAvatar?`<div style="font-size:9px;color:var(--success)">✓ Avatar ustawiony</div>`:`<div style="font-size:9px;color:var(--silver)">Brak avatara</div>`}
+        <div style="font-size:16px;font-weight:700;color:${c}">${n}</div>
+        ${gn!==n?`<div style="font-size:13px;color:var(--silver)">${gn}</div>`:''}
+        ${hasAvatar?`<div style="font-size:12px;color:var(--success)">✓ Avatar ustawiony</div>`:`<div style="font-size:12px;color:var(--silver)">Brak avatara</div>`}
       </div>
       <div style="display:flex;gap:5px;flex-shrink:0">
         <a href="https://discord.com/channels/@me" target="_blank"
-          style="background:rgba(88,101,242,0.2);border:1px solid rgba(88,101,242,0.4);color:#7289DA;padding:4px 9px;border-radius:4px;font-size:10px;font-weight:600;text-decoration:none;white-space:nowrap;font-family:'Rajdhani',sans-serif"
+          style="background:rgba(88,101,242,0.2);border:1px solid rgba(88,101,242,0.4);color:#7289DA;padding:4px 9px;border-radius:4px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;font-family:'Rajdhani',sans-serif"
           onclick="copyToClipboard('${gn}','Skopiowano nick: ${gn}')">
           📋 Kopiuj nick
         </a>
         <a href="https://www.google.com/search?q=discord+avatar+${encodeURIComponent(gn)}" target="_blank"
-          style="background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.25);color:rgba(114,137,218,0.7);padding:4px 9px;border-radius:4px;font-size:10px;font-weight:600;text-decoration:none;white-space:nowrap;font-family:'Rajdhani',sans-serif">
+          style="background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.25);color:rgba(114,137,218,0.7);padding:4px 9px;border-radius:4px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;font-family:'Rajdhani',sans-serif">
           🔍
         </a>
       </div>
-      <input id="avurl_${n}" class="ss" style="flex:1;font-size:11px;padding:5px 8px"
+      <input id="avurl_${n}" class="ss" style="flex:1;font-size:14px;padding:5px 8px"
         placeholder="Wklej URL avatara..."
         value="${meta.avatarUrl||''}"
         oninput="previewAvatar('${n}')">
-      <button class="btn tbtn" style="padding:5px 10px;font-size:10px;flex-shrink:0;white-space:nowrap"
+      <button class="btn tbtn" style="padding:5px 10px;font-size:13px;flex-shrink:0;white-space:nowrap"
         onclick="saveOneAvatar('${n}')">Zapisz</button>
     </div>`;
   }).join('');
