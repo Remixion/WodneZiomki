@@ -2431,7 +2431,27 @@ function renderProfile(n){
   const hardest=Object.entries(enmM).map(([x,v])=>({n:x,g:v.g,wr:v.g?Math.round(v.w/v.g*100):0})).filter(x=>x.g>=1).sort((a,b)=>a.wr-b.wr).slice(0,5);
 
   // Restrictions
-  const myR=restr.filter(r=>(r.type==='teammate'&&(r.playerA===n||r.playerB===n))||(r.type==='role'&&r.player===n));
+  const myR=restr.filter(r=>(r.type==='teammate'&&(r.playerA===n||r.playerB===n))||(r.type==='role'&&r.player===n)||(r.type==='with'&&(r.playerA===n||r.playerB===n)));
+
+  // Champion stats from manual entries + AI scan
+  const champMap={};
+  MH.forEach(m=>{
+    const inB=Object.values(m.blue).includes(n);
+    const side=inB?'blue':Object.values(m.red).includes(n)?'red':null;
+    if(!side)return;
+    const team=side==='blue'?m.blue:m.red;
+    const champs=side==='blue'?m.blueChamps:m.redChamps;
+    const scan=m.scanResult?.[n];
+    const roleInM=Object.entries(team).find(([r,p])=>p===n)?.[0]||'?';
+    const champ=champs?.[roleInM]||scan?.champ||'';
+    if(!champ)return;
+    const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
+    if(!champMap[champ])champMap[champ]={ch:champ,g:0,w:0};
+    champMap[champ].g++;if(won)champMap[champ].w++;
+  });
+  const champArr=Object.values(champMap).map(v=>({
+    ch:v.ch,g:v.g,w:v.w,wr:v.g?Math.round(v.w/v.g*100):0
+  })).sort((a,b)=>b.g-a.g);
 
   // Match history for player
   const playerMatches=[...matches].reverse().slice(0,20);
