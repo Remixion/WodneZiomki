@@ -608,6 +608,12 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
         Losuj drużyny
       </button>
       <button class="btn" onclick="randomizeChamps()">🎲 Losuj postacie</button>
+      <!-- MMR Balance Toggle -->
+      <button id="mmrBalanceBtn" class="btn" onclick="toggleMMRBalance()"
+        title="Zbalansuj drużyny tak aby sumy MMR były jak najbardziej równe"
+        style="border-color:rgba(200,170,110,0.35);color:var(--silver)">
+        ⚖ MMR Balance
+      </button>
     </div>
     <!-- Right: Clear -->
     <div>
@@ -998,6 +1004,7 @@ let CT={blue:[],red:[],bR:{},rR:{}};
 let recentPlayers=[]; // names of players from last draft, persisted in localStorage
 const LS_RECENT='rd_recent';
 let plSort='alpha'; // 'alpha' | 'games' | 'active'
+let mmrBalanceOn=false; // MMR balancing toggle
 let CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
 let RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};
 const MXR=3;
@@ -1601,7 +1608,7 @@ const JUNGLE_MONSTERS_SVG = {
 
   // Bulbasaur-style
   bulbasaur: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" style="opacity:0.82">
-    <rect width="300" height="400" fill="#0a1a0a"/>
+    <rect width="300" height="400" fill="none"/>
     <ellipse cx="150" cy="280" rx="90" ry="65" fill="#2d5a1b"/>
     <ellipse cx="150" cy="275" rx="85" ry="60" fill="#3a7a24"/>
     <ellipse cx="120" cy="285" rx="18" ry="12" fill="#2d5a1b"/>
@@ -1627,7 +1634,7 @@ const JUNGLE_MONSTERS_SVG = {
 
   // Charmander-style
   charmander: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" style="opacity:0.82">
-    <rect width="300" height="400" fill="#1a0800"/>
+    <rect width="300" height="400" fill="none"/>
     <ellipse cx="150" cy="260" rx="80" ry="70" fill="#e8621a"/>
     <ellipse cx="150" cy="255" rx="75" ry="65" fill="#f07030"/>
     <ellipse cx="115" cy="272" rx="16" ry="10" fill="#c8501a"/>
@@ -1652,7 +1659,7 @@ const JUNGLE_MONSTERS_SVG = {
 
   // Squirtle-style
   squirtle: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" style="opacity:0.82">
-    <rect width="300" height="400" fill="#001520"/>
+    <rect width="300" height="400" fill="none"/>
     <ellipse cx="150" cy="255" rx="78" ry="70" fill="#1a7a9a"/>
     <ellipse cx="150" cy="250" rx="72" ry="64" fill="#2596be"/>
     <ellipse cx="150" cy="252" rx="58" ry="50" fill="#1a6a8a"/>
@@ -1672,7 +1679,7 @@ const JUNGLE_MONSTERS_SVG = {
 
   // Gengar-style
   gengar: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" style="opacity:0.82">
-    <rect width="300" height="400" fill="#0a0015"/>
+    <rect width="300" height="400" fill="none"/>
     <ellipse cx="150" cy="280" rx="110" ry="60" fill="#3d1a6b"/>
     <path d="M40 340 Q60 280 80 300 Q100 260 120 290 Q140 245 150 280 Q160 245 180 290 Q200 260 220 300 Q240 280 260 340Z" fill="#3d1a6b"/>
     <ellipse cx="150" cy="210" rx="80" ry="75" fill="#6b35b8"/>
@@ -1691,7 +1698,7 @@ const JUNGLE_MONSTERS_SVG = {
 
   // Snorlax-style
   snorlax: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" style="opacity:0.82">
-    <rect width="300" height="400" fill="#0d0d1a"/>
+    <rect width="300" height="400" fill="none"/>
     <ellipse cx="150" cy="290" rx="105" ry="85" fill="#3a3a6b"/>
     <ellipse cx="150" cy="285" rx="100" ry="80" fill="#4a4a8a"/>
     <ellipse cx="150" cy="275" rx="80" ry="65" fill="#f5e6c8"/>
@@ -1714,7 +1721,7 @@ const JUNGLE_MONSTERS_SVG = {
 
   // Pikachu-style
   pikachu: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" style="opacity:0.82">
-    <rect width="300" height="400" fill="#0a0a00"/>
+    <rect width="300" height="400" fill="none"/>
     <ellipse cx="150" cy="270" rx="80" ry="68" fill="#f0c010"/>
     <ellipse cx="150" cy="265" rx="75" ry="63" fill="#f8d020"/>
     <ellipse cx="108" cy="278" rx="14" ry="9" fill="#d8a000"/>
@@ -1741,7 +1748,7 @@ const JUNGLE_MONSTERS_SVG = {
 
   // Mewtwo-style
   mewtwo: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" style="opacity:0.82">
-    <rect width="300" height="400" fill="#0e001e"/>
+    <rect width="300" height="400" fill="none"/>
     <ellipse cx="150" cy="300" rx="50" ry="30" fill="#c0a0d8"/>
     <path d="M150 300 Q155 250 165 230 Q175 220 178 280Z" fill="#c0a0d8"/>
     <path d="M140 260 Q100 240 80 280 Q95 290 115 285Z" fill="#c0a0d8"/>
@@ -1762,7 +1769,7 @@ const JUNGLE_MONSTERS_SVG = {
 
   // Gyarados-style
   gyarados: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" style="opacity:0.82">
-    <rect width="300" height="400" fill="#001030"/>
+    <rect width="300" height="400" fill="none"/>
     <path d="M50 400 Q80 350 100 300 Q120 250 140 220 Q155 200 150 170" stroke="#0050c0" stroke-width="55" fill="none" stroke-linecap="round"/>
     <path d="M50 400 Q80 350 100 300 Q120 250 140 220 Q155 200 150 170" stroke="#0070e8" stroke-width="45" fill="none" stroke-linecap="round"/>
     <path d="M250 380 Q230 320 210 280 Q185 240 170 215 Q158 198 150 170" stroke="#0050c0" stroke-width="35" fill="none" stroke-linecap="round"/>
@@ -1782,7 +1789,7 @@ const JUNGLE_MONSTERS_SVG = {
 
   // Eevee-style
   eevee: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" style="opacity:0.82">
-    <rect width="300" height="400" fill="#1a0a00"/>
+    <rect width="300" height="400" fill="none"/>
     <ellipse cx="150" cy="275" rx="75" ry="65" fill="#8b5a2b"/>
     <ellipse cx="150" cy="270" rx="70" ry="60" fill="#a06030"/>
     <ellipse cx="108" cy="278" rx="14" ry="9" fill="#7a4010"/>
@@ -1841,37 +1848,120 @@ function genDrops(){
 // =====================================================================
 // RANDOMIZE
 // =====================================================================
+function toggleMMRBalance(){
+  mmrBalanceOn=!mmrBalanceOn;
+  const btn=document.getElementById('mmrBalanceBtn');
+  if(btn){
+    btn.style.borderColor=mmrBalanceOn?'var(--teal)':'rgba(200,170,110,0.35)';
+    btn.style.color=mmrBalanceOn?'var(--teal)':'var(--silver)';
+    btn.style.background=mmrBalanceOn?'rgba(11,196,227,0.1)':'';
+    btn.textContent=mmrBalanceOn?'⚖ MMR On':'⚖ MMR Balance';
+  }
+  if(mmrBalanceOn){
+    toast('MMR Balance włączony — następne losowanie będzie zbalansowane');
+  } else {
+    toast('MMR Balance wyłączony');
+  }
+}
+
+// Find the most balanced split of players into two teams of 5
+// Uses brute-force for 10 players (C(10,5)=252 combinations — fast)
+function balanceTeamsByMMR(players){
+  if(players.length!==10) return null;
+
+  // Get MMR for each player
+  const mmrs=players.map(n=>calcMMR(n).mmr);
+  const totalMMR=mmrs.reduce((a,b)=>a+b,0);
+  const targetMMR=totalMMR/2;
+
+  let bestDiff=Infinity;
+  let bestBlue=null;
+
+  // Generate all C(10,5) = 252 combinations
+  function combine(start, chosen){
+    if(chosen.length===5){
+      const blueMMR=chosen.reduce((s,i)=>s+mmrs[i],0);
+      const diff=Math.abs(blueMMR-targetMMR);
+      if(diff<bestDiff){
+        // Also check teammate restrictions
+        const blueNames=chosen.map(i=>players[i]);
+        const redNames=players.filter((_,i)=>!chosen.includes(i));
+        let ok=true;
+        for(const rx of restr){
+          if(rx.type==='teammate'){
+            if((blueNames.includes(rx.playerA)&&blueNames.includes(rx.playerB))||
+               (redNames.includes(rx.playerA)&&redNames.includes(rx.playerB))){ok=false;break;}
+          }
+          if(rx.type==='with'){
+            const bothInPool=players.includes(rx.playerA)&&players.includes(rx.playerB);
+            if(!bothInPool)continue;
+            const sameBlue=blueNames.includes(rx.playerA)&&blueNames.includes(rx.playerB);
+            const sameRed=redNames.includes(rx.playerA)&&redNames.includes(rx.playerB);
+            if(!sameBlue&&!sameRed){ok=false;break;}
+          }
+        }
+        if(ok){bestDiff=diff;bestBlue=[...chosen];}
+      }
+      return;
+    }
+    for(let i=start;i<=10-(5-chosen.length);i++){
+      combine(i+1,[...chosen,i]);
+    }
+  }
+  combine(0,[]);
+
+  if(!bestBlue) return null;
+  const blueNames=bestBlue.map(i=>players[i]);
+  const redNames=players.filter((_,i)=>!bestBlue.includes(i));
+  const blueMMR=bestBlue.reduce((s,i)=>s+mmrs[i],0);
+  const redMMR=totalMMR-blueMMR;
+  return{blue:blueNames,red:redNames,blueMMR,redMMR,diff:Math.abs(blueMMR-redMMR)};
+}
+
 function randomizeTeams(){
-  // Collect all players currently in both teams
   const allDrafted=[...draftTeams.blue,...draftTeams.red].map(p=>p.name);
   if(allDrafted.length<2){toast('Przeciągnij najpierw graczy do drużyn!');return;}
   if(allDrafted.length!==10){toast(`Masz ${allDrafted.length}/10 graczy. Uzupełnij skład.`);return;}
 
-  // Shuffle them and split 5/5, respecting teammate restrictions
-  let pool=[...allDrafted];shuf(pool);
-  let b=pool.slice(0,5),r=pool.slice(5,10);
-  for(let a=0;a<200;a++){
-    let ok=true;
-    for(const rx of restr){
-      if(rx.type==='teammate'){
-        // Must NOT be on the same team
-        const sameB=b.includes(rx.playerA)&&b.includes(rx.playerB);
-        const sameR=r.includes(rx.playerA)&&r.includes(rx.playerB);
-        if(sameB||sameR){ok=false;break;}
-      }
-      if(rx.type==='with'){
-        // MUST be on the same team
-        const bothInPool=pool.includes(rx.playerA)&&pool.includes(rx.playerB);
-        if(!bothInPool)continue; // skip if one not in draft
-        const sameB=b.includes(rx.playerA)&&b.includes(rx.playerB);
-        const sameR=r.includes(rx.playerA)&&r.includes(rx.playerB);
-        if(!sameB&&!sameR){ok=false;break;}
-      }
+  let b, r;
+
+  if(mmrBalanceOn){
+    // Use MMR balancing — find most equal split
+    const result=balanceTeamsByMMR(allDrafted);
+    if(result){
+      b=result.blue; r=result.red;
+      const msg=`MMR: ${result.blueMMR} vs ${result.redMMR} (różnica: ${result.diff})`;
+      toast('⚖ Zbalansowano! '+msg);
+    } else {
+      toast('Nie udało się zbalansować — losowanie losowe');
+      b=allDrafted.slice(0,5); r=allDrafted.slice(5,10);
     }
-    if(ok)break;shuf(pool);b=pool.slice(0,5);r=pool.slice(5,10);
+  } else {
+    // Random shuffle, respecting restrictions
+    let pool=[...allDrafted]; shuf(pool);
+    b=pool.slice(0,5); r=pool.slice(5,10);
+    for(let a=0;a<200;a++){
+      let ok=true;
+      for(const rx of restr){
+        if(rx.type==='teammate'){
+          const sameB=b.includes(rx.playerA)&&b.includes(rx.playerB);
+          const sameR=r.includes(rx.playerA)&&r.includes(rx.playerB);
+          if(sameB||sameR){ok=false;break;}
+        }
+        if(rx.type==='with'){
+          const bothInPool=pool.includes(rx.playerA)&&pool.includes(rx.playerB);
+          if(!bothInPool)continue;
+          const sameB=b.includes(rx.playerA)&&b.includes(rx.playerB);
+          const sameR=r.includes(rx.playerA)&&r.includes(rx.playerB);
+          if(!sameB&&!sameR){ok=false;break;}
+        }
+      }
+      if(ok)break; shuf(pool); b=pool.slice(0,5); r=pool.slice(5,10);
+    }
+    toast('Drużyny przetasowane!');
   }
-  // Assign roles
-  const bR=assignR(b);const rR=assignR(r);
+
+  const bR=assignR(b); const rR=assignR(r);
   draftTeams.blue=b.map((name,i)=>({name,role:bR[i]||ROLES[i]}));
   draftTeams.red=r.map((name,i)=>({name,role:rR[i]||ROLES[i]}));
   CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
@@ -1879,13 +1969,10 @@ function randomizeTeams(){
   assignMonsters();
   syncDraftToCT();
   renderDraftTeams('blue');
-  // slight delay so both animate nicely
   setTimeout(()=>renderDraftTeams('red'),80);
-  renderPL();updateDraftCounts();
-  // track as recently played
+  renderPL(); updateDraftCounts();
   recentPlayers=[...draftTeams.blue,...draftTeams.red].map(p=>p.name);
   lsSave();
-  toast('Drużyny przetasowane!');
 }
 
 function randomizeDraftRoles(){
@@ -3133,8 +3220,17 @@ function clearDraft(){
 }
 
 function updateDraftCounts(){
-  document.getElementById('blueCount').textContent=`${draftTeams.blue.length}/5`;
-  document.getElementById('redCount').textContent=`${draftTeams.red.length}/5`;
+  const bCount=draftTeams.blue.length;
+  const rCount=draftTeams.red.length;
+  document.getElementById('blueCount').textContent=bCount+'/5';
+  document.getElementById('redCount').textContent=rCount+'/5';
+  // Show MMR sums if balance mode on and teams are full
+  if(mmrBalanceOn&&bCount===5&&rCount===5){
+    const bMMR=draftTeams.blue.reduce((s,p)=>s+calcMMR(p.name).mmr,0);
+    const rMMR=draftTeams.red.reduce((s,p)=>s+calcMMR(p.name).mmr,0);
+    document.getElementById('blueCount').textContent=bCount+'/5 · ⚖'+bMMR;
+    document.getElementById('redCount').textContent=rCount+'/5 · ⚖'+rMMR;
+  }
 }
 
 // Sync draft teams into CT so copyToDiscord / save / etc still work
