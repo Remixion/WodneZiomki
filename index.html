@@ -24,7 +24,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .nav-logo{font-family:'Pacifico',cursive;font-size:18px;color:#5DADE2;letter-spacing:1px;display:flex;align-items:center;gap:10px;text-shadow:0 0 20px rgba(93,173,226,0.4)}
 .nav-logo svg{width:32px;height:28px}
 .nav-tabs{display:flex;gap:2px;flex-wrap:wrap;align-items:center}
-.nav-tab{padding:6px 14px;background:transparent;border:1px solid transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s}
+.nav-tab{padding:6px 14px;background:transparent;border:1px solid transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s}
 .nav-tab:hover{color:var(--gold);border-color:var(--border)}
 .nav-tab.active{color:var(--gold);border-color:var(--border-bright);background:rgba(200,170,110,0.07)}
 /* OCTOPUS NAV — Skład centered, tabs in tentacles */
@@ -200,18 +200,18 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .pv2-charts{display:flex;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .pv2-chart-cell{flex:1;padding:20px;text-align:center;border-right:1px solid var(--border)}
 .pv2-chart-cell:last-child{border-right:none}
-.pv2-chart-label{font-size:11px;color:var(--silver);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.pv2-chart-label{font-size:13px;color:var(--silver);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
 /* Rank badge in center of pie */
 .pv2-rank-center{font-family:"Cinzel",serif;font-size:11px;font-weight:700;text-align:center}
 /* Bottom 2-col layout */
 .pv2-body{display:grid;grid-template-columns:220px 1fr;gap:0}
 .pv2-sidebar{padding:18px;border-right:1px solid var(--border)}
 .pv2-main{padding:18px}
-.pv2-section-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);opacity:0.6;margin-bottom:10px}
+.pv2-section-title{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);opacity:0.6;margin-bottom:10px}
 /* Match list */
 .pv2-match{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;margin-bottom:4px;border:1px solid var(--border);transition:background 0.15s}
 .pv2-match:hover{background:rgba(200,170,110,0.04)}
-.pv2-match.pv2-win{border-left:3px solid #5DADE2;background:rgba(93,173,226,0.04);font-size:13px}
+.pv2-match.pv2-win{border-left:3px solid #5DADE2;background:rgba(93,173,226,0.04);font-size:15px}
 .pv2-match.pv2-loss{border-left:3px solid #E84855;background:rgba(232,72,85,0.03)}
 /* Settings panel */
 .pv2-settings{display:none;border-top:1px solid var(--border);padding:20px;background:rgba(0,0,0,0.3)}
@@ -380,7 +380,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .ds label{font-size:9px;color:var(--silver);display:block;margin-bottom:3px;letter-spacing:1px;text-transform:uppercase}
 .ds select{width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);color:var(--white);padding:3px 5px;font-size:10px;border-radius:3px;font-family:'Rajdhani',sans-serif}
 /* TOAST */
-.toast{position:fixed;bottom:20px;right:20px;z-index:300;background:rgba(11,196,227,0.13);border:1px solid var(--teal);color:var(--teal);padding:9px 16px;border-radius:6px;font-size:12px;font-weight:600;letter-spacing:1px;transform:translateX(130%);transition:transform 0.3s;backdrop-filter:blur(8px)}
+.toast{position:fixed;bottom:20px;right:20px;z-index:300;background:rgba(11,196,227,0.13);border:1px solid var(--teal);color:var(--teal);padding:9px 16px;border-radius:6px;font-size:14px;font-weight:600;letter-spacing:1px;transform:translateX(130%);transition:transform 0.3s;backdrop-filter:blur(8px)}
 .toast.show{transform:translateX(0)}
 /* PROGRESS */
 .progress-bar{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;margin:8px 0}
@@ -431,7 +431,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .player-chip{
   display:inline-flex;align-items:center;gap:6px;
   padding:5px 9px;border-radius:4px;cursor:grab;
-  border:1px solid;font-size:12px;font-weight:600;
+  border:1px solid;font-size:14px;font-weight:600;
   transition:all 0.18s;user-select:none;
   background:rgba(0,0,0,0.3);
 }
@@ -1596,6 +1596,217 @@ const JUNGLE_MONSTERS_SVG = {
     <ellipse cx="55" cy="310" rx="12" ry="9" fill="#450a0a" opacity="0.6"/>
     <ellipse cx="255" cy="315" rx="10" ry="8" fill="#450a0a" opacity="0.6"/>
   </svg>`),
+
+  // ── STWORKI inspirowane 1 generacją Pokémonów ────────────────────────────
+
+  // Bulbasaur-style
+  bulbasaur: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <rect width="300" height="400" fill="#0a1a0a"/>
+    <ellipse cx="150" cy="280" rx="90" ry="65" fill="#2d5a1b"/>
+    <ellipse cx="150" cy="275" rx="85" ry="60" fill="#3a7a24"/>
+    <ellipse cx="120" cy="285" rx="18" ry="12" fill="#2d5a1b"/>
+    <ellipse cx="180" cy="285" rx="18" ry="12" fill="#2d5a1b"/>
+    <ellipse cx="100" cy="300" rx="14" ry="9" fill="#234a15"/>
+    <ellipse cx="200" cy="298" rx="14" ry="9" fill="#234a15"/>
+    <ellipse cx="150" cy="165" rx="55" ry="50" fill="#4a9e2f"/>
+    <path d="M110 175 Q150 168 190 175 Q185 200 150 205 Q115 200 110 175Z" fill="#234a15"/>
+    <circle cx="130" cy="162" r="12" fill="#0a1a0a"/><circle cx="130" cy="162" r="9" fill="#e74c3c"/><circle cx="127" cy="159" r="4" fill="white"/>
+    <circle cx="170" cy="162" r="12" fill="#0a1a0a"/><circle cx="170" cy="162" r="9" fill="#e74c3c"/><circle cx="167" cy="159" r="4" fill="white"/>
+    <path d="M135 185 Q150 192 165 185" stroke="#0a1a0a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="150" cy="130" rx="28" ry="38" fill="#1a6b0a"/>
+    <ellipse cx="150" cy="125" rx="25" ry="34" fill="#27a312"/>
+    <ellipse cx="138" cy="112" rx="8" ry="14" fill="#1a8a08" transform="rotate(-20 138 112)"/>
+    <ellipse cx="162" cy="112" rx="8" ry="14" fill="#1a8a08" transform="rotate(20 162 112)"/>
+    <circle cx="150" cy="108" r="10" fill="#f39c12"/>
+    <circle cx="150" cy="108" r="7" fill="#e67e22"/>
+    <ellipse cx="108" cy="315" rx="18" ry="10" fill="#3a7a24"/>
+    <ellipse cx="192" cy="315" rx="18" ry="10" fill="#3a7a24"/>
+    <ellipse cx="130" cy="335" rx="16" ry="8" fill="#2d5a1b"/>
+    <ellipse cx="170" cy="335" rx="16" ry="8" fill="#2d5a1b"/>
+  </svg>`),
+
+  // Charmander-style
+  charmander: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <rect width="300" height="400" fill="#1a0800"/>
+    <ellipse cx="150" cy="260" rx="80" ry="70" fill="#e8621a"/>
+    <ellipse cx="150" cy="255" rx="75" ry="65" fill="#f07030"/>
+    <ellipse cx="115" cy="272" rx="16" ry="10" fill="#c8501a"/>
+    <ellipse cx="185" cy="272" rx="16" ry="10" fill="#c8501a"/>
+    <ellipse cx="150" cy="170" rx="52" ry="55" fill="#f07030"/>
+    <ellipse cx="150" cy="175" rx="40" ry="38" fill="#fde8d8"/>
+    <circle cx="130" cy="160" r="13" fill="#1a0800"/><circle cx="130" cy="160" r="10" fill="#f39c12"/><circle cx="127" cy="157" r="4" fill="white"/>
+    <circle cx="170" cy="160" r="13" fill="#1a0800"/><circle cx="170" cy="160" r="10" fill="#f39c12"/><circle cx="167" cy="157" r="4" fill="white"/>
+    <path d="M138 188 L145 192 L155 192 L162 188" stroke="#c8501a" stroke-width="2" fill="none"/>
+    <ellipse cx="126" cy="148" rx="8" ry="5" fill="#f8c0a0" transform="rotate(-15 126 148)"/>
+    <ellipse cx="174" cy="148" rx="8" ry="5" fill="#f8c0a0" transform="rotate(15 174 148)"/>
+    <path d="M200 340 Q230 310 225 275 Q215 300 195 315Z" fill="#c8501a"/>
+    <ellipse cx="225" cy="270" rx="12" ry="18" fill="#e8621a"/>
+    <path d="M215 255 Q228 240 235 258 Q240 235 228 228 Q222 248 215 255Z" fill="#ff6b00"/>
+    <path d="M220 252 Q230 240 235 255" fill="#ff9a00"/>
+    <path d="M225 250 Q232 242 236 253" fill="#ffcc00"/>
+    <ellipse cx="108" cy="308" rx="16" ry="9" fill="#c8501a"/>
+    <ellipse cx="192" cy="308" rx="16" ry="9" fill="#c8501a"/>
+    <ellipse cx="125" cy="328" rx="14" ry="7" fill="#b04010"/>
+    <ellipse cx="175" cy="328" rx="14" ry="7" fill="#b04010"/>
+  </svg>`),
+
+  // Squirtle-style
+  squirtle: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <rect width="300" height="400" fill="#001520"/>
+    <ellipse cx="150" cy="255" rx="78" ry="70" fill="#1a7a9a"/>
+    <ellipse cx="150" cy="250" rx="72" ry="64" fill="#2596be"/>
+    <ellipse cx="150" cy="252" rx="58" ry="50" fill="#1a6a8a"/>
+    <path d="M92 250 Q95 220 110 215 Q112 235 108 252Z" fill="#1a7a9a"/>
+    <path d="M208 250 Q205 220 190 215 Q188 235 192 252Z" fill="#1a7a9a"/>
+    <ellipse cx="150" cy="165" rx="50" ry="52" fill="#2596be"/>
+    <ellipse cx="150" cy="172" rx="38" ry="36" fill="#e8f8ff"/>
+    <circle cx="132" cy="158" r="13" fill="#001520"/><circle cx="132" cy="158" r="10" fill="#1a90d0"/><circle cx="129" cy="155" r="4" fill="white"/>
+    <circle cx="168" cy="158" r="13" fill="#001520"/><circle cx="168" cy="158" r="10" fill="#1a90d0"/><circle cx="165" cy="155" r="4" fill="white"/>
+    <path d="M137 185 Q150 192 163 185" stroke="#1a6a8a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M150 300 Q170 320 175 350 Q150 360 125 350 Q130 320 150 300Z" fill="#1a6a8a"/>
+    <ellipse cx="108" cy="308" rx="18" ry="10" fill="#1a7a9a"/>
+    <ellipse cx="192" cy="308" rx="18" ry="10" fill="#1a7a9a"/>
+    <ellipse cx="120" cy="330" rx="15" ry="8" fill="#1a6a8a"/>
+    <ellipse cx="180" cy="330" rx="15" ry="8" fill="#1a6a8a"/>
+  </svg>`),
+
+  // Gengar-style
+  gengar: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <rect width="300" height="400" fill="#0a0015"/>
+    <ellipse cx="150" cy="280" rx="110" ry="60" fill="#3d1a6b"/>
+    <path d="M40 340 Q60 280 80 300 Q100 260 120 290 Q140 245 150 280 Q160 245 180 290 Q200 260 220 300 Q240 280 260 340Z" fill="#3d1a6b"/>
+    <ellipse cx="150" cy="210" rx="80" ry="75" fill="#6b35b8"/>
+    <ellipse cx="150" cy="205" rx="76" ry="70" fill="#7c3aed"/>
+    <circle cx="120" cy="195" r="18" fill="#0a0015"/><circle cx="120" cy="195" r="14" fill="#ff4444"/><circle cx="114" cy="190" r="6" fill="white"/>
+    <circle cx="180" cy="195" r="18" fill="#0a0015"/><circle cx="180" cy="195" r="14" fill="#ff4444"/><circle cx="174" cy="190" r="6" fill="white"/>
+    <path d="M118 225 Q135 238 165 235 Q155 248 145 248 Q135 248 118 225Z" fill="#0a0015"/>
+    <ellipse cx="135" cy="232" rx="5" ry="7" fill="#ff6666"/>
+    <ellipse cx="150" cy="235" rx="5" ry="7" fill="#ff6666"/>
+    <ellipse cx="165" cy="232" rx="5" ry="7" fill="#ff6666"/>
+    <path d="M80 210 Q65 185 78 195 M70 215 Q52 195 68 202" stroke="#6b35b8" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M220 210 Q235 185 222 195 M230 215 Q248 195 232 202" stroke="#6b35b8" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="50" cy="160" r="4" fill="#a855f7" opacity="0.5"/>
+    <circle cx="248" cy="150" r="3" fill="#c084fc" opacity="0.4"/>
+  </svg>`),
+
+  // Snorlax-style
+  snorlax: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <rect width="300" height="400" fill="#0d0d1a"/>
+    <ellipse cx="150" cy="290" rx="105" ry="85" fill="#3a3a6b"/>
+    <ellipse cx="150" cy="285" rx="100" ry="80" fill="#4a4a8a"/>
+    <ellipse cx="150" cy="275" rx="80" ry="65" fill="#f5e6c8"/>
+    <ellipse cx="150" cy="175" rx="65" ry="60" fill="#4a4a8a"/>
+    <ellipse cx="150" cy="178" rx="58" ry="52" fill="#5858a0"/>
+    <path d="M95 185 Q110 210 150 215 Q190 210 205 185" fill="#f5e6c8"/>
+    <ellipse cx="150" cy="200" rx="45" ry="32" fill="#f5e6c8"/>
+    <path d="M118 175 Q130 168 142 175" stroke="#3a3a6b" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M158 175 Q170 168 182 175" stroke="#3a3a6b" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M125 205 Q150 218 175 205" stroke="#c8a878" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="115" cy="173" rx="10" ry="6" fill="#8888c0" transform="rotate(-10 115 173)"/>
+    <ellipse cx="185" cy="173" rx="10" ry="6" fill="#8888c0" transform="rotate(10 185 173)"/>
+    <ellipse cx="96" cy="315" rx="22" ry="13" fill="#3a3a6b"/>
+    <ellipse cx="204" cy="315" rx="22" ry="13" fill="#3a3a6b"/>
+    <ellipse cx="108" cy="340" rx="20" ry="10" fill="#2d2d5a"/>
+    <ellipse cx="192" cy="340" rx="20" ry="10" fill="#2d2d5a"/>
+    <path d="M100 230 Q80 220 70 240" stroke="#3a3a6b" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M200 230 Q220 220 230 240" stroke="#3a3a6b" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </svg>`),
+
+  // Pikachu-style
+  pikachu: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <rect width="300" height="400" fill="#0a0a00"/>
+    <ellipse cx="150" cy="270" rx="80" ry="68" fill="#f0c010"/>
+    <ellipse cx="150" cy="265" rx="75" ry="63" fill="#f8d020"/>
+    <ellipse cx="108" cy="278" rx="14" ry="9" fill="#d8a000"/>
+    <ellipse cx="192" cy="278" rx="14" ry="9" fill="#d8a000"/>
+    <ellipse cx="150" cy="175" rx="58" ry="55" fill="#f8d020"/>
+    <circle cx="128" cy="163" r="13" fill="#0a0a00"/><circle cx="128" cy="163" r="10" fill="#2a2a2a"/><circle cx="125" cy="160" r="4" fill="white"/>
+    <circle cx="172" cy="163" r="13" fill="#0a0a00"/><circle cx="172" cy="163" r="10" fill="#2a2a2a"/><circle cx="169" cy="160" r="4" fill="white"/>
+    <ellipse cx="115" cy="183" rx="12" ry="9" fill="#e8702a"/>
+    <ellipse cx="185" cy="183" rx="12" ry="9" fill="#e8702a"/>
+    <path d="M135 192 Q150 202 165 192" stroke="#c89000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M110 130 Q118 80 128 100 Q132 70 142 95 L148 140Z" fill="#f8d020" stroke="#d8a000" stroke-width="2"/>
+    <path d="M120 78 Q128 60 135 75" fill="#1a1a1a"/>
+    <path d="M190 130 Q182 80 172 100 Q168 70 158 95 L152 140Z" fill="#f8d020" stroke="#d8a000" stroke-width="2"/>
+    <path d="M180 78 Q172 60 165 75" fill="#1a1a1a"/>
+    <path d="M210 250 Q240 230 238 280 Q220 270 210 280Z" fill="#f8d020"/>
+    <path d="M215 248 Q250 220 252 275" stroke="#c89000" stroke-width="2" fill="none"/>
+    <ellipse cx="210" cy="260" rx="8" ry="7" fill="#ffe040" opacity="0.8"/>
+    <ellipse cx="90" cy="260" rx="8" ry="7" fill="#ffe040" opacity="0.8"/>
+    <ellipse cx="108" cy="308" rx="16" ry="9" fill="#d8a000"/>
+    <ellipse cx="192" cy="308" rx="16" ry="9" fill="#d8a000"/>
+    <ellipse cx="125" cy="330" rx="14" ry="7" fill="#c89000"/>
+    <ellipse cx="175" cy="330" rx="14" ry="7" fill="#c89000"/>
+  </svg>`),
+
+  // Mewtwo-style
+  mewtwo: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <rect width="300" height="400" fill="#0e001e"/>
+    <ellipse cx="150" cy="300" rx="50" ry="30" fill="#c0a0d8"/>
+    <path d="M150 300 Q155 250 165 230 Q175 220 178 280Z" fill="#c0a0d8"/>
+    <path d="M140 260 Q100 240 80 280 Q95 290 115 285Z" fill="#c0a0d8"/>
+    <path d="M160 260 Q200 240 220 280 Q205 290 185 285Z" fill="#c0a0d8"/>
+    <ellipse cx="150" cy="210" rx="55" ry="65" fill="#c8b0e0"/>
+    <ellipse cx="150" cy="210" rx="50" ry="60" fill="#d8c0f0"/>
+    <ellipse cx="150" cy="215" rx="38" ry="42" fill="#e8d8f8"/>
+    <circle cx="130" cy="198" r="14" fill="#0e001e"/><circle cx="130" cy="198" r="11" fill="#8040d0"/><circle cx="126" cy="194" r="5" fill="white"/>
+    <circle cx="170" cy="198" r="14" fill="#0e001e"/><circle cx="170" cy="198" r="11" fill="#8040d0"/><circle cx="166" cy="194" r="5" fill="white"/>
+    <path d="M136 225 Q150 234 164 225" stroke="#a080c0" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="118" cy="215" rx="9" ry="6" fill="#c0a0d8" transform="rotate(-15 118 215)"/>
+    <ellipse cx="182" cy="215" rx="9" ry="6" fill="#c0a0d8" transform="rotate(15 182 215)"/>
+    <path d="M150 148 Q148 118 140 108 Q155 115 162 108 Q155 118 150 148Z" fill="#c0a0d8"/>
+    <ellipse cx="150" cy="106" rx="10" ry="7" fill="#a080c0"/>
+    <circle cx="50" cy="180" r="4" fill="#a855f7" opacity="0.45"/>
+    <circle cx="250" cy="170" r="3" fill="#c084fc" opacity="0.4"/>
+  </svg>`),
+
+  // Gyarados-style
+  gyarados: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <rect width="300" height="400" fill="#001030"/>
+    <path d="M50 400 Q80 350 100 300 Q120 250 140 220 Q155 200 150 170" stroke="#0050c0" stroke-width="55" fill="none" stroke-linecap="round"/>
+    <path d="M50 400 Q80 350 100 300 Q120 250 140 220 Q155 200 150 170" stroke="#0070e8" stroke-width="45" fill="none" stroke-linecap="round"/>
+    <path d="M250 380 Q230 320 210 280 Q185 240 170 215 Q158 198 150 170" stroke="#0050c0" stroke-width="35" fill="none" stroke-linecap="round"/>
+    <path d="M250 380 Q230 320 210 280 Q185 240 170 215 Q158 198 150 170" stroke="#0070e8" stroke-width="25" fill="none" stroke-linecap="round"/>
+    <ellipse cx="150" cy="145" rx="42" ry="38" fill="#0050c0"/>
+    <ellipse cx="150" cy="142" rx="38" ry="34" fill="#0070e8"/>
+    <circle cx="130" cy="132" r="13" fill="#001030"/><circle cx="130" cy="132" r="10" fill="#ff4444"/><circle cx="126" cy="128" r="4" fill="white"/>
+    <circle cx="170" cy="132" r="13" fill="#001030"/><circle cx="170" cy="132" r="10" fill="#ff4444"/><circle cx="166" cy="128" r="4" fill="white"/>
+    <path d="M122 158 L140 165 L160 165 L178 158" fill="#001030"/>
+    <ellipse cx="130" cy="162" rx="6" ry="8" fill="#ff2222"/>
+    <ellipse cx="150" cy="164" rx="6" ry="8" fill="#ff2222"/>
+    <ellipse cx="170" cy="162" rx="6" ry="8" fill="#ff2222"/>
+    <path d="M130 105 Q135 75 145 85 Q148 65 152 80 Q158 70 160 90 Q165 78 155 105Z" fill="#0070e8"/>
+    <circle cx="60" cy="200" r="4" fill="#4090ff" opacity="0.4"/>
+    <circle cx="240" cy="220" r="3" fill="#0070e8" opacity="0.5"/>
+  </svg>`),
+
+  // Eevee-style
+  eevee: ()=> svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+    <rect width="300" height="400" fill="#1a0a00"/>
+    <ellipse cx="150" cy="275" rx="75" ry="65" fill="#8b5a2b"/>
+    <ellipse cx="150" cy="270" rx="70" ry="60" fill="#a06030"/>
+    <ellipse cx="108" cy="278" rx="14" ry="9" fill="#7a4010"/>
+    <ellipse cx="192" cy="278" rx="14" ry="9" fill="#7a4010"/>
+    <ellipse cx="150" cy="325" rx="55" ry="35" fill="#c8a870"/>
+    <ellipse cx="150" cy="175" rx="58" ry="55" fill="#a06030"/>
+    <ellipse cx="150" cy="178" rx="52" ry="48" fill="#b07040"/>
+    <ellipse cx="150" cy="182" rx="38" ry="32" fill="#f5e0c0"/>
+    <circle cx="128" cy="165" r="14" fill="#1a0a00"/><circle cx="128" cy="165" r="11" fill="#4a2a00"/><circle cx="124" cy="161" r="5" fill="white"/>
+    <circle cx="172" cy="165" r="14" fill="#1a0a00"/><circle cx="172" cy="165" r="11" fill="#4a2a00"/><circle cx="168" cy="161" r="5" fill="white"/>
+    <path d="M136 192 Q150 202 164 192" stroke="#8b5a2b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="125" cy="184" rx="10" ry="7" fill="#e8b0a0" transform="rotate(-10 125 184)"/>
+    <ellipse cx="175" cy="184" rx="10" ry="7" fill="#e8b0a0" transform="rotate(10 175 184)"/>
+    <path d="M122 130 Q115 80 130 100 Q135 72 142 95 L148 140Z" fill="#a06030" stroke="#7a4010" stroke-width="1.5"/>
+    <ellipse cx="128" cy="90" rx="9" ry="12" fill="#f5e0c0"/>
+    <path d="M178 130 Q185 80 170 100 Q165 72 158 95 L152 140Z" fill="#a06030" stroke="#7a4010" stroke-width="1.5"/>
+    <ellipse cx="172" cy="90" rx="9" ry="12" fill="#f5e0c0"/>
+    <path d="M150 290 Q165 310 180 350 Q150 365 120 350 Q135 310 150 290Z" fill="#a06030"/>
+    <ellipse cx="108" cy="308" rx="18" ry="10" fill="#8b5a2b"/>
+    <ellipse cx="192" cy="308" rx="18" ry="10" fill="#8b5a2b"/>
+    <ellipse cx="118" cy="330" rx="15" ry="8" fill="#7a4010"/>
+    <ellipse cx="182" cy="330" rx="15" ry="8" fill="#7a4010"/>
+  </svg>`),
+
 };
 
 // Named list for random picking
@@ -2193,10 +2404,10 @@ function renderProfile(n){
       <div class="pv2-banner-bottom"></div>
       <div class="pv2-avatar" style="border-color:${c}">${avContent}</div>
       <div style="position:absolute;left:148px;top:50%;transform:translateY(-50%)">
-        <div style="font-family:'Cinzel',serif;font-size:22px;color:var(--white);text-shadow:0 2px 8px rgba(0,0,0,0.8)">${n}</div>
+        <div style="font-family:'Cinzel',serif;font-size:26px;color:var(--white);text-shadow:0 2px 8px rgba(0,0,0,0.8)">${n}</div>
         ${gn!==n?`<div style="font-size:12px;color:var(--teal);margin-top:2px">🎮 ${gn}</div>`:''}
-        <div style="font-size:11px;color:${mmrData.color};margin-top:4px;font-weight:700">${mmrData.rank} · ${mmrData.mmr} MMR</div>
-        <div style="font-size:10px;color:var(--silver);margin-top:3px">${g} gier · ${wr}% WR</div>
+        <div style="font-size:14px;color:${mmrData.color};margin-top:4px;font-weight:700">${mmrData.rank} · ${mmrData.mmr} MMR</div>
+        <div style="font-size:12px;color:var(--silver);margin-top:4px">${g} gier · ${wr}% WR</div>
       </div>
       <button class="pv2-settings-btn" onclick="toggleProfSettings('${n}')">⚙ Ustawienia</button>
     </div>
@@ -2240,8 +2451,8 @@ function renderProfile(n){
       </div>
       <div class="pv2-chart-cell" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
         ${rankEmblem(mmrData.tier,mmrData.color,56)}
-        <div style="font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:${mmrData.color};margin-top:2px">${mmrData.rank}</div>
-        <div style="font-size:13px;color:var(--gold);font-weight:600">${mmrData.mmr} MMR</div>
+        <div style="font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:${mmrData.color};margin-top:2px">${mmrData.rank}</div>
+        <div style="font-size:15px;color:var(--gold);font-weight:600">${mmrData.mmr} MMR</div>
         <div style="width:80%;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
           <div style="height:100%;background:${mmrData.color};border-radius:3px;width:${Math.min(100,((mmrData.mmr%20)/20)*100)}%;transition:width 0.5s"></div>
         </div>
@@ -2260,14 +2471,14 @@ function renderProfile(n){
         <div class="pv2-section-title">Najlepiej z</div>
         ${bestWith.length?bestWith.map(sy=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
           <div class="lbav" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15;width:26px;height:26px;font-size:9px">${ini(sy.n)}</div>
-          <span style="flex:1;font-size:12px;font-weight:600">${sy.n}</span>
+          <span style="flex:1;font-size:14px;font-weight:600">${sy.n}</span>
           <span style="font-size:11px;color:${sy.wr>=60?'var(--success)':sy.wr>=45?'var(--gold)':'var(--danger)'};font-weight:700">${sy.wr}%</span>
         </div>`).join(''):'<div style="font-size:11px;color:var(--silver)">—</div>'}
 
         <div class="pv2-section-title" style="margin-top:16px">Najtrudniej z</div>
         ${hardest.length?hardest.map(sy=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
           <div class="lbav" style="border-color:${PC[sy.n]||'#C8AA6E'}55;color:${PC[sy.n]||'#C8AA6E'};background:${PC[sy.n]||'#C8AA6E'}15;width:26px;height:26px;font-size:9px">${ini(sy.n)}</div>
-          <span style="flex:1;font-size:12px;font-weight:600">${sy.n}</span>
+          <span style="flex:1;font-size:14px;font-weight:600">${sy.n}</span>
           <span style="font-size:11px;color:${sy.wr>=60?'var(--success)':sy.wr>=45?'var(--gold)':'var(--danger)'};font-weight:700">${sy.wr}%</span>
         </div>`).join(''):'<div style="font-size:11px;color:var(--silver)">—</div>'}
       </div>
@@ -2290,13 +2501,13 @@ function renderProfile(n){
             </div>
             ${champKey?('<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+champKey+'.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">'):'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--silver)">'+(RI[roleInM]||'')+'</div>'}
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:600">${champs?.[roleInM]||'—'} <span style="color:var(--silver);font-size:10px;font-weight:400">${RI[roleInM]||''} ${roleInM.toUpperCase()}</span></div>
-              <div style="font-size:10px;color:var(--silver);margin-top:2px">z: ${allies.join(', ')||'—'}</div>
+              <div style="font-size:14px;font-weight:600">${champs?.[roleInM]||'—'} <span style="color:var(--silver);font-size:10px;font-weight:400">${RI[roleInM]||''} ${roleInM.toUpperCase()}</span></div>
+              <div style="font-size:12px;color:var(--silver);margin-top:3px">z: ${allies.join(', ')||'—'}</div>
             </div>
             <div style="text-align:right;flex-shrink:0;min-width:70px">
-              <div style="font-size:10px;color:var(--silver)">${m.date}</div>
-              <div style="font-size:9px;color:rgba(160,180,200,0.4)">P${m.patch}</div>
-              <div style="font-size:9px;color:${inB?'#5DADE2':'#E84855'}">${inB?'LEWA':'PRAWA'}</div>
+              <div style="font-size:12px;color:var(--silver)">${m.date}</div>
+              <div style="font-size:11px;color:rgba(160,180,200,0.4)">P${m.patch}</div>
+              <div style="font-size:11px;color:${inB?'#5DADE2':'#E84855'}">${inB?'LEWA':'PRAWA'}</div>
             </div>
           </div>`;
         }).join(''):'<div style="font-size:11px;color:var(--silver)">Brak gier w historii.</div>'}
