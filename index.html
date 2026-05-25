@@ -742,6 +742,46 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 
 </div><!-- /app -->
 
+<!-- MATCH DETAIL POPUP -->
+<div id="matchDetailModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeMatchDetail()">
+  <div class="modal-box" style="width:min(780px,96vw);max-height:92vh;overflow-y:auto;padding:0">
+    <!-- Header -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;position:sticky;top:0;background:rgba(8,18,36,0.98);backdrop-filter:blur(8px);z-index:2">
+      <div id="mdResult" style="font-size:18px;font-weight:800;letter-spacing:1px"></div>
+      <div style="flex:1">
+        <div id="mdTitle" style="font-family:'Cinzel',serif;font-size:15px;color:var(--gold)"></div>
+        <div id="mdMeta" style="font-size:12px;color:var(--silver);margin-top:2px"></div>
+      </div>
+      <button class="btn dbtn" style="padding:4px 12px;font-size:12px" onclick="closeMatchDetail()">✕</button>
+    </div>
+
+    <!-- Teams grid -->
+    <div id="mdTeams" style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border)"></div>
+
+    <!-- Screenshot + champion edit -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+      <!-- Left: Screenshot -->
+      <div style="padding:16px;border-right:1px solid var(--border)">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);margin-bottom:10px">Screenshot</div>
+        <div id="mdImgWrap" style="min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+          <div id="mdImgPreview" style="width:100%;border-radius:6px;overflow:hidden;display:none">
+            <img id="mdImg" src="" style="width:100%;border-radius:6px;cursor:pointer" onclick="window.open(this.src,'_blank')">
+          </div>
+          <div id="mdImgEmpty" style="text-align:center;color:var(--silver);font-size:12px;opacity:0.5">Brak screenshota</div>
+          <input id="mdImgUrl" class="ss" style="width:100%;font-size:12px;margin-top:6px" placeholder="Wklej URL screenshota...">
+          <button class="btn tbtn" style="width:100%;justify-content:center;font-size:12px" onclick="saveMatchImg()">💾 Zapisz URL</button>
+        </div>
+      </div>
+      <!-- Right: Edit champions -->
+      <div style="padding:16px">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);margin-bottom:10px">Edytuj Championów</div>
+        <div id="mdChampEdit" style="display:flex;flex-direction:column;gap:6px"></div>
+        <button class="btn primary" style="width:100%;justify-content:center;font-size:12px;margin-top:12px" onclick="saveMatchChamps()">💾 Zapisz postacie</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- AVATAR TOOL MODAL -->
 <div id="avatarToolModal" class="modal-overlay" style="display:none">
   <div class="modal-box" style="width:min(600px,96vw);max-height:90vh;display:flex;flex-direction:column">
@@ -2340,17 +2380,20 @@ const RANK_COLORS={Iron:'#8B8B8B',Bronze:'#CD7F32',Silver:'#C0C0C0',Gold:'#FFD70
 
 function calcMMR(n){
   const matches=MH.filter(m=>Object.values(m.blue).includes(n)||Object.values(m.red).includes(n));
-  let mmr=MMR_BASE; // everyone starts at Silver IV
+  let mmr=MMR_BASE;
   matches.forEach(m=>{
     const inBlue=Object.values(m.blue).includes(n);
     const won=(inBlue&&m.win==='LEWA')||(!inBlue&&m.win==='PRAWA');
     mmr+=won?MMR_WIN:-MMR_LOSS;
   });
   mmr=Math.max(0,mmr);
-  let rank=RANK_TIERS[0];
-  for(const t of RANK_TIERS){if(mmr>=t.mmr)rank=t;else break;}
+  let rankIdx=0;
+  for(let i=0;i<RANK_TIERS.length;i++){if(mmr>=RANK_TIERS[i].mmr)rankIdx=i;else break;}
+  const rank=RANK_TIERS[rankIdx];
+  const nextRank=RANK_TIERS[rankIdx+1]||null;
+  const toNext=nextRank?nextRank.mmr-mmr:0;
   const tier=rank.name.split(' ')[0];
-  return{mmr,rank:rank.name,color:RANK_COLORS[tier]||'#C8AA6E',tier};
+  return{mmr,rank:rank.name,color:RANK_COLORS[tier]||'#C8AA6E',tier,toNext,nextRank:nextRank?.name||null};
 }
 
 // ── DONUT PIE CHART (role distribution) ────────────────────────────────────
@@ -2626,7 +2669,7 @@ function renderProfile(n){
         <div style="width:80%;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
           <div style="height:100%;background:${mmrData.color};border-radius:3px;width:${Math.min(100,((mmrData.mmr%40)/40)*100)}%;transition:width 0.5s"></div>
         </div>
-        <div style="font-size:13px;color:var(--silver);opacity:0.55">+20 W · -20 L · start: Silver IV</div>
+        <div style="font-size:13px;color:var(--silver);opacity:0.7">${mmrData.nextRank?mmrData.toNext+' MMR do '+mmrData.nextRank:'MAX RANK 🏆'}</div>
       </div>
       <div class="pv2-chart-cell">
         <div class="pv2-chart-label">Rozkład ról</div>
@@ -2676,7 +2719,7 @@ function renderProfile(n){
           const champKey=(champs?.[roleInM]||m.scanResult?.[n]?.champ||'').replace(/[' ]/g,'').replace(/\./g,'');
           const allies=Object.values(team).filter(x=>x&&x!==n);
           const enemyList=Object.values(enemies).filter(x=>x);
-          return `<div class="pv2-match ${won?'pv2-win':'pv2-loss'}">
+          return `<div class="pv2-match ${won?'pv2-win':'pv2-loss'}" onclick="openMatchDetail('${m.gid}')" style="cursor:pointer">
             <div style="width:32px;text-align:center;flex-shrink:0">
               <div style="font-size:15px;font-weight:800;color:${won?'#5DADE2':'#E84855'}">${won?'W':'L'}</div>
               <div style="font-size:12px;color:var(--silver)">#${m.gid}</div>
@@ -2826,7 +2869,7 @@ function renderHist(){
     const blueLabelColor=blueWin?'#5DADE2':'rgba(93,173,226,0.35)';
     const redLabelColor=blueWin?'rgba(232,72,85,0.35)':'#E84855';
 
-    return `<div class="match-card" style="border-left:4px solid ${blueWin?'#5DADE2':'#E84855'}">
+    return `<div class="match-card" style="border-left:4px solid ${blueWin?'#5DADE2':'#E84855'};cursor:pointer" onclick="openMatchDetail('${m.gid}')">
       <div style="width:18px;flex-shrink:0;background:${blueBg};display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(93,173,226,0.12)">
         <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:800;letter-spacing:2px;color:${blueLabelColor};text-transform:uppercase;white-space:nowrap">${blueWin?'✓ ':''} LEWA</div>
       </div>
@@ -3373,6 +3416,149 @@ function openAvatarTool(){
   renderAvatarToolList();
 }
 function closeAvatarTool(){ document.getElementById('avatarToolModal').style.display='none'; }
+
+// =====================================================================
+// MATCH DETAIL POPUP
+// =====================================================================
+let currentMatchGid=null;
+
+function openMatchDetail(gid){
+  const m=MH.find(x=>x.gid===String(gid));
+  if(!m)return;
+  currentMatchGid=String(gid);
+
+  const blueWin=m.win==='LEWA';
+  document.getElementById('matchDetailModal').style.display='flex';
+
+  // Header
+  document.getElementById('mdResult').innerHTML=
+    `<span style="color:${blueWin?'#5DADE2':'#E84855'}">${m.win}</span> <span style="color:var(--silver);font-size:14px">wygrała</span>`;
+  document.getElementById('mdTitle').textContent='Mecz #'+m.gid;
+  document.getElementById('mdMeta').textContent=m.date+' · Patch '+m.patch;
+
+  // Teams
+  const blueChamps=m.blueChamps||{};const redChamps=m.redChamps||{};
+  function teamCol(team,champs,side,won){
+    const bg=won?side==='blue'?'rgba(93,173,226,0.08)':'rgba(232,72,85,0.08)':'rgba(0,0,0,0.1)';
+    const color=side==='blue'?'#5DADE2':'#E84855';
+    const label=side==='blue'?'LEWA':'PRAWA';
+    return `<div style="padding:16px;background:${bg}">
+      <div style="font-size:11px;letter-spacing:2px;font-weight:700;color:${color};margin-bottom:10px">${label} ${won?'✓':''}</div>
+      ${(['top','jng','mid','adc','supp']).map(role=>{
+        const name=team[role];if(!name)return'';
+        const champ=champs[role]||'';
+        const champKey=champ.replace(/[' ]/g,'').replace(/\./g,'');
+        const c=PC[name]||'#C8AA6E';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          ${champKey?'<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+champKey+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+            :'<div style="width:30px;height:30px;border-radius:5px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--silver)">'+RI[role]+'</div>'}
+          <span style="font-size:14px;font-weight:700;color:${c};min-width:70px">${name}</span>
+          <span style="font-size:12px;color:var(--gold)">${champ||'—'}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  document.getElementById('mdTeams').innerHTML=
+    teamCol(m.blue,blueChamps,'blue',blueWin)+
+    teamCol(m.red,redChamps,'red',!blueWin);
+
+  // Screenshot
+  const imgEl=document.getElementById('mdImg');
+  const imgPreview=document.getElementById('mdImgPreview');
+  const imgEmpty=document.getElementById('mdImgEmpty');
+  const imgInput=document.getElementById('mdImgUrl');
+  if(m.imgUrl){
+    imgEl.src=m.imgUrl;imgPreview.style.display='block';imgEmpty.style.display='none';
+    imgInput.value=m.imgUrl;
+  } else {
+    imgPreview.style.display='none';imgEmpty.style.display='block';
+    imgInput.value='';
+  }
+
+  // Champion edit form
+  const allChamps=[...new Set(Object.values(CHAMPS).flat())].sort();
+  const datalist='<datalist id="mdChampList">'+allChamps.map(c=>`<option value="${c}">`).join('')+'</datalist>';
+  const editRows=['blue','red'].map(side=>{
+    const team=side==='blue'?m.blue:m.red;
+    const champs=side==='blue'?blueChamps:redChamps;
+    const color=side==='blue'?'#5DADE2':'#E84855';
+    return `<div style="font-size:11px;color:${color};letter-spacing:1px;margin-bottom:4px">${side==='blue'?'LEWA':'PRAWA'}</div>`+
+      ['top','jng','mid','adc','supp'].map(role=>{
+        const name=team[role];if(!name)return'';
+        const c=PC[name]||'#C8AA6E';
+        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="font-size:11px;font-weight:600;color:${c};min-width:60px">${name}</span>
+          <input id="mce_${side}_${role}" class="ss" style="flex:1;font-size:11px;padding:4px 7px"
+            value="${champs[role]||''}" placeholder="${role.toUpperCase()}..." list="mdChampList">
+        </div>`;
+      }).join('');
+  }).join('<div style="height:8px"></div>');
+  document.getElementById('mdChampEdit').innerHTML=datalist+editRows;
+}
+
+function closeMatchDetail(){
+  document.getElementById('matchDetailModal').style.display='none';
+  currentMatchGid=null;
+}
+
+function saveMatchImg(){
+  const url=document.getElementById('mdImgUrl')?.value.trim()||'';
+  const m=MH.find(x=>x.gid===currentMatchGid);
+  if(!m)return;
+  m.imgUrl=url||undefined;
+  // Update preview
+  const imgEl=document.getElementById('mdImg');
+  const imgPreview=document.getElementById('mdImgPreview');
+  const imgEmpty=document.getElementById('mdImgEmpty');
+  if(url){imgEl.src=url;imgPreview.style.display='block';imgEmpty.style.display='none';}
+  else{imgPreview.style.display='none';imgEmpty.style.display='block';}
+  renderHist();
+  toast('Screenshot zapisany!');
+  gsWrite(m).catch(()=>{});
+}
+
+function saveMatchChamps(){
+  const m=MH.find(x=>x.gid===currentMatchGid);
+  if(!m)return;
+  const blueChamps={};const redChamps={};
+  ['top','jng','mid','adc','supp'].forEach(role=>{
+    const bv=document.getElementById('mce_blue_'+role)?.value.trim()||'';
+    const rv=document.getElementById('mce_red_'+role)?.value.trim()||'';
+    if(bv)blueChamps[role]=bv;
+    if(rv)redChamps[role]=rv;
+  });
+  if(Object.keys(blueChamps).length)m.blueChamps=blueChamps;
+  if(Object.keys(redChamps).length)m.redChamps=redChamps;
+  // Refresh teams display in modal
+  const blueWin=m.win==='LEWA';
+  function teamCol(team,champs,side,won){
+    const bg=won?side==='blue'?'rgba(93,173,226,0.08)':'rgba(232,72,85,0.08)':'rgba(0,0,0,0.1)';
+    const color=side==='blue'?'#5DADE2':'#E84855';
+    const label=side==='blue'?'LEWA':'PRAWA';
+    return `<div style="padding:16px;background:${bg}">
+      <div style="font-size:11px;letter-spacing:2px;font-weight:700;color:${color};margin-bottom:10px">${label} ${won?'✓':''}</div>
+      ${(['top','jng','mid','adc','supp']).map(role=>{
+        const name=team[role];if(!name)return'';
+        const champ=champs[role]||'';
+        const champKey=champ.replace(/[' ]/g,'').replace(/\./g,'');
+        const c=PC[name]||'#C8AA6E';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          ${champKey?'<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+champKey+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+            :'<div style="width:30px;height:30px;border-radius:5px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--silver)">'+RI[role]+'</div>'}
+          <span style="font-size:14px;font-weight:700;color:${c};min-width:70px">${name}</span>
+          <span style="font-size:12px;color:var(--gold)">${champ||'—'}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  document.getElementById('mdTeams').innerHTML=
+    teamCol(m.blue,m.blueChamps||{},'blue',blueWin)+
+    teamCol(m.red,m.redChamps||{},'red',!blueWin);
+  renderHist();
+  if(selPr)renderProfile(selPr);
+  toast('Postacie zapisane!');
+  gsWrite(m).catch(()=>{});
+}
 
 function renderAvatarToolList(){
   const list=document.getElementById('avatarToolList');
