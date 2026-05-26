@@ -2297,13 +2297,14 @@ function exportCSV(){
 // =====================================================================
 function renderAliases(){
   const el=document.getElementById('aliasGrid');
+  if(!el)return; // aliasGrid page removed — no-op
   el.innerHTML=AP.map(n=>{
     const gn=ALIASES[n]||'';const c=PC[n]||'#C8AA6E';
     return `<div class="alias-card">
       <div class="av av32" style="border-color:${c}55;color:${c};background:${c}15;overflow:hidden;position:relative">
         ${(PLAYER_META[n]||{}).avatarUrl
-          ?`<img src="${PLAYER_META[n].avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">`
-          :`${ini(n)}`}
+          ?'<img src="'+PLAYER_META[n].avatarUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\'">'
+          :ini(n)}
       </div>
       <div style="flex:1">
         <div style="font-size:16px;font-weight:600;margin-bottom:4px">${n}</div>
