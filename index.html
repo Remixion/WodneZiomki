@@ -179,6 +179,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .pv2-selector:hover{border-color:var(--teal);box-shadow:0 0 12px rgba(11,196,227,0.15)}
 .pv2-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:rgba(8,18,36,0.98);border:1px solid var(--border);border-radius:8px;padding:10px;max-height:320px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;animation:pv2SlideDown 0.22s ease}
 .pv2-dropdown.open{display:block}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 @keyframes pv2SlideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 .pv2-player-opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background 0.15s}
 .pv2-player-opt:hover{background:rgba(200,170,110,0.07)}
@@ -759,16 +760,16 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
     <div id="mdTeams" style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border)"></div>
 
     <!-- Screenshot + champion edit -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:0">
       <!-- Left: Screenshot -->
       <div style="padding:16px;border-right:1px solid var(--border)">
         <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--silver);margin-bottom:10px">Screenshot</div>
-        <div id="mdImgWrap" style="min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
-          <div id="mdImgPreview" style="width:100%;border-radius:6px;overflow:hidden;display:none">
-            <img id="mdImg" src="" style="width:100%;border-radius:6px;cursor:pointer" onclick="window.open(this.src,'_blank')">
+        <div id="mdImgWrap" style="min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+          <div id="mdImgPreview" style="width:100%;border-radius:8px;overflow:hidden;display:none">
+            <img id="mdImg" src="" style="width:100%;max-height:420px;object-fit:contain;border-radius:8px;cursor:zoom-in;display:block" onclick="window.open(this.src,'_blank')" title="Kliknij aby otworzyć w pełnym rozmiarze">
           </div>
-          <div id="mdImgEmpty" style="text-align:center;color:var(--silver);font-size:12px;opacity:0.5">Brak screenshota</div>
-          <input id="mdImgUrl" class="ss" style="width:100%;font-size:12px;margin-top:6px" placeholder="Wklej URL screenshota...">
+          <div id="mdImgEmpty" style="text-align:center;color:var(--silver);font-size:13px;opacity:0.5;padding:30px 0">📷 Brak screenshota</div>
+          <input id="mdImgUrl" class="ss" style="width:100%;font-size:12px;margin-top:4px" placeholder="Wklej URL screenshota...">
           <button class="btn tbtn" style="width:100%;justify-content:center;font-size:12px" onclick="saveMatchImg()">💾 Zapisz URL</button>
         </div>
       </div>
@@ -1070,11 +1071,33 @@ function init(){
   renderDraftTeams();
   renderRS();renderStats();renderHist();renderAliases();buildScanGrid();
   updateDraftCounts();
-  // Always refresh Sheets on load (silent), then also sync GitHub player data
-  gsFetch(true).then(()=>{
-    // After Sheets loaded, also sync GitHub for player colors/aliases
-    if(GH_CONFIG.owner && GH_CONFIG.repo) ghFetchData(true);
-  });
+  // Delay Sheets fetch slightly so page renders first, then fetch data
+  showSheetsLoading(true);
+  setTimeout(async ()=>{
+    const ok=await gsFetch(true);
+    if(!ok){
+      // Retry once after 2s if first attempt failed
+      setTimeout(async ()=>{
+        await gsFetch(true);
+        showSheetsLoading(false);
+        if(GH_CONFIG.owner&&GH_CONFIG.repo) ghFetchData(true);
+      }, 2000);
+    } else {
+      showSheetsLoading(false);
+      if(GH_CONFIG.owner&&GH_CONFIG.repo) ghFetchData(true);
+    }
+  }, 400);
+}
+
+function showSheetsLoading(on){
+  // Show subtle loading indicator in history header
+  const hdr=document.getElementById('histhdr');
+  if(!hdr)return;
+  if(on){
+    hdr.innerHTML='Historia meczy <span id="sheetsLoadingBadge" style="font-size:11px;color:var(--teal);animation:pulse 1.2s infinite">⟳ wczytywanie...</span>';
+  } else {
+    document.getElementById('sheetsLoadingBadge')?.remove();
+  }
 }
 
 // =====================================================================
