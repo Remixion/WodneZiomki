@@ -93,10 +93,26 @@ const CHAMP_DISPLAY={
 };
 
 function champDisplayName(key){return CHAMP_DISPLAY[key]||key;}
+
 function champKey(displayName){
-  // Find Data Dragon key from display name
-  for(const [k,v] of Object.entries(CHAMP_DISPLAY)){if(v===displayName)return k;}
-  return displayName.replace(/[' .\-]/g,'').replace(/&.*/,'');
+  if(!displayName)return'';
+  // First try exact display name lookup
+  for(const [k,v] of Object.entries(CHAMP_DISPLAY)){
+    if(v.toLowerCase()===displayName.toLowerCase())return k;
+  }
+  // Try direct match in ALL_CHAMPS (already a key)
+  const direct=displayName.replace(/['\u2019\u02bc .\-&]/g,'');
+  const found=ALL_CHAMPS.find(k=>k.toLowerCase()===direct.toLowerCase());
+  if(found)return found;
+  // Fallback: strip all special chars
+  return direct;
+}
+
+// Helper used everywhere to get Data Dragon image URL
+function champImgUrl(nameOrKey){
+  if(!nameOrKey)return'';
+  const key=champKey(nameOrKey);
+  return key?'https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+key+'.png':'';
 }
 
 // Fetch full champion list from Data Dragon at startup

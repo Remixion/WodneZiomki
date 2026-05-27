@@ -268,7 +268,31 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .lbbt{width:90px;height:4px;background:rgba(255,255,255,0.09);border-radius:2px;overflow:hidden}
 .lbbf{height:100%;border-radius:2px}
 .lbw{font-size:15px;font-weight:700;min-width:42px;text-align:right}
-/* ── HISTORY V2 — LoL style ─────────────────────────────── */
+/* ── STATS V2 ─────────────────────────────────────────────── */
+.stats-hero{display:grid;grid-template-columns:repeat(6,1fr);gap:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px}
+.stats-hero-cell{padding:18px 8px;text-align:center;border-right:1px solid var(--border);transition:background 0.2s}
+.stats-hero-cell:last-child{border-right:none}
+.stats-hero-cell:hover{background:rgba(200,170,110,0.05)}
+.stats-hero-val{font-family:'Cinzel',serif;font-size:26px;font-weight:700}
+.stats-hero-lbl{font-size:11px;color:var(--silver);margin-top:4px;letter-spacing:1px;text-transform:uppercase}
+.stats-section-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.stats-panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px}
+.stats-panel.wide{grid-column:1/-1}
+/* Player rank row */
+.stats-rank-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;margin-bottom:5px;transition:background 0.15s;cursor:default}
+.stats-rank-row:hover{background:rgba(200,170,110,0.05)}
+.stats-rank-num{font-size:18px;font-weight:900;width:28px;text-align:center;flex-shrink:0}
+.stats-rank-num.r1{color:#FFD700}.stats-rank-num.r2{color:#C0C0C0}.stats-rank-num.r3{color:#CD7F32}
+.stats-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden}
+.stats-bar-fill{height:100%;border-radius:3px;transition:width 0.5s}
+/* Synergy */
+.syn-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.syn-row:last-child{border-bottom:none}
+/* Matchup */
+.matchup-row{display:flex;align-items:center;gap:8px;padding:6px 0}
+/* Mini SVG donut bar */
+.stats-donut-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center} ─────────────────────────────── */
 .hist-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
 .hist-sum-cell{padding:14px 8px;text-align:center;border-right:1px solid var(--border)}
 .hist-sum-cell:last-child{border-right:none}
@@ -764,15 +788,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 
 <!-- STATS -->
 <div class="page" id="page-stats">
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px" id="stop"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-    <div class="panel"><div class="panel-header">Ranking winrate</div><div id="lbwr"></div></div>
-    <div class="panel"><div class="panel-header">Ranking aktywności</div><div id="lbg"></div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-    <div class="panel"><div class="panel-header">Najlepsze synergię (≥2G razem)</div><div id="syt" style="padding:14px"></div></div>
-    <div class="panel"><div class="panel-header">Top KDA (z analizy screenów)</div><div id="kdaTop" style="padding:14px"></div></div>
-  </div>
+  <div id="statsContent"></div>
 </div>
 
 <!-- HISTORY -->
@@ -1231,7 +1247,7 @@ function renderTS(t, animate){
     let bgStyle='';
     let isMonster=false;
     if(ch){
-      const key=ch.replace(/[' ]/g,'').replace(/\./g,'');
+      const key=champKey(ch);
       bgStyle=`background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${key}_0.jpg')`;
     } else if(pid){
       const key=slotMonsters[t][i]||MONSTER_KEYS[0];
@@ -2430,6 +2446,7 @@ function closeProfileSelector(){
 function selProfile(n){
   selPr=n;
   closeProfileSelector();
+  window._profilePage=0;
   renderProfileDropdown();
   const c=PC[n]||'#C8AA6E';
   const meta=PLAYER_META[n]||{};
@@ -2607,6 +2624,15 @@ function donutLeave(el){
 }
 
 
+function setProfilePage(n, page){
+  window._profilePage=Math.max(0,page);
+  renderProfile(n);
+  // Scroll to match history section
+  setTimeout(()=>{
+    document.querySelector('.pv2-main')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },50);
+}
+
 function makePieChart(rg, rw, size=52){
   if(!rg) return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size/2}" cy="${size/2}" r="${size/2-5}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/><text x="${size/2}" y="${size/2+4}" text-anchor="middle" fill="rgba(160,180,200,0.35)" font-size="9" font-family="Rajdhani,sans-serif">—</text></svg>`;
   const pct=Math.round(rw/rg*100);
@@ -2691,7 +2717,11 @@ function renderProfile(n){
   })).sort((a,b)=>b.g-a.g);
 
   // Match history for player
-  const playerMatches=[...matches].reverse().slice(0,20);
+  const MATCHES_PER_PAGE=10;
+  const totalPages=Math.max(1,Math.ceil(matches.length/MATCHES_PER_PAGE));
+  const profilePage=window._profilePage||0;
+  const pageStart=profilePage*MATCHES_PER_PAGE;
+  const playerMatches=[...matches].reverse().slice(pageStart,pageStart+MATCHES_PER_PAGE);
 
   const el=document.getElementById('profileContent');
   el.innerHTML=`<div class="pv2-card">
@@ -2768,10 +2798,10 @@ function renderProfile(n){
       <div class="pv2-sidebar">
         <div class="pv2-section-title">Postacie</div>
         ${champArr.length?champArr.slice(0,8).map(ch=>{
-          const champKey=ch.ch.replace(/[' ]/g,'').replace(/\./g,'');
+          const ck=champKey(ch.ch);
           const wrColor=ch.wr>=60?'var(--success)':ch.wr>=45?'var(--gold)':'var(--danger)';
           return `<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
-            ${champKey?'<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+champKey+'.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+            ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+ck+'.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
               :'<div style="width:28px;height:28px;border-radius:5px;background:rgba(255,255,255,0.08);flex-shrink:0"></div>'}
             <span style="flex:1;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ch.ch}</span>
             <span style="font-size:13px;color:${wrColor};font-weight:700;flex-shrink:0">${ch.wr}%</span>
@@ -2793,7 +2823,14 @@ function renderProfile(n){
         </div>`).join(''):'<div style="font-size:14px;color:var(--silver)">—</div>'}
       </div>
       <div class="pv2-main">
-        <div class="pv2-section-title">Historia gier (${matches.length})</div>
+        <div class="pv2-section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Historia gier (${matches.length})</span>
+          ${totalPages>1?`<div style="display:flex;align-items:center;gap:6px">
+            <button onclick="setProfilePage('${n}',${profilePage-1})" ${profilePage===0?'disabled':''} style="background:none;border:1px solid var(--border);color:var(--silver);padding:2px 8px;border-radius:3px;cursor:pointer;font-size:12px">‹</button>
+            <span style="font-size:12px;color:var(--silver)">${profilePage+1}/${totalPages}</span>
+            <button onclick="setProfilePage('${n}',${profilePage+1})" ${profilePage>=totalPages-1?'disabled':''} style="background:none;border:1px solid var(--border);color:var(--silver);padding:2px 8px;border-radius:3px;cursor:pointer;font-size:12px">›</button>
+          </div>`:''}
+        </div>
         ${playerMatches.length?playerMatches.map(m=>{
           const inB=Object.values(m.blue).includes(n);
           const won=(inB&&m.win==='LEWA')||(!inB&&m.win==='PRAWA');
@@ -2801,7 +2838,7 @@ function renderProfile(n){
           const enemies=inB?m.red:m.blue;
           const champs=inB?m.blueChamps:m.redChamps;
           const roleInM=Object.entries(team).find(([r,p])=>p===n)?.[0]||'?';
-          const champKey=(champs?.[roleInM]||m.scanResult?.[n]?.champ||'').replace(/[' ]/g,'').replace(/\./g,'');
+          const ck=champKey(champs?.[roleInM]||m.scanResult?.[n]?.champ||'');
           const allies=Object.values(team).filter(x=>x&&x!==n);
           const enemyList=Object.values(enemies).filter(x=>x);
           return `<div class="pv2-match ${won?'pv2-win':'pv2-loss'}" onclick="openMatchDetail('${m.gid}')" style="cursor:pointer">
@@ -2809,7 +2846,7 @@ function renderProfile(n){
               <div style="font-size:15px;font-weight:800;color:${won?'#5DADE2':'#E84855'}">${won?'W':'L'}</div>
               <div style="font-size:12px;color:var(--silver)">#${m.gid}</div>
             </div>
-            ${champKey?('<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+champKey+'.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">'):'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--silver)">'+(RI[roleInM]||'')+'</div>'}
+            ${ck?('<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+ck+'.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">'):'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--silver)">'+(RI[roleInM]||'')+'</div>'}
             <div style="flex:1;min-width:0">
               <div style="font-size:17px;font-weight:600">${champs?.[roleInM]||'—'} <span style="color:var(--silver);font-size:13px;font-weight:400">${RI[roleInM]||''} ${roleInM.toUpperCase()}</span></div>
               <div style="font-size:15px;color:var(--silver);margin-top:3px">z: ${allies.join(', ')||'—'}</div>
@@ -2887,25 +2924,221 @@ function addF(n){
 // STATS
 // =====================================================================
 function renderStats(){
-  document.getElementById('stop').innerHTML=`
-    <div class="bsc"><div class="bv">${MH.length}</div><div class="bl">Rozegrane mecze</div></div>
-    <div class="bsc"><div class="bv">${AP.length}</div><div class="bl">Aktywni gracze</div></div>
-    <div class="bsc"><div class="bv">${MH.filter(m=>m.scanResult).length}</div><div class="bl">Zeskanowane mecze</div></div>`;
-  const ranked=AP.map(n=>{const s=PS[n];const g=Object.values(s.roles).reduce((a,b)=>a+b,0);const w=Object.values(s.wins).reduce((a,b)=>a+b,0);return{n,g,w,wr:g>0?Math.round(w/g*100):0};});
-  const wrR=[...ranked].sort((a,b)=>b.wr-a.wr||b.g-a.g);const gR=[...ranked].sort((a,b)=>b.g-a.g);const mg=gR[0]?.g||1;
-  const rc=i=>i===0?'r1':i===1?'r2':i===2?'r3':'';
-  const lbrow=(p,i,bw,bc,vt,vc)=>`<div class="lbr"><span class="lbn ${rc(i)}">${i+1}</span><div class="lbav" style="border-color:${PC[p.n]||'#C8AA6E'}55;color:${PC[p.n]||'#C8AA6E'};background:${PC[p.n]||'#C8AA6E'}15">${ini(p.n)}</div><span style="flex:1;font-size:16px;font-weight:600">${p.n}</span><div class="lbbt"><div class="lbbf" style="width:${bw}%;background:${bc}"></div></div><span class="lbw" style="color:${vc}">${vt}</span></div>`;
-  document.getElementById('lbwr').innerHTML=wrR.map((p,i)=>lbrow(p,i,p.wr,'linear-gradient(90deg,var(--teal),var(--blue-bright))',p.wr+'%',p.wr>=60?'var(--success)':p.wr>=45?'var(--gold)':'var(--danger)')).join('');
-  document.getElementById('lbg').innerHTML=gR.map((p,i)=>lbrow(p,i,Math.round(p.g/mg*100),'linear-gradient(90deg,var(--gold-dark),var(--gold))',p.g+'G','var(--gold)')).join('');
-  const sM={};
-  MH.forEach(m=>{const pt=(tm,won)=>{const ns=Object.values(tm);for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){const k=[ns[i],ns[j]].sort().join('|');if(!sM[k])sM[k]={g:0,w:0};sM[k].g++;if(won)sM[k].w++;}};pt(m.blue,m.win==='LEWA');pt(m.red,m.win==='PRAWA');});
-  const sA=Object.entries(sM).map(([k,v])=>({pair:k.split('|'),g:v.g,wr:v.g?Math.round(v.w/v.g*100):0})).filter(s=>s.g>=2).sort((a,b)=>b.wr-a.wr).slice(0,8);
-  document.getElementById('syt').innerHTML=sA.length?`<div style="display:flex;flex-direction:column;gap:7px">${sA.map(s=>`<div class="syr"><div class="av av26" style="border-color:${PC[s.pair[0]]||'#C8AA6E'}55;color:${PC[s.pair[0]]||'#C8AA6E'};background:${PC[s.pair[0]]||'#C8AA6E'}15">${ini(s.pair[0])}</div><span style="font-size:14px;font-weight:600">${s.pair[0]}</span><span style="color:var(--gold);font-size:13px">+</span><div class="av av26" style="border-color:${PC[s.pair[1]]||'#C8AA6E'}55;color:${PC[s.pair[1]]||'#C8AA6E'};background:${PC[s.pair[1]]||'#C8AA6E'}15">${ini(s.pair[1])}</div><span style="font-size:14px;font-weight:600">${s.pair[1]}</span><div class="syb" style="flex:1"><div style="height:100%;background:${s.wr>=55?'var(--success)':s.wr>=45?'var(--gold)':'var(--danger)'};border-radius:2px;width:${s.wr}%"></div></div><span class="wp ${s.wr>=55?'wg':'wb'}">${s.wr}%</span><span style="font-size:12px;color:var(--silver)">${s.g}G</span></div>`).join('')}</div>`:'<div style="font-size:14px;color:var(--silver)">Za mało danych.</div>';
-  // KDA top
-  const kdaRows=[];
-  AP.forEach(n=>{Object.entries(PS[n].champs||{}).forEach(([ch,v])=>{if(v.g>=1&&v.d>=0){const kda=v.d>0?+((v.k+v.a)/v.d).toFixed(2):v.k+v.a;kdaRows.push({player:n,champ:ch,g:v.g,kda,k:v.g>0?+(v.k/v.g).toFixed(1):0,d:v.g>0?+(v.d/v.g).toFixed(1):0,a:v.g>0?+(v.a/v.g).toFixed(1):0});}});});
-  kdaRows.sort((a,b)=>b.kda-a.kda);
-  document.getElementById('kdaTop').innerHTML=kdaRows.length?`<table class="kda-tbl" style="width:100%"><thead><tr><th>Gracz</th><th>Postać</th><th>G</th><th>KDA</th></tr></thead><tbody>${kdaRows.slice(0,10).map(r=>{const c=PC[r.player]||'#C8AA6E';return`<tr><td><span style="color:${c};font-weight:600">${r.player}</span></td><td>${r.champ}</td><td>${r.g}</td><td style="font-weight:700;color:${r.kda>=3?'var(--success)':r.kda>=2?'var(--gold)':'var(--silver)'}">${r.kda}x</td></tr>`;}).join('')}</tbody></table>`:'<div style="font-size:14px;color:var(--silver)">Uruchom AI Scan żeby zobaczyć KDA.</div>';
+  const el=document.getElementById('statsContent');
+  if(!el)return;
+  if(!MH.length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--silver);opacity:0.5;font-size:15px">Brak danych — załaduj mecze ze Sheets</div>';return;}
+
+  // ── Core stats ─────────────────────────────────────────
+  const totalG=MH.length;
+  const blueWins=MH.filter(m=>m.win==='LEWA').length;
+  const redWins=totalG-blueWins;
+  const blueWR=Math.round(blueWins/totalG*100);
+
+  // Per-player stats
+  const ranked=AP.map(n=>{
+    const s=PS[n];
+    const g=Object.values(s.roles).reduce((a,b)=>a+b,0);
+    const w=Object.values(s.wins).reduce((a,b)=>a+b,0);
+    const mmr=calcMMR(n);
+    return{n,g,w,wr:g>0?Math.round(w/g*100):0,mmr:mmr.mmr,rank:mmr.rank,rankColor:mmr.color};
+  }).filter(p=>p.g>0).sort((a,b)=>b.g-a.g);
+  const maxG=ranked[0]?.g||1;
+  const byWR=[...ranked].filter(p=>p.g>=3).sort((a,b)=>b.wr-a.wr||b.g-a.g);
+  const byMMR=[...ranked].sort((a,b)=>b.mmr-a.mmr);
+
+  // Streaks & recent form
+  const recentMH=[...MH].reverse().slice(0,20);
+
+  // Synergies
+  const sMap={};
+  MH.forEach(m=>{
+    const proc=(tm,won)=>{const ns=Object.values(tm).filter(Boolean);for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){const k=[ns[i],ns[j]].sort().join('|');if(!sMap[k])sMap[k]={g:0,w:0};sMap[k].g++;if(won)sMap[k].w++;}};
+    proc(m.blue,m.win==='LEWA');proc(m.red,m.win==='PRAWA');
+  });
+  const synArr=Object.entries(sMap).map(([k,v])=>({pair:k.split('|'),g:v.g,w:v.w,wr:v.g?Math.round(v.w/v.g*100):0})).filter(s=>s.g>=2).sort((a,b)=>b.wr-a.wr||b.g-a.g).slice(0,8);
+
+  // Enemy matchups (head-to-head)
+  const h2h={};
+  MH.forEach(m=>{
+    const proc=(winners,losers)=>{Object.values(winners).filter(Boolean).forEach(w=>{Object.values(losers).filter(Boolean).forEach(l=>{const k=[w,l].sort().join('|');if(!h2h[k])h2h[k]={a:k.split('|')[0],b:k.split('|')[1],ga:0,gb:0};if(w===h2h[k].a)h2h[k].ga++;else h2h[k].gb++;});});};
+    if(m.win==='LEWA'){proc(m.blue,m.red);}else{proc(m.red,m.blue);}
+  });
+
+  // Patch activity
+  const byPatch={};
+  MH.forEach(m=>{if(!byPatch[m.patch])byPatch[m.patch]=0;byPatch[m.patch]++;});
+  const patchArr=Object.entries(byPatch).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxPatch=patchArr[0]?.[1]||1;
+
+  // Role distribution across all games
+  const roleCount={top:0,jng:0,mid:0,adc:0,supp:0};
+  MH.forEach(m=>{ROLES.forEach(r=>{if(m.blue[r])roleCount[r]++;if(m.red[r])roleCount[r]++;});});
+  const roleTotal=Object.values(roleCount).reduce((a,b)=>a+b,0)||1;
+  const roleColors={top:'#E84855',jng:'#1DE9B6',mid:'#5DADE2',adc:'#F39C12',supp:'#A78BFA'};
+
+  // Helper: mini rank bar row
+  const rankRow=(p,i)=>{
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const c=PC[p.n]||'#C8AA6E';
+    const meta=PLAYER_META[p.n]||{};
+    const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">':'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
+    return `<div class="stats-rank-row">
+      <div class="stats-rank-num ${rc}">${i+1}</div>
+      ${av}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
+        <div style="font-size:11px;color:var(--silver)">${p.g}G</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <slot></slot>
+      </div>
+    </div>`;
+  };
+
+  const wrRow=(p,i)=>{
+    const c=PC[p.n]||'#C8AA6E';
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const wrc=p.wr>=60?'var(--success)':p.wr>=45?'var(--gold)':'var(--danger)';
+    const meta=PLAYER_META[p.n]||{};
+    const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">':'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
+    return `<div class="stats-rank-row">
+      <div class="stats-rank-num ${rc}">${i+1}</div>
+      ${av}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
+        <div class="stats-bar-wrap"><div class="stats-bar-fill" style="width:${p.wr}%;background:linear-gradient(90deg,${wrc},${wrc}88)"></div></div>
+      </div>
+      <div style="font-size:16px;font-weight:800;color:${wrc};min-width:44px;text-align:right">${p.wr}%</div>
+    </div>`;
+  };
+
+  const mmrRow=(p,i)=>{
+    const c=PC[p.n]||'#C8AA6E';
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const meta=PLAYER_META[p.n]||{};
+    const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">':'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
+    return `<div class="stats-rank-row">
+      <div class="stats-rank-num ${rc}">${i+1}</div>
+      ${av}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
+        <div style="font-size:11px;color:${p.rankColor}">${p.rank}</div>
+      </div>
+      <div style="font-size:16px;font-weight:800;color:${p.rankColor};min-width:60px;text-align:right">${p.mmr}</div>
+    </div>`;
+  };
+
+  // Role donut SVGs
+  const roleDonut=ROLES.map(r=>{
+    const pct=Math.round(roleCount[r]/roleTotal*100);
+    const R=28,thick=8,circ=2*Math.PI*R,arc=circ*(pct/100);
+    return `<div style="text-align:center">
+      <svg width="70" height="70" viewBox="0 0 70 70">
+        <circle cx="35" cy="35" r="${R}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="${thick}"/>
+        <circle cx="35" cy="35" r="${R}" fill="none" stroke="${roleColors[r]}" stroke-width="${thick}"
+          stroke-dasharray="${arc} ${circ-arc}" stroke-dashoffset="${circ/4}" transform="rotate(-90 35 35)"/>
+        <text x="35" y="39" text-anchor="middle" fill="${roleColors[r]}" font-size="13" font-weight="700" font-family="Rajdhani,sans-serif">${pct}%</text>
+      </svg>
+      <div style="font-size:11px;color:${roleColors[r]};font-weight:700">${RI[r]} ${r.toUpperCase()}</div>
+    </div>`;
+  }).join('');
+
+  // Recent form (last 10)
+  const form10=recentMH.slice(0,10);
+  const formHtml=form10.map(m=>`<div title="#${m.gid} ${m.date}" style="width:24px;height:24px;border-radius:4px;background:${m.win==='LEWA'?'rgba(93,173,226,0.5)':'rgba(232,72,85,0.5)'};border:1px solid ${m.win==='LEWA'?'#5DADE2':'#E84855'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${m.win==='LEWA'?'#5DADE2':'#E84855'}">${m.win==='LEWA'?'L':'P'}</div>`).join('');
+
+  el.innerHTML=`
+  <div class="stats-hero">
+    <div class="stats-hero-cell">
+      <div class="stats-hero-val" style="color:var(--gold)">${totalG}</div>
+      <div class="stats-hero-lbl">Mecze</div>
+    </div>
+    <div class="stats-hero-cell">
+      <div class="stats-hero-val" style="color:#5DADE2">${blueWins}</div>
+      <div class="stats-hero-lbl">Wygrane Lewa</div>
+    </div>
+    <div class="stats-hero-cell">
+      <div class="stats-hero-val" style="color:#E84855">${redWins}</div>
+      <div class="stats-hero-lbl">Wygrane Prawa</div>
+    </div>
+    <div class="stats-hero-cell">
+      <div class="stats-hero-val" style="color:${blueWR>=50?'var(--success)':'var(--danger)'}">${blueWR}%</div>
+      <div class="stats-hero-lbl">WR Lewa</div>
+    </div>
+    <div class="stats-hero-cell">
+      <div class="stats-hero-val" style="color:var(--teal)">${AP.length}</div>
+      <div class="stats-hero-lbl">Graczy</div>
+    </div>
+    <div class="stats-hero-cell">
+      <div class="stats-hero-val" style="color:var(--silver)">${MH.filter(m=>m.imgUrl).length}</div>
+      <div class="stats-hero-lbl">Screenshoty</div>
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stats-panel">
+      <div class="stats-section-title">🏆 Ranking MMR</div>
+      ${byMMR.slice(0,8).map((p,i)=>mmrRow(p,i)).join('')}
+    </div>
+    <div class="stats-panel">
+      <div class="stats-section-title">📊 Ranking Winrate <span style="font-size:10px;color:var(--silver)">(min. 3G)</span></div>
+      ${byWR.slice(0,8).map((p,i)=>wrRow(p,i)).join('')}
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stats-panel">
+      <div class="stats-section-title">🎮 Ranking Aktywności</div>
+      ${[...ranked].sort((a,b)=>b.g-a.g).slice(0,8).map((p,i)=>{
+        const c=PC[p.n]||'#C8AA6E';
+        const meta=PLAYER_META[p.n]||{};
+        const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">':'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
+        const rc=i<3?['r1','r2','r3'][i]:'';
+        return `<div class="stats-rank-row">
+          <div class="stats-rank-num ${rc}">${i+1}</div>
+          ${av}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
+            <div class="stats-bar-wrap"><div class="stats-bar-fill" style="width:${Math.round(p.g/maxG*100)}%;background:linear-gradient(90deg,var(--gold-dark),var(--gold))"></div></div>
+          </div>
+          <div style="font-size:16px;font-weight:800;color:var(--gold);min-width:40px;text-align:right">${p.g}G</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="stats-panel">
+      <div class="stats-section-title">⚡ Ostatnia forma <span style="font-size:10px;color:var(--silver)">(ostatnie 10)</span></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px">${formHtml}</div>
+      <div class="stats-section-title" style="margin-top:8px">📅 Aktywność per patch</div>
+      ${patchArr.map(([patch,cnt])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--silver);min-width:50px">P${patch}</span>
+        <div class="stats-bar-wrap" style="flex:1"><div class="stats-bar-fill" style="width:${Math.round(cnt/maxPatch*100)}%;background:linear-gradient(90deg,rgba(11,196,227,0.6),rgba(93,173,226,0.4))"></div></div>
+        <span style="font-size:13px;font-weight:700;color:var(--teal);min-width:28px;text-align:right">${cnt}</span>
+      </div>`).join('')}
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stats-panel">
+      <div class="stats-section-title">⚔️ Rozkład ról</div>
+      <div class="stats-donut-row">${roleDonut}</div>
+    </div>
+    <div class="stats-panel">
+      <div class="stats-section-title">🤝 Najlepsza synergia <span style="font-size:10px;color:var(--silver)">(min. 2G razem)</span></div>
+      ${synArr.length?synArr.map(s=>{
+        const c0=PC[s.pair[0]]||'#C8AA6E', c1=PC[s.pair[1]]||'#C8AA6E';
+        const wrc=s.wr>=60?'var(--success)':s.wr>=45?'var(--gold)':'var(--danger)';
+        return `<div class="syn-row">
+          <div class="av av26" style="border-color:${c0}55;color:${c0};background:${c0}15">${ini(s.pair[0])}</div>
+          <span style="font-size:14px;font-weight:700;color:${c0}">${s.pair[0]}</span>
+          <span style="color:var(--gold);font-size:13px;margin:0 4px">+</span>
+          <div class="av av26" style="border-color:${c1}55;color:${c1};background:${c1}15">${ini(s.pair[1])}</div>
+          <span style="font-size:14px;font-weight:700;color:${c1}">${s.pair[1]}</span>
+          <div class="stats-bar-wrap" style="margin-left:8px"><div class="stats-bar-fill" style="width:${s.wr}%;background:${wrc}88"></div></div>
+          <span style="font-size:14px;font-weight:800;color:${wrc};min-width:40px;text-align:right">${s.wr}%</span>
+          <span style="font-size:11px;color:var(--silver);min-width:24px;text-align:right">${s.g}G</span>
+        </div>`;
+      }).join(''):'<div style="color:var(--silver);font-size:14px">Za mało danych</div>'}
+    </div>
+  </div>
+
+  `;
 }
 
 // =====================================================================
@@ -2926,7 +3159,7 @@ function renderHist(){
   function champRow(name, role, champs, scan){
     // Priority: blueChamps/redChamps > scanResult.champ > nothing
     const champ=(champs&&champs[role])||scan?.[name]?.champ||'';
-    const key=champ?champ.replace(/[' ]/g,'').replace(/\./g,''):'';
+    const key=champ?champKey(champ):'';
     const c=PC[name]||'#C8AA6E';
     const src=key?'https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+key+'.png':'';
     return '<div class="lm-champ-entry">'
@@ -3411,7 +3644,7 @@ function renderDraftTeamGrid(team, animate){
     let bgStyle='';let isMonster=false;
     if(name){
       if(ch){
-        const key=ch.replace(/[' ]/g,'').replace(/\./g,'');
+        const key=champKey(ch);
         bgStyle=`background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${key}_0.jpg')`;
       } else {
         const mkey=slotMonsters[team][i]||MONSTER_KEYS[0];
@@ -3526,10 +3759,10 @@ function openMatchDetail(gid){
       ${(['top','jng','mid','adc','supp']).map(role=>{
         const name=team[role];if(!name)return'';
         const champ=champs[role]||'';
-        const champKey=champ.replace(/[' ]/g,'').replace(/\./g,'');
+        const ck=champKey(champ);
         const c=PC[name]||'#C8AA6E';
         return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-          ${champKey?'<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+champKey+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+          ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+ck+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
             :'<div style="width:30px;height:30px;border-radius:5px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--silver)">'+RI[role]+'</div>'}
           <span style="font-size:14px;font-weight:700;color:${c};min-width:70px">${name}</span>
           <span style="font-size:12px;color:var(--gold)">${champ||'—'}</span>
@@ -3619,10 +3852,10 @@ function saveMatchChamps(){
       ${(['top','jng','mid','adc','supp']).map(role=>{
         const name=team[role];if(!name)return'';
         const champ=champs[role]||'';
-        const champKey=champ.replace(/[' ]/g,'').replace(/\./g,'');
+        const ck=champKey(champ);
         const c=PC[name]||'#C8AA6E';
         return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-          ${champKey?'<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+champKey+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+          ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/'+ck+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
             :'<div style="width:30px;height:30px;border-radius:5px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--silver)">'+RI[role]+'</div>'}
           <span style="font-size:14px;font-weight:700;color:${c};min-width:70px">${name}</span>
           <span style="font-size:12px;color:var(--gold)">${champ||'—'}</span>
