@@ -93,7 +93,10 @@ const CHAMP_DISPLAY={
 };
 
 // Normalize any apostrophe/quote variant to straight apostrophe for comparison
-function normApos(s){return(s||'').replace(/[\u2019\u2018\u02bc\u0060\u00b4]/g,"'");}
+function normApos(s){
+  if(!s)return'';
+  return s.replace(/[’‘ʼ`´]/g,"'");
+}
 
 function champDisplayName(key){return CHAMP_DISPLAY[key]||key;}
 
