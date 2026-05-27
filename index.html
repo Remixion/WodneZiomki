@@ -1059,12 +1059,29 @@ window.GH_CONFIG = window.GH_CONFIG || {
   branch: 'main',
   path:   'data.js'
 };
-// Fallback globals in case data.js loads after this script runs
 window.PLAYER_META = window.PLAYER_META || {};
 </script>
-<script src="players.js?v=1"></script>
-<script src="data.js?v=2"></script>
+<script src="players.js?v=2"></script>
+<script src="data.js?v=3"></script>
 <script>
+// Override normApos inline to guarantee correct Unicode handling regardless of file encoding
+window.normApos = function(s){
+  if(!s) return '';
+  // Replace ALL apostrophe/quote variants with straight apostrophe
+  // Using explicit char codes to avoid any encoding issues
+  let r = '';
+  for(let i=0;i<s.length;i++){
+    const c=s.charCodeAt(i);
+    // U+2019 RIGHT SINGLE QUOTATION MARK, U+2018 LEFT SINGLE QUOTATION MARK
+    // U+02BC MODIFIER LETTER APOSTROPHE, U+0060 GRAVE, U+00B4 ACUTE
+    if(c===0x2019||c===0x2018||c===0x02BC||c===0x0060||c===0x00B4){
+      r+="'";
+    } else {
+      r+=s[i];
+    }
+  }
+  return r;
+};
 
 function buildPS(){
   const ps={};
