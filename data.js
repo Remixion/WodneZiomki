@@ -92,23 +92,27 @@ const CHAMP_DISPLAY={
   TwistedFate:"Twisted Fate",VelKoz:"Vel'Koz",XinZhao:"Xin Zhao",
 };
 
+// Normalize any apostrophe/quote variant to straight apostrophe for comparison
+function normApos(s){return(s||'').replace(/[\u2019\u2018\u02bc\u0060\u00b4]/g,"'");}
+
 function champDisplayName(key){return CHAMP_DISPLAY[key]||key;}
 
 function champKey(displayName){
   if(!displayName)return'';
-  // First try exact display name lookup
+  const norm=normApos(displayName).trim();
+  // 1. Exact match in CHAMP_DISPLAY values
   for(const [k,v] of Object.entries(CHAMP_DISPLAY)){
-    if(v.toLowerCase()===displayName.toLowerCase())return k;
+    if(normApos(v).toLowerCase()===norm.toLowerCase())return k;
   }
-  // Try direct match in ALL_CHAMPS (already a key)
-  const direct=displayName.replace(/['\u2019\u02bc .\-&]/g,'');
+  // 2. Direct key match (already a Data Dragon key)
+  const direct=norm.replace(/[' \-\.&]/g,'');
   const found=ALL_CHAMPS.find(k=>k.toLowerCase()===direct.toLowerCase());
   if(found)return found;
-  // Fallback: strip all special chars
+  // 3. Partial strip
   return direct;
 }
 
-// Helper used everywhere to get Data Dragon image URL
+// Helper: get Data Dragon image URL from champion name or key
 function champImgUrl(nameOrKey){
   if(!nameOrKey)return'';
   const key=champKey(nameOrKey);
@@ -125,6 +129,7 @@ async function fetchAllChamps(){
     ALL_CHAMPS=keys;
     // Update CHAMP_DISPLAY from data
     Object.values(data.data).forEach(c=>{
+      // Store both straight and normalized versions
       if(c.id!==c.name)CHAMP_DISPLAY[c.id]=c.name;
     });
     // Rebuild autocomplete datalists if open
