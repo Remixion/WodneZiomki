@@ -70,13 +70,53 @@ function getCurrentPatch(dateStr){
 // =====================================================================
 const ROLES=['top','jng','mid','adc','supp'];
 const RI={top:'⚔',jng:'🌿',mid:'⚡',adc:'🏹',supp:'🛡'};
+// Complete champion list — updated dynamically from Data Dragon at startup
+// This is a fallback list; fetchAllChamps() will update it at runtime
 const CHAMPS={
-  top:["Darius","Garen","Malphite","Fiora","Camille","Renekton","Sett","Mordekaiser","Gwen","Illaoi","Nasus","Teemo","Ornn","Aatrox","Jax","Irelia","Gangplank","Kennen","Vladimir","Urgot","Tryndamere","Gnar","Rumble","Jayce","Riven","Yasuo","Yone","Akali","Wukong","Poppy"],
-  jng:["Vi","Amumu","Hecarim","Jarvan IV","Kindred","Nidalee","Nunu","Rammus","Sejuani","Volibear","Warwick","Xin Zhao","Lee Sin","Kayn","Kha'Zix","Ekko","Graves","Viego","Lillia","Diana","Elise","Evelynn","Fiddlesticks","Gragas","Ivern","Rengar","Shaco","Taliyah","Trundle","Udyr"],
-  mid:["Ahri","Akali","Annie","Cassiopeia","Diana","Galio","Katarina","LeBlanc","Lissandra","Lux","Malzahar","Orianna","Syndra","Twisted Fate","Zed","Viktor","Yone","Yasuo","Vex","Sylas","Azir","Corki","Ekko","Fizz","Irelia","Kassadin","Qiyana","Swain","Veigar","Ziggs"],
-  adc:["Ashe","Caitlyn","Draven","Ezreal","Jinx","Kai'Sa","Lucian","Miss Fortune","Samira","Tristana","Twitch","Vayne","Sivir","Xayah","Zeri","Jhin","Varus","Nilah","Aphelios","Kog'Maw","Corki","Kalista","Kindred","Seraphine","Senna","Smolder","Swain","Taliyah","Ziggs","Ziggs"],
-  supp:["Alistar","Blitzcrank","Brand","Janna","Karma","Leona","Lulu","Morgana","Nami","Nautilus","Pyke","Rakan","Senna","Thresh","Yuumi","Soraka","Renata","Milio","Bard","Zyra","Lux","Seraphine","Xerath","Vel'Koz","Sona","Swain","Heimerdinger","Tahm Kench","Taric","Zilean"]
+  top:["Aatrox","Camille","Darius","Fiora","Gangplank","Garen","Gnar","Gwen","Illaoi","Irelia","Jax","Jayce","Kayle","Kennen","Malphite","Mordekaiser","Nasus","Ornn","Poppy","Quinn","Renekton","Riven","Rumble","Sett","Shen","Singed","Teemo","Tryndamere","Urgot","Vladimir","Volibear","Wukong","Yasuo","Yone"],
+  jng:["Amumu","Bel'Veth","Briar","Diana","Ekko","Elise","Evelynn","Fiddlesticks","Gragas","Graves","Hecarim","Ivern","Jarvan IV","Kayn","Kha'Zix","Kindred","Lee Sin","Lillia","Master Yi","Nidalee","Nocturne","Nunu","Rammus","Rek'Sai","Rengar","Sejuani","Shaco","Shyvana","Taliyah","Trundle","Udyr","Vi","Viego","Volibear","Warwick","Wukong","Xin Zhao","Zac"],
+  mid:["Ahri","Akali","Anivia","Annie","Aurora","Azir","Cassiopeia","Corki","Diana","Ekko","Fizz","Galio","Hwei","Irelia","Kassadin","Katarina","LeBlanc","Lissandra","Lux","Malzahar","Naafiri","Neeko","Orianna","Qiyana","Ryze","Sylas","Syndra","Taliyah","Twisted Fate","Veigar","Vel'Koz","Vex","Viktor","Yasuo","Yone","Zed","Ziggs","Zoe"],
+  adc:["Aphelios","Ashe","Caitlyn","Corki","Draven","Ezreal","Jhin","Jinx","Kai'Sa","Kalista","Kindred","Kog'Maw","Lucian","Miss Fortune","Nilah","Samira","Senna","Seraphine","Sivir","Smolder","Swain","Tristana","Twitch","Varus","Vayne","Xayah","Zeri"],
+  supp:["Alistar","Bard","Blitzcrank","Brand","Heimerdinger","Janna","Karma","Leona","Lulu","Lux","Milio","Morgana","Nami","Nautilus","Neeko","Pyke","Rakan","Renata","Senna","Seraphine","Sona","Soraka","Swain","Tahm Kench","Taric","Thresh","Vel'Koz","Xerath","Yuumi","Zilean","Zyra"]
 };
+
+// Full champion roster — populated from Data Dragon at startup
+let ALL_CHAMPS=["Aatrox","Ahri","Akali","Akshan","Alistar","Ambessa","Amumu","Anivia","Annie","Aphelios","Ashe","AurelionSol","Aurora","Azir","Bard","BelVeth","Blitzcrank","Brand","Braum","Briar","Caitlyn","Camille","Cassiopeia","ChoGath","Corki","Darius","Diana","DrMundo","Draven","Ekko","Elise","Evelynn","Ezreal","Fiddlesticks","Fiora","Fizz","Galio","Gangplank","Garen","Gnar","Gragas","Graves","Gwen","Hecarim","Heimerdinger","Hwei","Illaoi","Irelia","Ivern","Janna","JarvanIV","Jax","Jayce","Jhin","Jinx","KSante","KaiSa","Kalista","Karma","Karthus","Kassadin","Katarina","Kayle","Kayn","Kennen","KhaZix","Kindred","Kled","KogMaw","LeBlanc","LeeSin","Leona","Lillia","Lissandra","Lucian","Lulu","Lux","Malphite","Malzahar","Maokai","MasterYi","Mel","Milio","MissFortune","MonkeyKing","Mordekaiser","Morgana","Naafiri","Nami","Nasus","Nautilus","Neeko","Nidalee","Nilah","Nocturne","NunuWillump","Olaf","Orianna","Ornn","Pantheon","Poppy","Pyke","Qiyana","Quinn","Rakan","Rammus","RekSai","Rell","Renata","Renekton","Rengar","Riven","Rumble","Ryze","Samira","Sejuani","Senna","Seraphine","Sett","Shaco","Shen","Shyvana","Singed","Sion","Sivir","Skarner","Smolder","Sona","Soraka","Swain","Sylas","Syndra","TahmKench","Taliyah","Talon","Taric","Teemo","Thresh","Tristana","Trundle","Tryndamere","TwistedFate","Twitch","Udyr","Urgot","Varus","Vayne","Veigar","VelKoz","Vex","Vi","Viego","Viktor","Vladimir","Volibear","Warwick","Xayah","Xerath","XinZhao","Yasuo","Yone","Yorick","Yuumi","Zac","Zed","Zeri","Ziggs","Zilean","Zoe","Zyra"];
+
+// Display names map (Data Dragon key → display name with spaces/apostrophes)
+const CHAMP_DISPLAY={
+  AurelionSol:"Aurelion Sol",BelVeth:"Bel'Veth",ChoGath:"Cho'Gath",DrMundo:"Dr. Mundo",
+  JarvanIV:"Jarvan IV",KSante:"K'Sante",KaiSa:"Kai'Sa",KhaZix:"Kha'Zix",KogMaw:"Kog'Maw",
+  LeeSin:"Lee Sin",LeBlanc:"LeBlanc",MasterYi:"Master Yi",MissFortune:"Miss Fortune",
+  MonkeyKing:"Wukong",NunuWillump:"Nunu & Willump",RekSai:"Rek'Sai",TahmKench:"Tahm Kench",
+  TwistedFate:"Twisted Fate",VelKoz:"Vel'Koz",XinZhao:"Xin Zhao",
+};
+
+function champDisplayName(key){return CHAMP_DISPLAY[key]||key;}
+function champKey(displayName){
+  // Find Data Dragon key from display name
+  for(const [k,v] of Object.entries(CHAMP_DISPLAY)){if(v===displayName)return k;}
+  return displayName.replace(/[' .\-]/g,'').replace(/&.*/,'');
+}
+
+// Fetch full champion list from Data Dragon at startup
+async function fetchAllChamps(){
+  try{
+    const r=await fetch('https://ddragon.leagueoflegends.com/cdn/14.24.1/data/en_US/champion.json',{cache:'no-store'});
+    if(!r.ok)return;
+    const data=await r.json();
+    const keys=Object.keys(data.data).sort();
+    ALL_CHAMPS=keys;
+    // Update CHAMP_DISPLAY from data
+    Object.values(data.data).forEach(c=>{
+      if(c.id!==c.name)CHAMP_DISPLAY[c.id]=c.name;
+    });
+    // Rebuild autocomplete datalists if open
+    console.log('Champions loaded from Data Dragon:',ALL_CHAMPS.length);
+  }catch(e){
+    console.warn('fetchAllChamps failed:',e.message);
+  }
+}
 
 // =====================================================================
 // MATCH HISTORY

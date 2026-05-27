@@ -1122,6 +1122,8 @@ function init(){
   renderDraftTeams();
   renderRS();renderStats();renderHist();renderAliases();buildScanGrid();
   updateDraftCounts();
+  // Fetch complete champion roster from Data Dragon
+  fetchAllChamps();
   // Delay Sheets fetch slightly so page renders first, then fetch data
   showSheetsLoading(true);
   setTimeout(async ()=>{
@@ -2199,7 +2201,14 @@ function randomizeChamps(){
   toast(alreadyRolled?'Postacie przetasowane!':'Postacie wylosowane!');
 }
 
-function pch(role,exc){const pool=CHAMPS[role].filter(c=>!exc.includes(c));return pool[Math.floor(Math.random()*pool.length)]||CHAMPS[role][0];}
+function pch(role,exc){
+  const rolePool=CHAMPS[role]||[];
+  // Use role pool first, fall back to random from all champs
+  const pool=rolePool.filter(c=>!exc.includes(c));
+  if(pool.length)return pool[Math.floor(Math.random()*pool.length)];
+  const allPool=ALL_CHAMPS.map(k=>champDisplayName(k)).filter(c=>!exc.includes(c));
+  return allPool[Math.floor(Math.random()*allPool.length)]||'Unknown';
+}
 
 // Per-slot dice reroll (hidden button top-right of each card)
 function rerollSlotChamp(team,i,role,e){
@@ -2288,8 +2297,8 @@ function openSave(){
   });
 
   // Datalist for autocomplete
-  const allChamps=[...new Set(Object.values(CHAMPS).flat())].sort();
-  html+=`<datalist id="champList">${allChamps.map(c=>`<option value="${c}">`).join('')}</datalist>`;
+  const allChampNames=ALL_CHAMPS.map(k=>champDisplayName(k)).sort();
+  html+=`<datalist id="champList">${allChampNames.map(c=>`<option value="${c}">`).join('')}</datalist>`;
 
   grid.innerHTML=html;
   document.getElementById('saveModal').style.display='flex';
@@ -3546,8 +3555,8 @@ function openMatchDetail(gid){
   }
 
   // Champion edit form
-  const allChamps=[...new Set(Object.values(CHAMPS).flat())].sort();
-  const datalist='<datalist id="mdChampList">'+allChamps.map(c=>`<option value="${c}">`).join('')+'</datalist>';
+  const allChampNames=ALL_CHAMPS.map(k=>champDisplayName(k)).sort();
+  const datalist='<datalist id="mdChampList">'+allChampNames.map(c=>`<option value="${c}">`).join('')+'</datalist>';
   const editRows=['blue','red'].map(side=>{
     const team=side==='blue'?m.blue:m.red;
     const champs=side==='blue'?blueChamps:redChamps;
