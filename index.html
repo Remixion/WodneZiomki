@@ -1062,7 +1062,7 @@ window.GH_CONFIG = window.GH_CONFIG || {
 window.PLAYER_META = window.PLAYER_META || {};
 </script>
 <script src="players.js?v=2"></script>
-<script src="data.js?v=4"></script>
+<script src="data.js?v=5"></script>
 <script>
 // Override normApos inline to guarantee correct Unicode handling regardless of file encoding
 window.normApos = function(s){
@@ -2818,7 +2818,7 @@ function renderProfile(n){
           const ck=champKey(ch.ch);
           const wrColor=ch.wr>=60?'var(--success)':ch.wr>=45?'var(--gold)':'var(--danger)';
           return `<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
-            ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/15.10.1/img/champion/'+ck+'.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+            ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+ck+'.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
               :'<div style="width:28px;height:28px;border-radius:5px;background:rgba(255,255,255,0.08);flex-shrink:0"></div>'}
             <span style="flex:1;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ch.ch}</span>
             <span style="font-size:13px;color:${wrColor};font-weight:700;flex-shrink:0">${ch.wr}%</span>
@@ -2863,7 +2863,7 @@ function renderProfile(n){
               <div style="font-size:15px;font-weight:800;color:${won?'#5DADE2':'#E84855'}">${won?'W':'L'}</div>
               <div style="font-size:12px;color:var(--silver)">#${m.gid}</div>
             </div>
-            ${ck?('<img src="https://ddragon.leagueoflegends.com/cdn/15.10.1/img/champion/'+ck+'.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">'):'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--silver)">'+(RI[roleInM]||'')+'</div>'}
+            ${ck?('<img src="https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+ck+'.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">'):'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--silver)">'+(RI[roleInM]||'')+'</div>'}
             <div style="flex:1;min-width:0">
               <div style="font-size:17px;font-weight:600">${champs?.[roleInM]||'—'} <span style="color:var(--silver);font-size:13px;font-weight:400">${RI[roleInM]||''} ${roleInM.toUpperCase()}</span></div>
               <div style="font-size:15px;color:var(--silver);margin-top:3px">z: ${allies.join(', ')||'—'}</div>
@@ -3178,7 +3178,7 @@ function renderHist(){
     const champ=(champs&&champs[role])||scan?.[name]?.champ||'';
     const key=champ?champKey(champ):'';
     const c=PC[name]||'#C8AA6E';
-    const src=key?'https://ddragon.leagueoflegends.com/cdn/15.10.1/img/champion/'+key+'.png':'';
+    const src=key?'https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+key+'.png':'';
     return '<div class="lm-champ-entry">'
       +(src
         ?'<img class="lm-champ-icon" src="'+src+'" loading="lazy" onerror="this.style.background=\''+c+'22\';this.src=\'\'">'
@@ -3779,7 +3779,7 @@ function openMatchDetail(gid){
         const ck=champKey(champ);
         const c=PC[name]||'#C8AA6E';
         return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-          ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/15.10.1/img/champion/'+ck+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+          ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+ck+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
             :'<div style="width:30px;height:30px;border-radius:5px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--silver)">'+RI[role]+'</div>'}
           <span style="font-size:14px;font-weight:700;color:${c};min-width:70px">${name}</span>
           <span style="font-size:12px;color:var(--gold)">${champ||'—'}</span>
@@ -3872,7 +3872,7 @@ function saveMatchChamps(){
         const ck=champKey(champ);
         const c=PC[name]||'#C8AA6E';
         return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-          ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/15.10.1/img/champion/'+ck+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+          ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+ck+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
             :'<div style="width:30px;height:30px;border-radius:5px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--silver)">'+RI[role]+'</div>'}
           <span style="font-size:14px;font-weight:700;color:${c};min-width:70px">${name}</span>
           <span style="font-size:12px;color:var(--gold)">${champ||'—'}</span>
