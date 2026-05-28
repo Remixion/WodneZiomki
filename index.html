@@ -788,6 +788,21 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 
 <!-- STATS -->
 <div class="page" id="page-stats">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--gold);letter-spacing:2px">Statystyki</div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="statsFilterType" class="ss" style="font-size:13px;padding:5px 10px" onchange="onStatsFilterChange()">
+        <option value="all">Wszystkie mecze</option>
+        <option value="patch">Per patch</option>
+        <option value="date">Przedział dat</option>
+      </select>
+      <select id="statsPatchSelect" class="ss" style="font-size:13px;padding:5px 10px;display:none" onchange="renderStats()"></select>
+      <input id="statsDateFrom" type="date" class="ss" style="font-size:13px;padding:5px 10px;display:none" onchange="renderStats()">
+      <span id="statsDateSep" style="color:var(--silver);display:none">—</span>
+      <input id="statsDateTo" type="date" class="ss" style="font-size:13px;padding:5px 10px;display:none" onchange="renderStats()">
+      <button class="btn sbtn" style="font-size:12px;padding:5px 12px" onclick="renderStats()">↺</button>
+    </div>
+  </div>
   <div id="statsContent"></div>
 </div>
 
@@ -1062,7 +1077,7 @@ window.GH_CONFIG = window.GH_CONFIG || {
 window.PLAYER_META = window.PLAYER_META || {};
 </script>
 <script src="players.js?v=2"></script>
-<script src="data.js?v=5"></script>
+<script src="data.js?v=6"></script>
 <script>
 // Override normApos inline to guarantee correct Unicode handling regardless of file encoding
 window.normApos = function(s){
@@ -1081,6 +1096,11 @@ window.normApos = function(s){
     }
   }
   return r;
+};
+// Dynamic Data Dragon image URL — uses auto-detected version or fallback
+window.ddUrl = function(key){
+  const v=window._ddVersion||'15.10.1';
+  return key?'https://ddragon.leagueoflegends.com/cdn/'+v+'/img/champion/'+key+'.png':'';
 };
 
 function buildPS(){
@@ -2500,12 +2520,27 @@ const RANK_COLORS={Iron:'#8B8B8B',Bronze:'#CD7F32',Silver:'#C0C0C0',Gold:'#FFD70
 function calcMMR(n){
   const matches=MH.filter(m=>Object.values(m.blue).includes(n)||Object.values(m.red).includes(n));
   let mmr=MMR_BASE;
-  matches.forEach(m=>{
+  let lastRankIdx=RANK_TIERS.findIndex(t=>t.mmr===MMR_BASE);
+  let justPromoted=false;
+  const sortedMatches=[...matches].sort((a,b)=>Number(a.gid)-Number(b.gid));
+  sortedMatches.forEach(m=>{
     const inBlue=Object.values(m.blue).includes(n);
     const won=(inBlue&&m.win==='LEWA')||(!inBlue&&m.win==='PRAWA');
-    mmr+=won?MMR_WIN:-MMR_LOSS;
+    if(won){
+      mmr+=MMR_WIN;
+      // Check if we just crossed a rank threshold
+      const newRankIdx=RANK_TIERS.filter(t=>t.mmr<=mmr).length-1;
+      if(newRankIdx>lastRankIdx){justPromoted=true;lastRankIdx=newRankIdx;}
+      else justPromoted=false;
+    } else {
+      if(justPromoted){
+        // Skip first loss after promotion (demotion protection)
+        justPromoted=false;
+      } else {
+        mmr=Math.max(0,mmr-MMR_LOSS);
+      }
+    }
   });
-  mmr=Math.max(0,mmr);
   let rankIdx=0;
   for(let i=0;i<RANK_TIERS.length;i++){if(mmr>=RANK_TIERS[i].mmr)rankIdx=i;else break;}
   const rank=RANK_TIERS[rankIdx];
@@ -2818,7 +2853,7 @@ function renderProfile(n){
           const ck=champKey(ch.ch);
           const wrColor=ch.wr>=60?'var(--success)':ch.wr>=45?'var(--gold)':'var(--danger)';
           return `<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
-            ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+ck+'.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+            ${ck?'<img src="'+ddUrl(ck)+'" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
               :'<div style="width:28px;height:28px;border-radius:5px;background:rgba(255,255,255,0.08);flex-shrink:0"></div>'}
             <span style="flex:1;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ch.ch}</span>
             <span style="font-size:13px;color:${wrColor};font-weight:700;flex-shrink:0">${ch.wr}%</span>
@@ -2863,7 +2898,7 @@ function renderProfile(n){
               <div style="font-size:15px;font-weight:800;color:${won?'#5DADE2':'#E84855'}">${won?'W':'L'}</div>
               <div style="font-size:12px;color:var(--silver)">#${m.gid}</div>
             </div>
-            ${ck?('<img src="https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+ck+'.png" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">'):'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--silver)">'+(RI[roleInM]||'')+'</div>'}
+            ${ck?('<img src="'+ddUrl(ck)+'" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">'):'<div style="width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--silver)">'+(RI[roleInM]||'')+'</div>'}
             <div style="flex:1;min-width:0">
               <div style="font-size:17px;font-weight:600">${champs?.[roleInM]||'—'} <span style="color:var(--silver);font-size:13px;font-weight:400">${RI[roleInM]||''} ${roleInM.toUpperCase()}</span></div>
               <div style="font-size:15px;color:var(--silver);margin-top:3px">z: ${allies.join(', ')||'—'}</div>
@@ -2940,14 +2975,54 @@ function addF(n){
 // =====================================================================
 // STATS
 // =====================================================================
+function onStatsFilterChange(){
+  const type=document.getElementById('statsFilterType')?.value||'all';
+  const patchSel=document.getElementById('statsPatchSelect');
+  const dateFrom=document.getElementById('statsDateFrom');
+  const dateSep=document.getElementById('statsDateSep');
+  const dateTo=document.getElementById('statsDateTo');
+  if(patchSel) patchSel.style.display=type==='patch'?'block':'none';
+  if(dateFrom) dateFrom.style.display=type==='date'?'block':'none';
+  if(dateSep) dateSep.style.display=type==='date'?'inline':'none';
+  if(dateTo) dateTo.style.display=type==='date'?'block':'none';
+  // Populate patch dropdown
+  if(type==='patch'&&patchSel){
+    const patches=[...new Set(MH.map(m=>m.patch))].sort().reverse();
+    patchSel.innerHTML=patches.map(p=>`<option value="${p}">Patch ${p}</option>`).join('');
+  }
+  renderStats();
+}
+
+function getFilteredMatches(){
+  const type=document.getElementById('statsFilterType')?.value||'all';
+  if(type==='patch'){
+    const p=document.getElementById('statsPatchSelect')?.value;
+    return p?MH.filter(m=>m.patch===p):MH;
+  }
+  if(type==='date'){
+    const from=document.getElementById('statsDateFrom')?.value;
+    const to=document.getElementById('statsDateTo')?.value;
+    return MH.filter(m=>{
+      const d=m.date;
+      if(from&&d<from)return false;
+      if(to&&d>to)return false;
+      return true;
+    });
+  }
+  return MH;
+}
+
 function renderStats(){
   const el=document.getElementById('statsContent');
   if(!el)return;
-  if(!MH.length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--silver);opacity:0.5;font-size:15px">Brak danych — załaduj mecze ze Sheets</div>';return;}
+  const MHf=getFilteredMatches();
+  const filterType=document.getElementById('statsFilterType')?.value||'all';
+  const filterLabel=filterType==='patch'?(' — Patch '+(document.getElementById('statsPatchSelect')?.value||'')):filterType==='date'?(' — '+((document.getElementById('statsDateFrom')?.value||'?')+' → '+(document.getElementById('statsDateTo')?.value||'?'))):'';
+  if(!MHf.length){el.innerHTML=`<div style="text-align:center;padding:60px;color:var(--silver);opacity:0.5;font-size:15px">Brak danych${filterLabel?(' dla: '+filterLabel):' — załaduj mecze ze Sheets'}</div>`;return;}
 
   // ── Core stats ─────────────────────────────────────────
-  const totalG=MH.length;
-  const blueWins=MH.filter(m=>m.win==='LEWA').length;
+  const totalG=MHf.length;
+  const blueWins=MHf.filter(m=>m.win==='LEWA').length;
   const redWins=totalG-blueWins;
   const blueWR=Math.round(blueWins/totalG*100);
 
@@ -2964,11 +3039,11 @@ function renderStats(){
   const byMMR=[...ranked].sort((a,b)=>b.mmr-a.mmr);
 
   // Streaks & recent form
-  const recentMH=[...MH].reverse().slice(0,20);
+  const recentMH=[...MHf].reverse().slice(0,20);
 
   // Synergies
   const sMap={};
-  MH.forEach(m=>{
+  MHf.forEach(m=>{
     const proc=(tm,won)=>{const ns=Object.values(tm).filter(Boolean);for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){const k=[ns[i],ns[j]].sort().join('|');if(!sMap[k])sMap[k]={g:0,w:0};sMap[k].g++;if(won)sMap[k].w++;}};
     proc(m.blue,m.win==='LEWA');proc(m.red,m.win==='PRAWA');
   });
@@ -2976,20 +3051,20 @@ function renderStats(){
 
   // Enemy matchups (head-to-head)
   const h2h={};
-  MH.forEach(m=>{
+  MHf.forEach(m=>{
     const proc=(winners,losers)=>{Object.values(winners).filter(Boolean).forEach(w=>{Object.values(losers).filter(Boolean).forEach(l=>{const k=[w,l].sort().join('|');if(!h2h[k])h2h[k]={a:k.split('|')[0],b:k.split('|')[1],ga:0,gb:0};if(w===h2h[k].a)h2h[k].ga++;else h2h[k].gb++;});});};
     if(m.win==='LEWA'){proc(m.blue,m.red);}else{proc(m.red,m.blue);}
   });
 
   // Patch activity
   const byPatch={};
-  MH.forEach(m=>{if(!byPatch[m.patch])byPatch[m.patch]=0;byPatch[m.patch]++;});
+  MHf.forEach(m=>{if(!byPatch[m.patch])byPatch[m.patch]=0;byPatch[m.patch]++;});
   const patchArr=Object.entries(byPatch).sort((a,b)=>b[1]-a[1]).slice(0,6);
   const maxPatch=patchArr[0]?.[1]||1;
 
   // Role distribution across all games
   const roleCount={top:0,jng:0,mid:0,adc:0,supp:0};
-  MH.forEach(m=>{ROLES.forEach(r=>{if(m.blue[r])roleCount[r]++;if(m.red[r])roleCount[r]++;});});
+  MHf.forEach(m=>{ROLES.forEach(r=>{if(m.blue[r])roleCount[r]++;if(m.red[r])roleCount[r]++;});});
   const roleTotal=Object.values(roleCount).reduce((a,b)=>a+b,0)||1;
   const roleColors={top:'#E84855',jng:'#1DE9B6',mid:'#5DADE2',adc:'#F39C12',supp:'#A78BFA'};
 
@@ -3060,9 +3135,7 @@ function renderStats(){
     </div>`;
   }).join('');
 
-  // Recent form (last 10)
-  const form10=recentMH.slice(0,10);
-  const formHtml=form10.map(m=>`<div title="#${m.gid} ${m.date}" style="width:24px;height:24px;border-radius:4px;background:${m.win==='LEWA'?'rgba(93,173,226,0.5)':'rgba(232,72,85,0.5)'};border:1px solid ${m.win==='LEWA'?'#5DADE2':'#E84855'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${m.win==='LEWA'?'#5DADE2':'#E84855'}">${m.win==='LEWA'?'L':'P'}</div>`).join('');
+
 
   el.innerHTML=`
   <div class="stats-hero">
@@ -3087,7 +3160,7 @@ function renderStats(){
       <div class="stats-hero-lbl">Graczy</div>
     </div>
     <div class="stats-hero-cell">
-      <div class="stats-hero-val" style="color:var(--silver)">${MH.filter(m=>m.imgUrl).length}</div>
+      <div class="stats-hero-val" style="color:var(--silver)">${MHf.filter(m=>m.imgUrl).length}</div>
       <div class="stats-hero-lbl">Screenshoty</div>
     </div>
   </div>
@@ -3121,9 +3194,7 @@ function renderStats(){
       }).join('')}
     </div>
     <div class="stats-panel">
-      <div class="stats-section-title">⚡ Ostatnia forma <span style="font-size:10px;color:var(--silver)">(ostatnie 10)</span></div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px">${formHtml}</div>
-      <div class="stats-section-title" style="margin-top:8px">📅 Aktywność per patch</div>
+      <div class="stats-section-title">📅 Aktywność per patch</div>
       ${patchArr.map(([patch,cnt])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
         <span style="font-size:12px;color:var(--silver);min-width:50px">P${patch}</span>
         <div class="stats-bar-wrap" style="flex:1"><div class="stats-bar-fill" style="width:${Math.round(cnt/maxPatch*100)}%;background:linear-gradient(90deg,rgba(11,196,227,0.6),rgba(93,173,226,0.4))"></div></div>
@@ -3178,7 +3249,7 @@ function renderHist(){
     const champ=(champs&&champs[role])||scan?.[name]?.champ||'';
     const key=champ?champKey(champ):'';
     const c=PC[name]||'#C8AA6E';
-    const src=key?'https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+key+'.png':'';
+    const src=key?ddUrl(key):'';
     return '<div class="lm-champ-entry">'
       +(src
         ?'<img class="lm-champ-icon" src="'+src+'" loading="lazy" onerror="this.style.background=\''+c+'22\';this.src=\'\'">'
@@ -3779,7 +3850,7 @@ function openMatchDetail(gid){
         const ck=champKey(champ);
         const c=PC[name]||'#C8AA6E';
         return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-          ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+ck+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+          ${ck?'<img src="'+ddUrl(ck)+'" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
             :'<div style="width:30px;height:30px;border-radius:5px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--silver)">'+RI[role]+'</div>'}
           <span style="font-size:14px;font-weight:700;color:${c};min-width:70px">${name}</span>
           <span style="font-size:12px;color:var(--gold)">${champ||'—'}</span>
@@ -3872,7 +3943,7 @@ function saveMatchChamps(){
         const ck=champKey(champ);
         const c=PC[name]||'#C8AA6E';
         return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-          ${ck?'<img src="https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+ck+'.png" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
+          ${ck?'<img src="'+ddUrl(ck)+'" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0" loading="lazy">'
             :'<div style="width:30px;height:30px;border-radius:5px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--silver)">'+RI[role]+'</div>'}
           <span style="font-size:14px;font-weight:700;color:${c};min-width:70px">${name}</span>
           <span style="font-size:12px;color:var(--gold)">${champ||'—'}</span>

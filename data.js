@@ -135,13 +135,17 @@ function champKey(displayName){
 function champImgUrl(nameOrKey){
   if(!nameOrKey)return'';
   const key=champKey(nameOrKey);
-  return key?'https://ddragon.leagueoflegends.com/cdn/26.10.1/img/champion/'+key+'.png':'';
+  const v=(typeof window!=='undefined'&&window._ddVersion)||'15.10.1';return key?'https://ddragon.leagueoflegends.com/cdn/'+v+'/img/champion/'+key+'.png':'';
 }
 
 // Fetch full champion list from Data Dragon at startup
 async function fetchAllChamps(){
   try{
-    const r=await fetch('https://ddragon.leagueoflegends.com/cdn/26.10.1/data/en_US/champion.json',{cache:'no-store'});
+    // Fetch latest version first, then champion data
+    const vr=await fetch('https://ddragon.leagueoflegends.com/api/versions.json',{cache:'no-store'});
+    const versions=vr.ok?await vr.json():['15.10.1'];
+    const latestVer=versions[0]||'15.10.1';
+    const r=await fetch('https://ddragon.leagueoflegends.com/cdn/'+latestVer+'/data/en_US/champion.json',{cache:'no-store'});
     if(!r.ok)return;
     const data=await r.json();
     const keys=Object.keys(data.data).sort();
@@ -152,7 +156,9 @@ async function fetchAllChamps(){
       if(c.id!==c.name)CHAMP_DISPLAY[c.id]=c.name;
     });
     // Rebuild autocomplete datalists if open
-    console.log('Champions loaded from Data Dragon:',ALL_CHAMPS.length);
+    // Update the patch version for image URLs
+    window._ddVersion = latestVer;
+    console.log('Champions loaded from Data Dragon:',ALL_CHAMPS.length,'version:',latestVer);
   }catch(e){
     console.warn('fetchAllChamps failed:',e.message);
   }
