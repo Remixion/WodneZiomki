@@ -2985,12 +2985,14 @@ function onStatsFilterChange(){
   if(dateFrom) dateFrom.style.display=type==='date'?'block':'none';
   if(dateSep) dateSep.style.display=type==='date'?'inline':'none';
   if(dateTo) dateTo.style.display=type==='date'?'block':'none';
-  // Populate patch dropdown
   if(type==='patch'&&patchSel){
     const patches=[...new Set(MH.map(m=>m.patch))].sort().reverse();
     patchSel.innerHTML=patches.map(p=>`<option value="${p}">Patch ${p}</option>`).join('');
   }
+  // Update all views that depend on filter
   renderStats();
+  renderHist();
+  if(selPr)renderProfile(selPr);
 }
 
 function getFilteredMatches(){
@@ -3234,7 +3236,10 @@ function renderStats(){
 // =====================================================================
 function renderHist(){
   const q=(document.getElementById('histSearch')?.value||'').toLowerCase().trim();
-  const allMatches=[...MH].reverse();
+  // Apply global stats filter if active
+  const statsFilter=document.getElementById('statsFilterType')?.value||'all';
+  const baseMH=statsFilter!=='all'?getFilteredMatches():MH;
+  const allMatches=[...baseMH].reverse();
   const matches=q?allMatches.filter(m=>
     Object.values(m.blue).concat(Object.values(m.red)).some(n=>n&&n.toLowerCase().includes(q))
   ):allMatches;
@@ -3882,17 +3887,36 @@ function openMatchDetail(gid){
     const team=side==='blue'?m.blue:m.red;
     const champs=side==='blue'?blueChamps:redChamps;
     const color=side==='blue'?'#5DADE2':'#E84855';
-    return `<div style="font-size:11px;color:${color};letter-spacing:1px;margin-bottom:4px">${side==='blue'?'LEWA':'PRAWA'}</div>`+
+    const scan=m.scanResult||{};
+    return `<div style="font-size:11px;color:${color};letter-spacing:1px;margin-bottom:6px;font-weight:700">${side==='blue'?'◆ LEWA':'◆ PRAWA'}</div>`+
       ['top','jng','mid','adc','supp'].map(role=>{
         const name=team[role];if(!name)return'';
         const c=PC[name]||'#C8AA6E';
-        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          <span style="font-size:11px;font-weight:600;color:${c};min-width:60px">${name}</span>
-          <input id="mce_${side}_${role}" class="ss" style="flex:1;font-size:11px;padding:4px 7px"
-            value="${champs[role]||''}" placeholder="${role.toUpperCase()}..." list="mdChampList">
+        const sr=scan[name]||{};
+        const champVal=champs[role]||sr.champ||'';
+        const k=sr.k!==undefined?sr.k:'';
+        const d=sr.d!==undefined?sr.d:'';
+        const a=sr.a!==undefined?sr.a:'';
+        return `<div style="margin-bottom:8px;padding:6px 8px;background:rgba(0,0,0,0.2);border-radius:5px;border:1px solid rgba(255,255,255,0.05)">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+            <span style="font-size:12px;font-weight:700;color:${c};min-width:65px;flex-shrink:0">${name}</span>
+            <input id="mce_${side}_${role}" class="ss" style="flex:1;font-size:12px;padding:4px 7px"
+              value="${champVal}" placeholder="Postać..." list="mdChampList">
+          </div>
+          <div style="display:flex;gap:5px;align-items:center">
+            <span style="font-size:10px;color:var(--silver);flex-shrink:0">KDA:</span>
+            <input id="mce_k_${side}_${role}" class="ss" style="width:40px;font-size:11px;padding:3px 5px;text-align:center"
+              value="${k}" placeholder="K" type="number" min="0">
+            <span style="color:var(--silver);font-size:12px">/</span>
+            <input id="mce_d_${side}_${role}" class="ss" style="width:40px;font-size:11px;padding:3px 5px;text-align:center"
+              value="${d}" placeholder="D" type="number" min="0">
+            <span style="color:var(--silver);font-size:12px">/</span>
+            <input id="mce_a_${side}_${role}" class="ss" style="width:40px;font-size:11px;padding:3px 5px;text-align:center"
+              value="${a}" placeholder="A" type="number" min="0">
+          </div>
         </div>`;
       }).join('');
-  }).join('<div style="height:8px"></div>');
+  }).join('');
   document.getElementById('mdChampEdit').innerHTML=datalist+editRows;
 }
 
@@ -3921,11 +3945,41 @@ function saveMatchChamps(){
   const m=MH.find(x=>x.gid===currentMatchGid);
   if(!m)return;
   const blueChamps={};const redChamps={};
+  if(!m.scanResult)m.scanResult={};
   ['top','jng','mid','adc','supp'].forEach(role=>{
+    // Save champs
     const bv=document.getElementById('mce_blue_'+role)?.value.trim()||'';
     const rv=document.getElementById('mce_red_'+role)?.value.trim()||'';
     if(bv)blueChamps[role]=bv;
     if(rv)redChamps[role]=rv;
+    // Save KDA for blue
+    const bname=m.blue[role];
+    if(bname){
+      const k=document.getElementById('mce_k_blue_'+role)?.value;
+      const d=document.getElementById('mce_d_blue_'+role)?.value;
+      const a=document.getElementById('mce_a_blue_'+role)?.value;
+      if(k!==''||d!==''||a!==''){
+        if(!m.scanResult[bname])m.scanResult[bname]={};
+        if(k!=='')m.scanResult[bname].k=Number(k);
+        if(d!=='')m.scanResult[bname].d=Number(d);
+        if(a!=='')m.scanResult[bname].a=Number(a);
+        if(bv)m.scanResult[bname].champ=bv;
+      }
+    }
+    // Save KDA for red
+    const rname=m.red[role];
+    if(rname){
+      const k=document.getElementById('mce_k_red_'+role)?.value;
+      const d=document.getElementById('mce_d_red_'+role)?.value;
+      const a=document.getElementById('mce_a_red_'+role)?.value;
+      if(k!==''||d!==''||a!==''){
+        if(!m.scanResult[rname])m.scanResult[rname]={};
+        if(k!=='')m.scanResult[rname].k=Number(k);
+        if(d!=='')m.scanResult[rname].d=Number(d);
+        if(a!=='')m.scanResult[rname].a=Number(a);
+        if(rv)m.scanResult[rname].champ=rv;
+      }
+    }
   });
   if(Object.keys(blueChamps).length)m.blueChamps=blueChamps;
   if(Object.keys(redChamps).length)m.redChamps=redChamps;
@@ -4304,26 +4358,27 @@ function parseSheetCSV(csv){
     const rct=get(19),rcj=get(20),rcm=get(21),rca=get(22),rcs=get(23);
     if(bct||bcj||bcm||bca||bcs) m.blueChamps={top:bct,jng:bcj,mid:bcm,adc:bca,supp:bcs};
     if(rct||rcj||rcm||rca||rcs) m.redChamps={top:rct,jng:rcj,mid:rcm,adc:rca,supp:rcs};
-    const imgUrl=get(24);
-    // Handle multiple formats:
-    // 1. Plain URL: "https://..."
-    // 2. HYPERLINK formula exported as text: =HYPERLINK("url","name")
-    // 3. Google Sheets exports hyperlink cell as the display text, not URL
-    //    → user should paste URL directly, but try to extract if formula leaked
+    const kdaRaw2=get(24);
+    const imgUrl=get(25);
     const extractUrl=(raw)=>{
       if(!raw)return'';
-      // Direct URL
       if(raw.startsWith('http'))return raw;
-      // HYPERLINK formula: =HYPERLINK("url","text") or HYPERLINK("url","text")
       const hm=raw.match(/HYPERLINK\s*\(\s*"([^"]+)"/i);
       if(hm)return hm[1];
-      // Sometimes exports as: url (display text) — try finding http inside
       const urlMatch=raw.match(/https?:\/\/[^\s"')]+/);
       if(urlMatch)return urlMatch[0];
       return'';
     };
     const resolvedUrl=extractUrl(imgUrl);
     if(resolvedUrl)m.imgUrl=resolvedUrl;
+    // Col 25: KdaJson
+    // kdaRaw already parsed above as kdaRaw2
+    if(kdaRaw2){
+      try{
+        const kda=JSON.parse(kdaRaw2);
+        if(typeof kda==='object'){m.scanResult=kda;}
+      }catch(e){/* invalid JSON — ignore */}
+    }
     const existing=MH.find(x=>x.gid===m.gid);
     if(existing?.scanResult)m.scanResult=existing.scanResult;
     matches.push(m);
@@ -4401,9 +4456,9 @@ async function gsWrite(matchData){
       matchData.red.top||'',  matchData.red.jng||'',  matchData.red.mid||'',  matchData.red.adc||'',  matchData.red.supp||'',
       matchData.blueChamps?.top||'', matchData.blueChamps?.jng||'', matchData.blueChamps?.mid||'', matchData.blueChamps?.adc||'', matchData.blueChamps?.supp||'',
       matchData.redChamps?.top||'',  matchData.redChamps?.jng||'',  matchData.redChamps?.mid||'',  matchData.redChamps?.adc||'',  matchData.redChamps?.supp||'',
+      matchData.scanResult&&Object.keys(matchData.scanResult).length?JSON.stringify(matchData.scanResult):'',
       matchData.imgUrl||'',
     ];
-    const r=await fetch(scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(row)));
     const res=await r.json();
     if(res.status==='ok'){
       gsLog('✓ Zapisano w Google Sheets','var(--success)');
@@ -4430,6 +4485,7 @@ async function gsUpdate(matchData){
       matchData.red.top||'',  matchData.red.jng||'',  matchData.red.mid||'',  matchData.red.adc||'',  matchData.red.supp||'',
       matchData.blueChamps?.top||'', matchData.blueChamps?.jng||'', matchData.blueChamps?.mid||'', matchData.blueChamps?.adc||'', matchData.blueChamps?.supp||'',
       matchData.redChamps?.top||'',  matchData.redChamps?.jng||'',  matchData.redChamps?.mid||'',  matchData.redChamps?.adc||'',  matchData.redChamps?.supp||'',
+      matchData.scanResult&&Object.keys(matchData.scanResult).length?JSON.stringify(matchData.scanResult):'',
       matchData.imgUrl||'',
     ];
     const r=await fetch(scriptUrl+'?action=updateRow&gid='+encodeURIComponent(matchData.gid)+'&row='+encodeURIComponent(JSON.stringify(row)));
