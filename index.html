@@ -3301,11 +3301,15 @@ function renderHist(){
   if(hdr) hdr.textContent='Historia meczy'+(q?' (filtr: '+q+')':' ('+MH.length+')');
 
   function champRow(name, role, champs, scan){
-    // Priority: blueChamps/redChamps > scanResult.champ > nothing
     const champ=(champs&&champs[role])||scan?.[name]?.champ||'';
     const key=champ?champKey(champ):'';
     const c=PC[name]||'#C8AA6E';
     const src=key?ddUrl(key):'';
+    const sr=scan?.[name]||{};
+    const hasKDA=sr.k!==undefined;
+    const kdaStr=hasKDA?(sr.k+'/'+sr.d+'/'+sr.a):'';
+    const kdaVal=hasKDA?(sr.d>0?((sr.k+sr.a)/sr.d).toFixed(1):(sr.k+sr.a).toString()):'';
+    const kdaColor=Number(kdaVal)>=5?'#1DE9B6':Number(kdaVal)>=3?'#C8AA6E':'rgba(160,180,200,0.6)';
     return '<div class="lm-champ-entry">'
       +(src
         ?'<img class="lm-champ-icon" src="'+src+'" loading="lazy" onerror="this.style.background=\''+c+'22\';this.src=\'\'">'
@@ -3313,6 +3317,7 @@ function renderHist(){
       +'<div class="lm-player-info">'
       +'<div class="lm-player-name" style="color:'+c+'">'+name+'</div>'
       +(champ?'<div class="lm-champ-name">'+champ+'</div>':'<div style="font-size:10px;color:rgba(160,180,200,0.35)">'+role.toUpperCase()+'</div>')
+      +(hasKDA?'<div style="font-size:10px;color:'+kdaColor+';font-weight:600;line-height:1">'+kdaStr+'</div>':'')
       +'</div></div>';
   }
 
