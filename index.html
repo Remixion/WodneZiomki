@@ -33,13 +33,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .nav-right-tabs{display:flex;justify-content:flex-start;align-items:center;gap:3px}
 .nav-center-wrap{display:flex;flex-direction:column;align-items:center;position:relative;padding:0 8px}
 /* tentacle curves */
-.nav-center-wrap::before,.nav-center-wrap::after{
-  content:'';position:absolute;top:50%;width:36px;height:28px;
-  border:1.5px solid rgba(11,196,227,0.25);border-radius:50%;
-  pointer-events:none;
-}
-.nav-center-wrap::before{right:100%;margin-right:-10px;border-right:none;border-top:none;transform:translateY(-50%) rotate(-10deg)}
-.nav-center-wrap::after{left:100%;margin-left:-10px;border-left:none;border-top:none;transform:translateY(-50%) rotate(10deg)}
+/* nav tentacles removed */
 .nav-tab-center{
   padding:9px 26px;
   background:linear-gradient(135deg,rgba(11,196,227,0.18),rgba(93,173,226,0.12));
@@ -3065,104 +3059,8 @@ function renderStats(){
     if(m.win==='LEWA'){proc(m.blue,m.red);}else{proc(m.red,m.blue);}
   });
 
-  // Patch activity
-  const byPatch={};
-  MHf.forEach(m=>{if(!byPatch[m.patch])byPatch[m.patch]=0;byPatch[m.patch]++;});
-  const patchArr=Object.entries(byPatch).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const maxPatch=patchArr[0]?.[1]||1;
-
-  // Role distribution across all games
-  const roleCount={top:0,jng:0,mid:0,adc:0,supp:0};
-  MHf.forEach(m=>{ROLES.forEach(r=>{if(m.blue[r])roleCount[r]++;if(m.red[r])roleCount[r]++;});});
-  const roleTotal=Object.values(roleCount).reduce((a,b)=>a+b,0)||1;
-  const roleColors={top:'#E84855',jng:'#1DE9B6',mid:'#5DADE2',adc:'#F39C12',supp:'#A78BFA'};
-
-  // Helper: mini rank bar row
-  const rankRow=(p,i)=>{
-    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
-    const c=PC[p.n]||'#C8AA6E';
-    const meta=PLAYER_META[p.n]||{};
-    const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">':'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
-    return `<div class="stats-rank-row">
-      <div class="stats-rank-num ${rc}">${i+1}</div>
-      ${av}
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
-        <div style="font-size:11px;color:var(--silver)">${p.g}G</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <slot></slot>
-      </div>
-    </div>`;
-  };
-
-  const wrRow=(p,i)=>{
-    const c=PC[p.n]||'#C8AA6E';
-    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
-    const wrc=p.wr>=60?'var(--success)':p.wr>=45?'var(--gold)':'var(--danger)';
-    const meta=PLAYER_META[p.n]||{};
-    const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">':'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
-    return `<div class="stats-rank-row">
-      <div class="stats-rank-num ${rc}">${i+1}</div>
-      ${av}
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
-        <div class="stats-bar-wrap"><div class="stats-bar-fill" style="width:${p.wr}%;background:linear-gradient(90deg,${wrc},${wrc}88)"></div></div>
-      </div>
-      <div style="font-size:16px;font-weight:800;color:${wrc};min-width:44px;text-align:right">${p.wr}%</div>
-    </div>`;
-  };
-
-  const mmrRow=(p,i)=>{
-    const c=PC[p.n]||'#C8AA6E';
-    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
-    const meta=PLAYER_META[p.n]||{};
-    const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">':'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
-    return `<div class="stats-rank-row">
-      <div class="stats-rank-num ${rc}">${i+1}</div>
-      ${av}
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
-        <div style="font-size:11px;color:${p.rankColor}">${p.rank}</div>
-      </div>
-      <div style="font-size:16px;font-weight:800;color:${p.rankColor};min-width:60px;text-align:right">${p.mmr}</div>
-    </div>`;
-  };
-
-  // Role donut SVGs
-  const roleDonut=ROLES.map(r=>{
-    const pct=Math.round(roleCount[r]/roleTotal*100);
-    const R=28,thick=8,circ=2*Math.PI*R,arc=circ*(pct/100);
-    return `<div style="text-align:center">
-      <svg width="70" height="70" viewBox="0 0 70 70">
-        <circle cx="35" cy="35" r="${R}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="${thick}"/>
-        <circle cx="35" cy="35" r="${R}" fill="none" stroke="${roleColors[r]}" stroke-width="${thick}"
-          stroke-dasharray="${arc} ${circ-arc}" stroke-dashoffset="${circ/4}" transform="rotate(-90 35 35)"/>
-        <text x="35" y="39" text-anchor="middle" fill="${roleColors[r]}" font-size="13" font-weight="700" font-family="Rajdhani,sans-serif">${pct}%</text>
-      </svg>
-      <div style="font-size:11px;color:${roleColors[r]};font-weight:700">${RI[r]} ${r.toUpperCase()}</div>
-    </div>`;
-  }).join('');
-
-
-
-  // KDA leaderboard
-  const kdaRows=[];
-  AP.forEach(n=>{
-    Object.entries(PS[n].champs||{}).forEach(([ch,v])=>{
-      if(v.g>=1){
-        const kda=v.d>0?+((v.k+v.a)/v.d).toFixed(2):+(v.k+v.a).toFixed(1);
-        kdaRows.push({player:n,champ:ch,g:v.g,kda,
-          k:v.g>0?+(v.k/v.g).toFixed(1):0,
-          d:v.g>0?+(v.d/v.g).toFixed(1):0,
-          a:v.g>0?+(v.a/v.g).toFixed(1):0});
-      }
-    });
-  });
-  kdaRows.sort((a,b)=>b.kda-a.kda||b.g-a.g);
-  const hasKDA=kdaRows.length>0;
-
   el.innerHTML=`
+  <div class="stats-hero">
     <div class="stats-hero-cell">
       <div class="stats-hero-val" style="color:var(--gold)">${totalG}</div>
       <div class="stats-hero-lbl">Mecze</div>
@@ -3217,21 +3115,9 @@ function renderStats(){
         </div>`;
       }).join('')}
     </div>
-    <div class="stats-panel">
-      <div class="stats-section-title">📅 Aktywność per patch</div>
-      ${patchArr.map(([patch,cnt])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-size:12px;color:var(--silver);min-width:50px">P${patch}</span>
-        <div class="stats-bar-wrap" style="flex:1"><div class="stats-bar-fill" style="width:${Math.round(cnt/maxPatch*100)}%;background:linear-gradient(90deg,rgba(11,196,227,0.6),rgba(93,173,226,0.4))"></div></div>
-        <span style="font-size:13px;font-weight:700;color:var(--teal);min-width:28px;text-align:right">${cnt}</span>
-      </div>`).join('')}
-    </div>
   </div>
   <div class="stats-grid">
-    <div class="stats-panel">
-      <div class="stats-section-title">⚔️ Rozkład ról</div>
-      <div class="stats-donut-row">${roleDonut}</div>
-    </div>
-    <div class="stats-panel">
+    <div class="stats-panel stats-wide" style="grid-column:1/-1">
       <div class="stats-section-title">🤝 Najlepsza synergia <span style="font-size:10px;color:var(--silver)">(min. 2G razem)</span></div>
       ${synArr.length?synArr.map(s=>{
         const c0=PC[s.pair[0]]||'#C8AA6E', c1=PC[s.pair[1]]||'#C8AA6E';
