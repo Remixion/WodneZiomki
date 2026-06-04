@@ -3061,6 +3061,22 @@ function renderStats(){
 
   // ── Row helpers ──────────────────────────────────────────────────────────
 
+  // KDA leaderboard data
+  const kdaRows=[];
+  AP.forEach(n=>{
+    Object.entries(PS[n].champs||{}).forEach(([ch,v])=>{
+      if(v.g>=1){
+        const kda=v.d>0?+((v.k+v.a)/v.d).toFixed(2):+(v.k+v.a).toFixed(1);
+        kdaRows.push({player:n,champ:ch,g:v.g,kda,
+          k:v.g>0?+(v.k/v.g).toFixed(1):0,
+          d:v.g>0?+(v.d/v.g).toFixed(1):0,
+          a:v.g>0?+(v.a/v.g).toFixed(1):0});
+      }
+    });
+  });
+  kdaRows.sort((a,b)=>b.kda-a.kda||b.g-a.g);
+  const hasKDA=kdaRows.length>0;
+
   const wrRow=(p,i)=>{
     const c=PC[p.n]||'#C8AA6E';
     const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
