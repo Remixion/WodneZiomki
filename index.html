@@ -3059,6 +3059,43 @@ function renderStats(){
     if(m.win==='LEWA'){proc(m.blue,m.red);}else{proc(m.red,m.blue);}
   });
 
+  // ── Row helpers ──────────────────────────────────────────────────────────
+
+  const wrRow=(p,i)=>{
+    const c=PC[p.n]||'#C8AA6E';
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const wrc=p.wr>=60?'var(--success)':p.wr>=45?'var(--gold)':'var(--danger)';
+    const meta=PLAYER_META[p.n]||{};
+    const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">'
+      :'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
+    return `<div class="stats-rank-row">
+      <div class="stats-rank-num ${rc}">${i+1}</div>
+      ${av}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
+        <div class="stats-bar-wrap"><div class="stats-bar-fill" style="width:${p.wr}%;background:linear-gradient(90deg,${wrc},${wrc}88)"></div></div>
+      </div>
+      <div style="font-size:16px;font-weight:800;color:${wrc};min-width:44px;text-align:right">${p.wr}%</div>
+    </div>`;
+  };
+
+  const mmrRow=(p,i)=>{
+    const c=PC[p.n]||'#C8AA6E';
+    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const meta=PLAYER_META[p.n]||{};
+    const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">'
+      :'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
+    return `<div class="stats-rank-row">
+      <div class="stats-rank-num ${rc}">${i+1}</div>
+      ${av}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
+        <div style="font-size:11px;color:${p.rankColor}">${p.rank}</div>
+      </div>
+      <div style="font-size:16px;font-weight:800;color:${p.rankColor};min-width:60px;text-align:right">${p.mmr}</div>
+    </div>`;
+  };
+
   el.innerHTML=`
   <div class="stats-hero">
     <div class="stats-hero-cell">
@@ -4352,12 +4389,8 @@ async function gsFetch(silent=false){
   if(!url){if(!silent)toast('Brak URL do arkusza Google Sheets');return false;}
   try{
     if(!silent)gsLog('Pobieranie z Google Sheets...');
-    // Use no-store cache to always get fresh data
-    const r=await fetch(url+'&t='+Date.now(),{
-      method:'GET',
-      cache:'no-store',
-      headers:{'Accept':'text/csv,text/plain,*/*'}
-    });
+    // Simple fetch without custom headers — avoids CORS preflight on Sheets published URL
+    const r=await fetch(url+'&t='+Date.now());
     if(!r.ok)throw new Error('HTTP '+r.status);
     const csv=await r.text();
     if(!csv||csv.trim().length<10)throw new Error('Pusta odpowiedź');
@@ -4374,7 +4407,7 @@ async function gsFetch(silent=false){
     const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
     if(scriptUrl){
       try{
-        const ir=await fetch(scriptUrl+'?action=getImgUrls',{cache:'no-store'});
+        const ir=await fetch(scriptUrl+'?action=getImgUrls');
         if(ir.ok){
           const imgData=await ir.json();
           if(imgData.status==='ok'&&imgData.urls){
