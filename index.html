@@ -2465,6 +2465,7 @@ function parseLoLJsonFile(jsonData, fileName){
     const g=entry.game;
     if(!g)return;
     const gameId=String(g.gameId);
+
     if(!_importBuffer[gameId]){
       _importBuffer[gameId]={
         gameId,
@@ -2476,7 +2477,7 @@ function parseLoLJsonFile(jsonData, fileName){
         blueChamps:{top:'',jng:'',mid:'',adc:'',supp:''},
         redChamps:{top:'',jng:'',mid:'',adc:'',supp:''},
         scanResult:{},
-        _blue_slots:{},_red_slots:{},
+        _pidSlots:{blue:{},red:{}},
       };
       added++;
     } else {
@@ -2485,12 +2486,12 @@ function parseLoLJsonFile(jsonData, fileName){
 
     const buf=_importBuffer[gameId];
 
-    // Winning team
+    // Winning team from game.teams
     const teams=g.teams||[];
     const winTeam=teams.find(t=>t.win==='Win');
     if(winTeam)buf.winningTeam=winTeam.teamId;
 
-    // participantIdentities → id to name map
+    // Identity map: only the file owner has a real name
     const idToName={};
     (g.participantIdentities||[]).forEach(pi=>{
       const pl=pi.player||{};
@@ -2498,11 +2499,14 @@ function parseLoLJsonFile(jsonData, fileName){
       if(name)idToName[pi.participantId]=name;
     });
 
-    // participants → map to slots
-    (g.participants||[]).forEach(p=>{
+    // KEY FIX: use entry.participants (outer array = all 10 players)
+    // not g.participants (inner = only 1 player)
+    const allParticipants=entry.participants||g.participants||[];
+
+    allParticipants.forEach(p=>{
       const pid=p.participantId;
-      const name=idToName[pid]||'';
-      const teamId=p.teamId;
+      const name=idToName[pid]||'';  // empty if unknown player
+      const side=p.teamId===100?'blue':'red';
       const champKey2=champIdToKey(p.championId)||'';
       const champDisp=champKey2?champDisplayName(champKey2):'';
       const tl=p.timeline||{};
@@ -2510,18 +2514,41 @@ function parseLoLJsonFile(jsonData, fileName){
       const stats=p.stats||{};
       const k=stats.kills||0,d=stats.deaths||0,a=stats.assists||0;
 
-      const side=teamId===100?'blue':'red';
-      const team=buf[side];
-      const champs=buf[side+'Champs'];
-
-      // Assign to role (handle conflicts by position)
-      team[role]=name||team[role];
-      champs[role]=champDisp||champs[role];
-
-      // KDA
-      if(name){
-        buf.scanResult[name]={champ:champDisp,k,d,a};
+      // Store by participantId slot so merging across files works
+      if(!buf._pidSlots[side][pid]){
+        buf._pidSlots[side][pid]={pid,name,champKey:champKey2,champDisp,role,k,d,a};
+      } else if(name){
+        // Update name if we now know it (from another player's file)
+        buf._pidSlots[side][pid].name=name;
       }
+    });
+  });
+
+  // Rebuild blue/red/champs from _pidSlots after each file
+  Object.values(_importBuffer).forEach(buf=>{
+    ['blue','red'].forEach(side=>{
+      const slots=Object.values(buf._pidSlots[side]);
+      // Sort by participantId to assign roles consistently
+      slots.sort((a,b)=>a.pid-b.pid);
+      // Reset
+      buf[side]={top:'',jng:'',mid:'',adc:'',supp:''};
+      buf[side+'Champs']={top:'',jng:'',mid:'',adc:'',supp:''};
+      buf.scanResult={};
+
+      slots.forEach(s=>{
+        if(buf[side][s.role]===''||buf[side][s.role]===undefined){
+          buf[side][s.role]=s.name;
+          buf[side+'Champs'][s.role]=s.champDisp;
+        } else {
+          // Find next empty role
+          const freeRole=ROLES.find(r=>!buf[side][r]);
+          if(freeRole){buf[side][freeRole]=s.name;buf[side+'Champs'][freeRole]=s.champDisp;}
+        }
+        // KDA for known players only
+        if(s.name){
+          buf.scanResult[s.name]={champ:s.champDisp,k:s.k,d:s.d,a:s.a};
+        }
+      });
     });
   });
 
