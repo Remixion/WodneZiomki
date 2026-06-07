@@ -850,10 +850,10 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 
 <!-- MECZE PAGE -->
-<div class="page" id="page-mecze">
+<div class="page" id="page-mecze" style="display:flex;flex-direction:column;height:calc(100vh - 70px);overflow:hidden;padding:0">
 
-  <!-- Top bar: title + import button -->
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+  <!-- Top bar -->
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 20px 10px;flex-shrink:0">
     <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--gold);letter-spacing:2px">Mecze</div>
     <div style="margin-left:auto;display:flex;gap:6px">
       <label class="btn sbtn" style="font-size:12px;padding:5px 12px;cursor:pointer" title="Importuj match_*.json lub sss.json">
@@ -864,11 +864,18 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
     </div>
   </div>
 
-  <!-- Analyzer panel (shows when match selected) -->
-  <div id="mecze-analyzer" style="display:none;margin-bottom:14px"></div>
+  <!-- Split: fixed analyzer (top) + scrollable list (bottom) -->
+  <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
 
-  <!-- Match list (fetched from Sheets + imported) -->
-  <div id="mecze-list" style="display:flex;flex-direction:column;gap:5px"></div>
+    <!-- Fixed analyzer panel -->
+    <div id="mecze-analyzer" style="display:none;flex-shrink:0;max-height:60vh;overflow-y:auto;padding:0 20px 10px;border-bottom:2px solid var(--border)"></div>
+
+    <!-- Scrollable match list -->
+    <div style="flex:1;overflow-y:auto;padding:10px 20px 20px">
+      <div id="mecze-list" style="display:flex;flex-direction:column;gap:5px"></div>
+    </div>
+
+  </div>
 
 </div>
 
@@ -5022,6 +5029,15 @@ async function gsWrite(matchData){
   }
   try{
     gsLog('Wysyłam do Google Sheets...');
+    // Truncate participants to avoid huge payloads — store only key stats
+    const trimParticipants=(pts)=>{
+      if(!pts||!pts.length)return[];
+      return pts.map(p=>({
+        pid:p.pid,side:p.side,role:p.role,name:p.name,champ:p.champ,win:p.win,
+        k:p.k,d:p.d,a:p.a,cs:p.cs,gold:p.gold,dmg:p.dmg,vision:p.vision,
+        kda:p.kda,kp:p.kp,items:p.items,
+      }));
+    };
     const row=[
       matchData.gid, matchData.patch, matchData.date, matchData.win,
       matchData.blue.top||'', matchData.blue.jng||'', matchData.blue.mid||'', matchData.blue.adc||'', matchData.blue.supp||'',
@@ -5030,9 +5046,16 @@ async function gsWrite(matchData){
       matchData.redChamps?.top||'',  matchData.redChamps?.jng||'',  matchData.redChamps?.mid||'',  matchData.redChamps?.adc||'',  matchData.redChamps?.supp||'',
       matchData.scanResult&&Object.keys(matchData.scanResult).length?JSON.stringify(matchData.scanResult):'',
       matchData.imgUrl||'',
-      matchData.participants&&matchData.participants.length?JSON.stringify(matchData.participants):'',
+      matchData.participants&&matchData.participants.length?JSON.stringify(trimParticipants(matchData.participants)):'',
     ];
-    const r=await fetch(scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(row)));
+    const payload=JSON.stringify({action:'addRow',row});
+    // Try POST first (avoids URL length limit), fall back to GET
+    let r;
+    try{
+      r=await fetch(scriptUrl,{method:'POST',body:payload,headers:{'Content-Type':'text/plain'}});
+    }catch(e){
+      r=await fetch(scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(row)));
+    }
     const res=await r.json();
     if(res.status==='ok'){
       gsLog('✓ Zapisano w Google Sheets','var(--success)');
@@ -5048,11 +5071,11 @@ async function gsWrite(matchData){
   }
 }
 
-// Update existing row in Sheets (by GID)
 async function gsUpdate(matchData){
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
   if(!scriptUrl){toast('⚠ Brak Apps Script URL');return false;}
   try{
+    const trimP=(pts)=>(!pts||!pts.length)?[]:pts.map(p=>({pid:p.pid,side:p.side,role:p.role,name:p.name,champ:p.champ,win:p.win,k:p.k,d:p.d,a:p.a,cs:p.cs,gold:p.gold,dmg:p.dmg,vision:p.vision,kda:p.kda,kp:p.kp,items:p.items}));
     const row=[
       matchData.gid, matchData.patch, matchData.date, matchData.win,
       matchData.blue.top||'', matchData.blue.jng||'', matchData.blue.mid||'', matchData.blue.adc||'', matchData.blue.supp||'',
@@ -5061,16 +5084,18 @@ async function gsUpdate(matchData){
       matchData.redChamps?.top||'',  matchData.redChamps?.jng||'',  matchData.redChamps?.mid||'',  matchData.redChamps?.adc||'',  matchData.redChamps?.supp||'',
       matchData.scanResult&&Object.keys(matchData.scanResult).length?JSON.stringify(matchData.scanResult):'',
       matchData.imgUrl||'',
-      matchData.participants&&matchData.participants.length?JSON.stringify(matchData.participants):'',
+      matchData.participants&&matchData.participants.length?JSON.stringify(trimP(matchData.participants)):'',
     ];
-    const r=await fetch(scriptUrl+'?action=updateRow&gid='+encodeURIComponent(matchData.gid)+'&row='+encodeURIComponent(JSON.stringify(row)));
-    const res=await r.json();
-    if(res.status==='ok'){
-      toast('✓ Zaktualizowano w Sheets!');
-      return true;
-    } else {
-      throw new Error(res.error||'nieznany błąd');
+    const payload=JSON.stringify({action:'updateRow',gid:matchData.gid,row});
+    let r;
+    try{
+      r=await fetch(scriptUrl,{method:'POST',body:payload,headers:{'Content-Type':'text/plain'}});
+    }catch(e){
+      r=await fetch(scriptUrl+'?action=updateRow&gid='+encodeURIComponent(matchData.gid)+'&row='+encodeURIComponent(JSON.stringify(row)));
     }
+    const res=await r.json();
+    if(res.status==='ok'){toast('✓ Zaktualizowano w Sheets!');return true;}
+    else throw new Error(res.error||'nieznany błąd');
   }catch(e){
     toast('Błąd aktualizacji Sheets: '+e.message);
     return false;
@@ -5331,7 +5356,6 @@ async function meczeFetchSheets(){
 
 function openMecze(gameId){
   if(_meczeActive===gameId){
-    // Toggle close
     _meczeActive=null;
     document.getElementById('mecze-analyzer').style.display='none';
     renderMeczeList();
@@ -5341,8 +5365,9 @@ function openMecze(gameId){
   _meczeTab='overview';
   renderMeczeList();
   renderMeczeAnalyzer();
-  // Scroll analyzer into view
-  setTimeout(()=>document.getElementById('mecze-analyzer')?.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  // Scroll list container to top so analyzer (fixed at top) is visible
+  const listWrap=document.getElementById('mecze-list')?.parentElement;
+  if(listWrap)listWrap.scrollTop=0;
 }
 
 function renderMeczeAnalyzer(){
@@ -5373,49 +5398,57 @@ function renderMeczeAnalyzer(){
   const iUrl=id=>`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/item/${id}.png`;
 
   el.innerHTML=`
-  <div style="background:var(--panel);border:1px solid var(--gold-dark);border-radius:10px;overflow:hidden">
-    <!-- Analyzer header -->
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(200,170,110,0.06);border-bottom:1px solid var(--border)">
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">#${m.gameId}</div>
-      <div style="font-size:12px;color:var(--silver)">${m.date}</div>
-      ${m.duration?`<div style="font-size:12px;color:var(--silver)">⏱${m.duration}</div>`:''}
-      <div style="font-size:12px;color:var(--silver)">P${m.patch}</div>
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:0 0 10px 10px;overflow:hidden">
+    <!-- Analyzer header — History popup style -->
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border)">
+      <div style="font-family:'Cinzel',serif;font-size:17px;color:var(--gold);font-weight:700">Mecz #${m.gameId}</div>
+      <div style="font-size:13px;color:var(--silver)">${m.date}</div>
+      ${m.duration?`<div style="font-size:13px;color:var(--silver)">⏱ ${m.duration}</div>`:''}
+      <div style="font-size:13px;color:var(--silver)">Patch ${m.patch}</div>
       <div style="flex:1"></div>
-      <button onclick="setMeczeTab('overview')" id="mt_overview" class="btn sbtn" style="font-size:11px;padding:3px 10px">Przegląd</button>
-      <button onclick="setMeczeTab('scoreboard')" id="mt_scoreboard" class="btn sbtn" style="font-size:11px;padding:3px 10px">Scoreboard</button>
-      <button onclick="setMeczeTab('charts')" id="mt_charts" class="btn sbtn" style="font-size:11px;padding:3px 10px">Wykresy</button>
-      <button onclick="setMeczeTab('edit')" id="mt_edit" class="btn sbtn" style="font-size:11px;padding:3px 10px">Edytuj</button>
-      <button onclick="exportMeczeToSheets('${gameId}')" style="padding:4px 12px;background:rgba(200,170,110,0.1);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:11px">💾 Sheets</button>
-      <button onclick="openMecze('${gameId}')" style="background:none;border:none;cursor:pointer;color:var(--silver);font-size:16px;padding:0 4px">✕</button>
+      <div style="font-size:16px;font-weight:700;color:${blueWin?'#5DADE2':'#E84855'}">${m.win} wygrywa</div>
+      <button onclick="exportMeczeToSheets('${gameId}')" style="padding:5px 14px;background:rgba(200,170,110,0.12);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:12px">💾 Sheets</button>
+      <button onclick="openMecze('${gameId}')" style="background:none;border:1px solid var(--border);color:var(--silver);cursor:pointer;font-size:14px;padding:3px 8px;border-radius:4px">✕</button>
     </div>
-    <!-- Team summary bar -->
-    <div style="display:grid;grid-template-columns:1fr 60px 1fr;background:rgba(0,0,0,0.15)">
-      <div style="padding:8px 12px;background:${blueWin?'rgba(93,173,226,0.08)':''}">
-        <div style="font-size:10px;font-weight:700;color:${blueWin?'#5DADE2':'rgba(93,173,226,0.4)'};letter-spacing:1px">${blueWin?'✓ VICTORY':'DEFEAT'} · LEWA</div>
-        <div style="display:flex;gap:10px;font-size:12px;margin-top:3px;flex-wrap:wrap">
-          <b style="color:var(--gold)">${bT.totalKills||0}K</b>
-          ${bT.towerKills?`<span style="color:var(--silver)">🏰${bT.towerKills}</span>`:''}
-          ${bT.dragonKills?`<span style="color:var(--silver)">🐉${bT.dragonKills}</span>`:''}
-          ${bT.baronKills?`<span style="color:var(--silver)">👑${bT.baronKills}</span>`:''}
-          ${bT.firstBlood?'<span style="color:var(--danger)">🩸FB</span>':''}
-          ${bT.totalGold?`<span style="color:var(--silver)">💰${(bT.totalGold/1000).toFixed(1)}k</span>`:''}
+
+    <!-- Team summary — VS bar like History popup -->
+    <div style="display:grid;grid-template-columns:1fr 50px 1fr">
+      <div style="padding:10px 16px;background:${blueWin?'rgba(93,173,226,0.1)':'rgba(10,16,30,0.5)'}">
+        <div style="font-size:12px;font-weight:700;color:${blueWin?'#5DADE2':'rgba(93,173,226,0.35)'};letter-spacing:1.5px;margin-bottom:6px">${blueWin?'✓ VICTORY':'DEFEAT'} · LEWA</div>
+        <div style="display:flex;gap:12px;font-size:14px;flex-wrap:wrap;align-items:center">
+          <span style="font-weight:700;color:var(--gold)">${bT.totalKills||0} Kills</span>
+          ${bT.towerKills?`<span style="color:var(--silver)">🏰 ${bT.towerKills}</span>`:''}
+          ${bT.dragonKills?`<span style="color:var(--silver)">🐉 ${bT.dragonKills}</span>`:''}
+          ${bT.baronKills?`<span style="color:var(--silver)">👑 ${bT.baronKills}</span>`:''}
+          ${bT.firstBlood?'<span style="color:var(--danger)">🩸 FB</span>':''}
+          ${bT.totalGold?`<span style="color:rgba(200,170,110,0.6);font-size:12px">💰 ${(bT.totalGold/1000).toFixed(1)}k</span>`:''}
         </div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(200,170,110,0.3);font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border)">VS</div>
-      <div style="padding:8px 12px;background:${!blueWin?'rgba(232,72,85,0.08)':''}">
-        <div style="font-size:10px;font-weight:700;color:${!blueWin?'#E84855':'rgba(232,72,85,0.4)'};letter-spacing:1px">${!blueWin?'✓ VICTORY':'DEFEAT'} · PRAWA</div>
-        <div style="display:flex;gap:10px;font-size:12px;margin-top:3px;flex-wrap:wrap">
-          <b style="color:var(--gold)">${rT.totalKills||0}K</b>
-          ${rT.towerKills?`<span style="color:var(--silver)">🏰${rT.towerKills}</span>`:''}
-          ${rT.dragonKills?`<span style="color:var(--silver)">🐉${rT.dragonKills}</span>`:''}
-          ${rT.baronKills?`<span style="color:var(--silver)">👑${rT.baronKills}</span>`:''}
-          ${rT.firstBlood?'<span style="color:var(--danger)">🩸FB</span>':''}
-          ${rT.totalGold?`<span style="color:var(--silver)">💰${(rT.totalGold/1000).toFixed(1)}k</span>`:''}
+      <div style="display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:14px;color:rgba(200,170,110,0.3);border-left:1px solid var(--border);border-right:1px solid var(--border)">VS</div>
+      <div style="padding:10px 16px;background:${!blueWin?'rgba(232,72,85,0.1)':'rgba(10,16,30,0.5)'}">
+        <div style="font-size:12px;font-weight:700;color:${!blueWin?'#E84855':'rgba(232,72,85,0.35)'};letter-spacing:1.5px;margin-bottom:6px">${!blueWin?'✓ VICTORY':'DEFEAT'} · PRAWA</div>
+        <div style="display:flex;gap:12px;font-size:14px;flex-wrap:wrap;align-items:center">
+          <span style="font-weight:700;color:var(--gold)">${rT.totalKills||0} Kills</span>
+          ${rT.towerKills?`<span style="color:var(--silver)">🏰 ${rT.towerKills}</span>`:''}
+          ${rT.dragonKills?`<span style="color:var(--silver)">🐉 ${rT.dragonKills}</span>`:''}
+          ${rT.baronKills?`<span style="color:var(--silver)">👑 ${rT.baronKills}</span>`:''}
+          ${rT.firstBlood?'<span style="color:var(--danger)">🩸 FB</span>':''}
+          ${rT.totalGold?`<span style="color:rgba(200,170,110,0.6);font-size:12px">💰 ${(rT.totalGold/1000).toFixed(1)}k</span>`:''}
         </div>
       </div>
     </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border)">
+      ${['overview','scoreboard','charts','edit'].map(tab=>`
+        <button onclick="setMeczeTab('${tab}')" id="mt_${tab}" style="padding:9px 18px;font-size:13px;cursor:pointer;background:${_meczeTab===tab?'var(--panel)':'transparent'};border:none;border-bottom:2px solid ${_meczeTab===tab?'var(--gold)':'transparent'};color:${_meczeTab===tab?'var(--gold)':'var(--silver)'};transition:all 0.15s">
+          ${{overview:'📋 Przegląd',scoreboard:'📊 Scoreboard',charts:'📈 Wykresy',edit:'✏️ Edytuj'}[tab]}
+        </button>
+      `).join('')}
+    </div>
+
     <!-- Tab content -->
-    <div id="mecze-tab-content" style="padding:14px"></div>
+    <div id="mecze-tab-content" style="padding:14px 16px"></div>
   </div>`;
 
   renderMeczeTab();
@@ -5423,6 +5456,13 @@ function renderMeczeAnalyzer(){
 
 function setMeczeTab(tab){
   _meczeTab=tab;
+  ['overview','scoreboard','charts','edit'].forEach(t=>{
+    const btn=document.getElementById('mt_'+t);
+    if(!btn)return;
+    btn.style.borderBottom=t===tab?'2px solid var(--gold)':'2px solid transparent';
+    btn.style.color=t===tab?'var(--gold)':'var(--silver)';
+    btn.style.background=t===tab?'var(--panel)':'transparent';
+  });
   renderMeczeTab();
 }
 
