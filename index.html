@@ -3693,21 +3693,27 @@ function renderHist(){
 
 function renderHistCompact(matches){
   function champRow(name,role,champs,scan,participants){
-    // Try rich participant data first
-    const richP=participants&&participants.find(p=>p.name===name||p.summonerName===name);
+    const richP=participants&&participants.find(p=>p.name===name);
     const champ=(champs&&champs[role])||richP?.champDisp||scan?.[name]?.champ||'';
     const key=champ?champKey(champ):'';
     const c=PC[name]||'#C8AA6E';
     const src=key?ddUrl(key):'';
     const k=richP?.k??scan?.[name]?.k, d=richP?.d??scan?.[name]?.d, a=richP?.a??scan?.[name]?.a;
     const hasKDA=k!==undefined;
-    const kdaStr=hasKDA?(k+'/'+d+'/'+a):'';
+    const kdaStr=hasKDA?`${k}/${d}/${a}`:'';
     const kdaVal=hasKDA?(d>0?((k+a)/d).toFixed(1):(k+a).toString()):'';
     const kdaColor=Number(kdaVal)>=5?'#1DE9B6':Number(kdaVal)>=3?'#C8AA6E':'rgba(160,180,200,0.6)';
-    const iconHtml=src
-      ?`<img class="lm-champ-icon" src="${src}" loading="lazy" onerror="this.style.background='${c}22';this.src=''">`
-      :`<div class="lm-champ-icon" style="background:${c}20;display:flex;align-items:center;justify-content:center;font-size:12px;color:${c}">${RI[role]}</div>`;
-    return `<div class="lm-champ-entry">${iconHtml}<div class="lm-player-info"><div class="lm-player-name" style="color:${c}">${name}</div>${champ?`<div class="lm-champ-name">${champ}</div>`:`<div style="font-size:10px;color:rgba(160,180,200,0.35)">${role.toUpperCase()}</div>`}${hasKDA?`<div style="font-size:10px;color:${kdaColor};font-weight:600;line-height:1">${kdaStr}</div>`:''}</div></div>`;
+    return `<div class="lm-champ-entry">
+      ${src
+        ?`<img class="lm-champ-icon" src="${src}" loading="lazy" onerror="this.style.background='${c}22';this.src=''">`
+        :`<div class="lm-champ-icon" style="background:${c}20;display:flex;align-items:center;justify-content:center;font-size:12px;color:${c}">${RI[role]}</div>`}
+      <div class="lm-player-info">
+        <div class="lm-player-name" style="color:${c}">${name}</div>
+        ${champ?`<div class="lm-champ-name">${champ}</div>`:`<div style="font-size:10px;color:rgba(160,180,200,0.35)">${role.toUpperCase()}</div>`}
+        ${hasKDA?`<div style="font-size:10px;color:${kdaColor};font-weight:600;line-height:1">${kdaStr}</div>`:''}
+      </div>
+    </div>`;
+  }
 
   document.getElementById('histList').innerHTML=matches.map(m=>{
     const blueWin=m.win==='LEWA';
@@ -3721,30 +3727,31 @@ function renderHistCompact(matches){
     const redOpacity=blueWin?'0.55':'1';
     const blueRows=ROLES.map(r=>m.blue[r]?champRow(m.blue[r],r,m.blueChamps,scan,parts):'').join('');
     const redRows=ROLES.map(r=>m.red[r]?champRow(m.red[r],r,m.redChamps,scan,parts):'').join('');
-    return '<div class="lol-match '+(blueWin?'lm-win':'lm-loss')+'" onclick="openMatchDetail(\''+m.gid+'\')">'+
-      '<div class="lm-result">'+
-        '<div class="lm-win-badge '+(blueWin?'win':'loss')+'">'+m.win+'</div>'+
-        '<div class="lm-gid">#'+m.gid+'</div>'+
-        '<div class="lm-date">'+(m.date||'').slice(5)+'</div>'+
-        (m.duration?'<div class="lm-patch">'+m.duration+'</div>':'<div class="lm-patch">P'+m.patch+'</div>')+
-      '</div>'+
-      '<div class="lm-team blue-team" style="background:'+blueBg+';'+blueGlow+';opacity:'+blueOpacity+'">'+
-        '<div class="lm-team-label" style="color:'+(blueWin?'#5DADE2':'rgba(93,173,226,0.25)')+';font-size:'+(blueWin?'12':'9')+'px">'+(blueWin?'✓ WIN':'')+'LEWA</div>'+
-        '<div class="lm-champ-list">'+blueRows+'</div>'+
-      '</div>'+
-      '<div class="lm-vs"><div class="lm-vs-txt">VS</div></div>'+
-      '<div class="lm-team" style="background:'+redBg+';'+redGlow+';opacity:'+redOpacity+'">'+
-        '<div class="lm-team-label" style="color:'+(!blueWin?'#E84855':'rgba(232,72,85,0.25)')+';font-size:'+(!blueWin?'12':'9')+'px">'+(!blueWin?'✓ WIN':'')+'PRAWA</div>'+
-        '<div class="lm-champ-list">'+redRows+'</div>'+
-      '</div>'+
-      '<div class="lm-screen">'+
-        (m.imgUrl?`<img class="lm-screen-thumb" src="${m.imgUrl}" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation();window.open('${m.imgUrl}','_blank')">`
-          :'<div class="lm-screen-placeholder">📷</div>')+
-        `<div style="font-size:10px;color:var(--silver);text-align:center">${m.imgUrl?'Screen':'—'}</div>`+
-    '</div>';
+    return `<div class="lol-match ${blueWin?'lm-win':'lm-loss'}" onclick="openMatchDetail('${m.gid}')">
+      <div class="lm-result">
+        <div class="lm-win-badge ${blueWin?'win':'loss'}">${m.win}</div>
+        <div class="lm-gid">#${m.gid}</div>
+        <div class="lm-date">${(m.date||'').slice(5)}</div>
+        ${m.duration?`<div class="lm-patch">${m.duration}</div>`:`<div class="lm-patch">P${m.patch}</div>`}
+      </div>
+      <div class="lm-team blue-team" style="background:${blueBg};${blueGlow};opacity:${blueOpacity}">
+        <div class="lm-team-label" style="color:${blueWin?'#5DADE2':'rgba(93,173,226,0.25)'};font-size:${blueWin?'12':'9'}px">${blueWin?'✓ WIN':''}LEWA</div>
+        <div class="lm-champ-list">${blueRows}</div>
+      </div>
+      <div class="lm-vs"><div class="lm-vs-txt">VS</div></div>
+      <div class="lm-team" style="background:${redBg};${redGlow};opacity:${redOpacity}">
+        <div class="lm-team-label" style="color:${!blueWin?'#E84855':'rgba(232,72,85,0.25)'};font-size:${!blueWin?'12':'9'}px">${!blueWin?'✓ WIN':''}PRAWA</div>
+        <div class="lm-champ-list">${redRows}</div>
+      </div>
+      <div class="lm-screen">
+        ${m.imgUrl
+          ?`<img class="lm-screen-thumb" src="${m.imgUrl}" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation();window.open('${m.imgUrl}','_blank')">`
+          :'<div class="lm-screen-placeholder">📷</div>'}
+        <div style="font-size:10px;color:var(--silver);text-align:center">${m.imgUrl?'Screen':'—'}</div>
+      </div>
+    </div>`;
   }).join('');
 }
-
 function renderHistScoreboard(matches){
   const DDVER=window._ddVersion||'15.10.1';
 
