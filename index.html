@@ -5281,9 +5281,9 @@ function renderMeczeList(){
     const date=(hist?.date||rich?.date||'');
     const patch=hist?.patch||rich?.patch||'';
     const duration=rich?.duration||hist?.duration||'';
-    const isActive=_meczeActive===lolId;
     const lolId=id; // LoL match ID from Riot
     const seqNum=total-idx; // sequential #N (1=oldest)
+    const isActive=_meczeActive===lolId;
 
     const parts=rich?.participants||hist?.participants||[];
     const blueRaw=rich?.blue||parts.filter(p=>p.side==='blue')||[];
