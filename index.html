@@ -5511,7 +5511,7 @@ function confirmMeczeImport(indices){
     exportMeczeToSheets(parsed.lolId);
     setTimeout(saveNext,600); // slight delay between saves
   }
-  const scriptUrl=localStorage.getItem('gs_script_url')||GS_CONFIG.scriptUrl;
+  const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
   if(scriptUrl) saveNext();
   else toast('⚠ Skonfiguruj Apps Script URL w DEV aby auto-zapisywać do Sheets');
 }
