@@ -2437,11 +2437,12 @@ function champIdToDisplay(id){
 
 function laneRoleToOurs(lane,role){
   const map={
-    'TOP,SOLO':'top','TOP,NONE':'top','TOP,DUO_CARRY':'top','TOP,DUO':'top',
-    'JUNGLE,NONE':'jng','JUNGLE,SOLO':'jng','JUNGLE,DUO':'jng',
-    'MIDDLE,SOLO':'mid','MIDDLE,DUO':'mid','MIDDLE,NONE':'mid',
-    'BOTTOM,DUO_CARRY':'adc','BOTTOM,DUO':'adc','BOTTOM,SOLO':'adc',
-    'BOTTOM,DUO_SUPPORT':'supp','NONE,DUO_SUPPORT':'supp',
+    'TOP,SOLO':'top','TOP,NONE':'top','TOP,DUO_CARRY':'top','TOP,DUO':'top','TOP,CARRY':'top',
+    'JUNGLE,NONE':'jng','JUNGLE,SOLO':'jng','JUNGLE,DUO':'jng','JUNGLE,CARRY':'jng',
+    'MIDDLE,SOLO':'mid','MIDDLE,DUO':'mid','MIDDLE,NONE':'mid','MIDDLE,CARRY':'mid',
+    'BOTTOM,DUO_CARRY':'adc','BOTTOM,DUO':'adc','BOTTOM,SOLO':'adc','BOTTOM,CARRY':'adc','BOTTOM,NONE':'adc',
+    'BOTTOM,DUO_SUPPORT':'supp','BOTTOM,SUPPORT':'supp',
+    'NONE,DUO_SUPPORT':'supp','NONE,SUPPORT':'supp','NONE,NONE':'top',
   };
   return map[lane+','+role]||'top';
 }
@@ -2528,25 +2529,23 @@ function parseLoLJsonFile(jsonData, fileName){
   Object.values(_importBuffer).forEach(buf=>{
     ['blue','red'].forEach(side=>{
       const slots=Object.values(buf._pidSlots[side]);
-      // Sort by participantId to assign roles consistently
       slots.sort((a,b)=>a.pid-b.pid);
-      // Reset
       buf[side]={top:'',jng:'',mid:'',adc:'',supp:''};
       buf[side+'Champs']={top:'',jng:'',mid:'',adc:'',supp:''};
       buf.scanResult={};
 
       slots.forEach(s=>{
-        if(buf[side][s.role]===''||buf[side][s.role]===undefined){
-          buf[side][s.role]=s.name;
-          buf[side+'Champs'][s.role]=s.champDisp;
-        } else {
-          // Find next empty role
-          const freeRole=ROLES.find(r=>!buf[side][r]);
-          if(freeRole){buf[side][freeRole]=s.name;buf[side+'Champs'][freeRole]=s.champDisp;}
+        // champDisp comes from champKey lookup
+        const dispName=s.champDisp||champDisplayName(s.champKey)||'';
+        let assignedRole=s.role;
+        if(buf[side][assignedRole]!==''){
+          // Role conflict — find first empty slot
+          assignedRole=ROLES.find(r=>buf[side][r]=='')||s.role;
         }
-        // KDA for known players only
+        buf[side][assignedRole]=s.name||buf[side][assignedRole];
+        buf[side+'Champs'][assignedRole]=dispName||buf[side+'Champs'][assignedRole];
         if(s.name){
-          buf.scanResult[s.name]={champ:s.champDisp,k:s.k,d:s.d,a:s.a};
+          buf.scanResult[s.name]={champ:dispName,k:s.k,d:s.d,a:s.a};
         }
       });
     });
@@ -2559,6 +2558,9 @@ function importLoLJson(input){
   const files=[...input.files];
   if(!files.length)return;
 
+  // Clear previous import buffer
+  Object.keys(_importBuffer).forEach(k=>delete _importBuffer[k]);
+
   let totalAdded=0,totalUpdated=0;
   let pending=files.length;
 
@@ -2567,20 +2569,23 @@ function importLoLJson(input){
     reader.onload=e=>{
       try{
         const json=JSON.parse(e.target.result);
+        console.log('Parsed JSON type:', typeof json, Array.isArray(json)?'array len='+json.length:'object');
         const{added,updated}=parseLoLJsonFile(json,file.name);
+        console.log('parseLoLJsonFile result:', added, updated, 'buffer size:', Object.keys(_importBuffer).length);
         totalAdded+=added;totalUpdated+=updated;
       }catch(err){
+        console.error('Parse error:', err);
         toast('Błąd parsowania '+file.name+': '+err.message);
       }
       pending--;
       if(pending===0){
-        // All files loaded — show preview modal
+        console.log('All files loaded, buffer:', Object.keys(_importBuffer).length, 'games');
         openImportPreview(totalAdded,totalUpdated);
       }
     };
+    reader.onerror=()=>{toast('Błąd odczytu pliku: '+file.name);};
     reader.readAsText(file,'utf-8');
   });
-  // Reset input
   input.value='';
 }
 
