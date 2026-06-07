@@ -5481,6 +5481,20 @@ function confirmMeczeImport(indices){
 
   document.getElementById('meczeImportModal')?.remove();
 
+  // Sort by lolId ascending — smaller lolId (older match) gets smaller GID
+  selected.sort((a,b)=>Number(a.lolId)-Number(b.lolId));
+
+  // Find current max GID in MH
+  const maxGid=MH.reduce((max,m)=>Math.max(max,Number(m.gid)||0),0);
+  let nextGid=maxGid+1;
+
+  // Pre-assign GIDs for new matches in lolId order
+  const gidAssignments={};
+  selected.forEach(parsed=>{
+    const existing=MH.find(x=>x.lolId===parsed.lolId||x.gid===parsed.lolId);
+    if(!existing) gidAssignments[parsed.lolId]=String(nextGid++);
+  });
+
   selected.forEach(parsed=>{
     _meczeData[parsed.lolId]=parsed;
     const existing=MH.find(x=>x.lolId===parsed.lolId||x.gid===parsed.lolId);
@@ -5488,9 +5502,12 @@ function confirmMeczeImport(indices){
       existing.participants=parsed.participants;
       existing.teamStats={blue:parsed.teams?.blue||{},red:parsed.teams?.red||{}};
       existing.duration=parsed.duration;
+      if(!existing.lolId)existing.lolId=parsed.lolId;
       const scan={};
       parsed.participants.forEach(p=>{scan[p.name]={champ:p.champ,k:p.k,d:p.d,a:p.a};});
       existing.scanResult={...existing.scanResult,...scan};
+    } else {
+      parsed._assignedGid=gidAssignments[parsed.lolId];
     }
   });
 
@@ -5499,31 +5516,21 @@ function confirmMeczeImport(indices){
   if(selected.length===1)openMecze(selected[0].lolId);
   toast(`✓ Zaimportowano ${selected.length} ${selected.length===1?'mecz':'meczy'} — zapisuję do Sheets...`);
 
-  // Auto-save each to Sheets sequentially
   let i=0;
   function saveNext(){
     if(i>=selected.length){
       toast(`✓ ${selected.length} ${selected.length===1?'mecz zapisany':'meczy zapisanych'} do Sheets!`);
-      renderMeczeList();
-      return;
+      renderMeczeList();return;
     }
     const parsed=selected[i++];
-    exportMeczeToSheets(parsed.lolId);
-    setTimeout(saveNext,600); // slight delay between saves
+    exportMeczeToSheets(parsed.lolId,parsed._assignedGid);
+    setTimeout(saveNext,600);
   }
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
-  if(scriptUrl) saveNext();
+  if(scriptUrl)saveNext();
   else toast('⚠ Skonfiguruj Apps Script URL w DEV aby auto-zapisywać do Sheets');
 }
 
-
-
-async function meczeFetchSheets(){
-  toast('⟳ Ładuję mecze ze Sheets...');
-  const ok=await gsFetch(true);
-  if(ok){renderMeczeList();toast('✓ Załadowano mecze ze Sheets');}
-  else toast('Błąd ładowania ze Sheets');
-}
 
 function openMecze(gameId){
   if(_meczeActive===gameId){
@@ -5547,16 +5554,16 @@ function renderMeczeAnalyzer(){
   el.style.display='block';
 
   // Get data - prefer rich JSON, fallback to hist data
-  const rich=_meczeData[gameId];
-  const hist=MH.find(m=>m.gid===gameId);
+  const rich=_meczeData[gameId]||Object.values(_meczeData).find(r=>r.lolId===gameId);
+  const hist=MH.find(m=>m.gid===gameId||m.lolId===gameId);
   if(!rich&&!hist){el.style.display='none';return;}
 
   const m=rich||{
     gameId, date:hist.date, patch:hist.patch, duration:'',
     win:hist.win, teams:{blue:{},red:{}},
     participants:hist.participants||[],
-    blue:Object.entries(hist.blue||{}).map(([role,name])=>({name,role,champ:(hist.blueChamps||{})[role]||'',side:'blue',win:hist.win==='LEWA',k:0,d:0,a:0,cs:0,gold:0,dmg:0,vision:0,items:[],kda:0,kp:0})).filter(x=>x.name),
-    red:Object.entries(hist.red||{}).map(([role,name])=>({name,role,champ:(hist.redChamps||{})[role]||'',side:'red',win:hist.win==='PRAWA',k:0,d:0,a:0,cs:0,gold:0,dmg:0,vision:0,items:[],kda:0,kp:0})).filter(x=>x.name),
+    blue:hist.participants?.filter(p=>p.side==='blue')||Object.entries(hist.blue||{}).map(([role,name])=>{const sr=hist.scanResult?.[name]||{};return{name,role,champ:(hist.blueChamps||{})[role]||'',side:'blue',win:hist.win==='LEWA',k:sr.k||0,d:sr.d||0,a:sr.a||0,cs:0,gold:0,dmg:0,vision:0,items:[],kda:0,kp:0};}).filter(x=>x.name),
+    red:hist.participants?.filter(p=>p.side==='red')||Object.entries(hist.red||{}).map(([role,name])=>{const sr=hist.scanResult?.[name]||{};return{name,role,champ:(hist.redChamps||{})[role]||'',side:'red',win:hist.win==='PRAWA',k:sr.k||0,d:sr.d||0,a:sr.a||0,cs:0,gold:0,dmg:0,vision:0,items:[],kda:0,kp:0};}).filter(x=>x.name),
   };
   if(hist&&!m.participants?.length)m.participants=[...m.blue,...m.red];
 
@@ -5644,8 +5651,8 @@ function renderMeczeTab(){
   const el=document.getElementById('mecze-tab-content');
   if(!el)return;
   const gameId=_meczeActive;
-  const rich=_meczeData[gameId];
-  const hist=MH.find(m=>m.gid===gameId);
+  const rich=_meczeData[gameId]||Object.values(_meczeData).find(r=>r.lolId===gameId);
+  const hist=MH.find(m=>m.gid===gameId||m.lolId===gameId);
   if(!rich&&!hist)return;
 
   const m=rich||{gameId,date:hist.date,patch:hist.patch,win:hist.win,teams:{blue:{},red:{}},participants:[],
@@ -6032,7 +6039,7 @@ function _meczeEdit(gameId,pid,field,val){
 }
 
 
-function exportMeczeToSheets(gameId){
+function exportMeczeToSheets(gameId,forcedGid){
   const rich=_meczeData[gameId]||Object.values(_meczeData).find(r=>r.lolId===gameId);
   const hist=MH.find(m=>m.gid===gameId||m.lolId===gameId);
   const m=rich||hist;
@@ -6041,7 +6048,8 @@ function exportMeczeToSheets(gameId){
   const lolId=rich?.lolId||hist?.lolId||String(m.gameId||m.gid||gameId);
   const existByLolId=MH.find(x=>x.lolId===lolId||x.gid===lolId);
   const existingGid=existByLolId?.gid;
-  const nextGid=existingGid||String(MH.length+1);
+  // Use forcedGid if provided (bulk import), else existing GID, else next sequential
+  const nextGid=forcedGid||existingGid||String(MH.length+1);
 
   const blue={top:'',jng:'',mid:'',adc:'',supp:''};
   const red={top:'',jng:'',mid:'',adc:'',supp:''};
