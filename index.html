@@ -5655,16 +5655,45 @@ function renderMeczeTab(){
   const hist=MH.find(m=>m.gid===gameId||m.lolId===gameId);
   if(!rich&&!hist)return;
 
-  const m=rich||{gameId,date:hist.date,patch:hist.patch,win:hist.win,teams:{blue:{},red:{}},participants:[],
-    blue:Object.entries(hist.blue||{}).map(([role,name])=>({name,role,champ:(hist.blueChamps||{})[role]||'',side:'blue',win:hist.win==='LEWA',k:hist.scanResult?.[name]?.k||0,d:hist.scanResult?.[name]?.d||0,a:hist.scanResult?.[name]?.a||0,cs:0,gold:0,dmg:0,vision:0,items:[],kda:0,kp:0})).filter(x=>x.name),
-    red:Object.entries(hist.red||{}).map(([role,name])=>({name,role,champ:(hist.redChamps||{})[role]||'',side:'red',win:hist.win==='PRAWA',k:hist.scanResult?.[name]?.k||0,d:hist.scanResult?.[name]?.d||0,a:hist.scanResult?.[name]?.a||0,cs:0,gold:0,dmg:0,vision:0,items:[],kda:0,kp:0})).filter(x=>x.name),
-  };
+  const m=rich||(()=>{
+    const parts=hist.participants||[];
+    function buildPlayer(role,name,histSide){
+      const sr=hist.scanResult?.[name]||{};
+      const pp=parts.find(p=>p.name===name)||{};
+      return{name,role,champ:(histSide==='blue'?(hist.blueChamps||{}):(hist.redChamps||{}))[role]||pp.champ||sr.champ||'',
+        side:histSide,win:histSide==='blue'?hist.win==='LEWA':hist.win==='PRAWA',
+        k:pp.k??sr.k??0,d:pp.d??sr.d??0,a:pp.a??sr.a??0,
+        cs:pp.cs||0,gold:pp.gold||0,dmg:pp.dmg||0,vision:pp.vision||0,
+        kda:pp.kda||0,kp:pp.kp||0,champLevel:pp.champLevel||0,
+        items:pp.items||[],itemsEnriched:pp.itemsEnriched||[],
+        spellNames:pp.spellNames||null,runes:pp.runes||null,
+        dmgTaken:pp.dmgTaken||0,selfMit:pp.selfMit||0,
+        healing:pp.healing||0,cc:pp.cc||0,
+        wards:pp.wards||0,wardsKilled:pp.wardsKilled||0,pinkWards:pp.pinkWards||0,
+        double:pp.double||0,triple:pp.triple||0,quadra:pp.quadra||0,penta:pp.penta||0,
+        firstBlood:pp.firstBlood||false,turrets:pp.turrets||0,
+        magicDmg:pp.magicDmg||0,physDmg:pp.physDmg||0,trueDmg:pp.trueDmg||0,
+        pid:pp.pid||0,jungleCS:pp.jungleCS||0,longestAlive:pp.longestAlive||0,
+        goldpm:pp.goldpm||0,cspm:pp.cspm||0,dmgpm:pp.dmgpm||0,
+      };
+    }
+    const blue=Object.entries(hist.blue||{}).map(([r,n])=>buildPlayer(r,n,'blue')).filter(x=>x.name);
+    const red=Object.entries(hist.red||{}).map(([r,n])=>buildPlayer(r,n,'red')).filter(x=>x.name);
+    return{
+      gameId,lolId:hist.lolId||hist.gid,
+      date:hist.date,patch:hist.patch,win:hist.win,duration:hist.duration||'',
+      teams:{blue:hist.teamStats?.blue||{},red:hist.teamStats?.red||{}},
+      participants:parts.length?parts:[...blue,...red],
+      blue,red,
+    };
+  })();
 
   if(_meczeTab==='overview') renderMeczeOverview(el,m);
   else if(_meczeTab==='scoreboard') renderMeczeScoreboard(el,m);
   else if(_meczeTab==='charts') renderMeczeCharts(el,m);
   else if(_meczeTab==='edit') renderMeczeEdit(el,m);
 }
+
 
 function renderMeczeOverview(el,m){
   const ddVer=window._ddVersion||'15.10.1';
