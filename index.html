@@ -1222,13 +1222,20 @@ function init(){
 }
 
 function showSheetsLoading(on){
-  const hdr=document.getElementById('histhdr');
-  if(!hdr)return;
+  // Show loading indicator in Mecze header if visible
+  const mecze=document.getElementById('page-mecze');
+  if(!mecze||mecze.style.display==='none') return;
+  let badge=document.getElementById('sheetsLoadingBadge');
   if(on){
-    hdr._origText=hdr.textContent;
-    hdr.innerHTML=hdr.textContent+' <span id="sheetsLoadingBadge" style="font-size:12px;color:var(--teal);animation:pulse 1.2s infinite">⟳ wczytywanie...</span>';
+    if(!badge){
+      badge=document.createElement('span');
+      badge.id='sheetsLoadingBadge';
+      badge.style.cssText='font-size:12px;color:var(--teal);margin-left:8px';
+      badge.textContent='⟳ wczytywanie...';
+      mecze.querySelector('div')?.appendChild(badge);
+    }
   } else {
-    document.getElementById('sheetsLoadingBadge')?.remove();
+    badge?.remove();
   }
 }
 
@@ -3713,7 +3720,8 @@ function renderHistCompact(matches){
     </div>`;
   }
 
-  document.getElementById('histList').innerHTML=matches.map(m=>{
+  const histEl=document.getElementById('histList');if(!histEl)return;
+  histEl.innerHTML=matches.map(m=>{
     const blueWin=m.win==='LEWA';
     const scan=m.scanResult||{};
     const parts=m.participants||[];
@@ -3753,7 +3761,8 @@ function renderHistCompact(matches){
 function renderHistScoreboard(matches){
   const DDVER=window._ddVersion||'15.10.1';
 
-  document.getElementById('histList').innerHTML=matches.map(m=>{
+  const histEl=document.getElementById('histList');if(!histEl)return;
+  histEl.innerHTML=matches.map(m=>{
     const blueWin=m.win==='LEWA';
     const parts=(m.participants||[]).slice().sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role));
     if(!parts.length)return renderHistCompactCard(m);
