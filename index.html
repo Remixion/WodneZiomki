@@ -5272,7 +5272,7 @@ function renderMeczeList(){
   // Match sequential number (order among all matches)
   const total=allMatches.length;
 
-  el.innerHTML=allMatches.map(({id,rich,hist},idx)=>{
+  el.innerHTML=allMatches.map(({id,gid,lolId:lolIdFromMap,rich,hist},idx)=>{
     const win=rich?.win||hist?.win||'?';
     const blueWin=win==='LEWA';
     const winColor=blueWin?'#5DADE2':'#E84855';
@@ -5281,7 +5281,7 @@ function renderMeczeList(){
     const date=(hist?.date||rich?.date||'');
     const patch=hist?.patch||rich?.patch||'';
     const duration=rich?.duration||hist?.duration||'';
-    const lolId=id; // LoL match ID from Riot
+    const lolId=lolIdFromMap||id; // LoL match ID from Riot
     const seqNum=total-idx; // sequential #N (1=oldest)
     const isActive=_meczeActive===lolId;
 
