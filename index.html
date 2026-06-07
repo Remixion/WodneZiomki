@@ -2602,8 +2602,19 @@ function openImportPreview(added,updated){
 
   // Build preview HTML
   const rows=games.map((g,i)=>{
-    const blueNames=Object.values(g.blue).filter(Boolean).join(', ')||'—';
-    const redNames=Object.values(g.red).filter(Boolean).join(', ')||'—';
+    function previewMapName(n){
+      if(!n)return'';
+      if(AP.includes(n))return n;
+      const jLow=n.toLowerCase();
+      const m=AP.find(a=>(ALIASES[a]||'').toLowerCase()===jLow)||
+               AP.find(a=>(PLAYER_META[a]||{}).lolNick?.toLowerCase()===jLow)||
+               AP.find(a=>a.toLowerCase()===jLow)||
+               AP.find(a=>a.toLowerCase().startsWith(jLow.slice(0,4))||jLow.startsWith(a.toLowerCase().slice(0,4)));
+      if(m)return`<span title="JSON: ${n} → ${m}" style="color:var(--teal)">${m}</span>`;
+      return`<span style="color:var(--warn)" title="Nieznany gracz — zostanie dodany">${n}⚠</span>`;
+    }
+    const blueNames=Object.values(g.blue).filter(Boolean).map(previewMapName).join(', ')||'—';
+    const redNames=Object.values(g.red).filter(Boolean).map(previewMapName).join(', ')||'—';
     const win=g.winningTeam===100?'LEWA':g.winningTeam===200?'PRAWA':'?';
     const blueChamps=Object.values(g.blueChamps).filter(Boolean).join(', ')||'—';
     const redChamps=Object.values(g.redChamps).filter(Boolean).join(', ')||'—';
@@ -2657,15 +2668,53 @@ function openImportPreview(added,updated){
 function confirmImport(){
   const games=Object.values(_importBuffer);
   let imported=0;
+  const toWrite=[];
 
   games.forEach(g=>{
-    // Check if already in MH
+    // Map JSON names to app names using aliases (reverse lookup)
+    function mapName(jsonName){
+      if(!jsonName)return'';
+      // 1. Direct match in AP
+      if(AP.includes(jsonName))return jsonName;
+      const jLow=jsonName.toLowerCase();
+      // 2. ALIASES: ALIASES[appName] = lolNick
+      const aliasMatch=AP.find(n=>(ALIASES[n]||'').toLowerCase()===jLow);
+      if(aliasMatch)return aliasMatch;
+      // 3. PLAYER_META lolNick field
+      const metaMatch=AP.find(n=>(PLAYER_META[n]||{}).lolNick?.toLowerCase()===jLow);
+      if(metaMatch)return metaMatch;
+      // 4. Case-insensitive direct match
+      const caseMatch=AP.find(n=>n.toLowerCase()===jLow);
+      if(caseMatch)return caseMatch;
+      // 5. Partial match: app name starts with JSON name or vice versa
+      const partialMatch=AP.find(n=>
+        n.toLowerCase().startsWith(jLow.slice(0,4))||
+        jLow.startsWith(n.toLowerCase().slice(0,4))
+      );
+      // Only use partial if confident enough (min 4 chars)
+      if(partialMatch&&jLow.length>=4)return partialMatch;
+      // Return as-is
+      return jsonName;
+    }
+
+    // Apply name mapping to all slots
+    const mappedBlue={};
+    const mappedRed={};
+    Object.entries(g.blue).forEach(([r,n])=>mappedBlue[r]=mapName(n));
+    Object.entries(g.red).forEach(([r,n])=>mappedRed[r]=mapName(n));
+
+    // Map scanResult keys too
+    const mappedScan={};
+    Object.entries(g.scanResult||{}).forEach(([n,v])=>{
+      mappedScan[mapName(n)]=v;
+    });
+
     const existing=MH.find(m=>m.gid===String(g.gameId));
     if(existing){
-      // Update champions and scan results
       if(Object.values(g.blueChamps).some(Boolean))existing.blueChamps=g.blueChamps;
       if(Object.values(g.redChamps).some(Boolean))existing.redChamps=g.redChamps;
-      if(Object.keys(g.scanResult).length)existing.scanResult={...existing.scanResult,...g.scanResult};
+      if(Object.keys(mappedScan).length)existing.scanResult={...existing.scanResult,...mappedScan};
+      toWrite.push({m:existing,update:true});
       return;
     }
 
@@ -2675,29 +2724,40 @@ function confirmImport(){
       patch:g.patch,
       date:g.date,
       win,
-      blue:g.blue,
-      red:g.red,
+      blue:mappedBlue,
+      red:mappedRed,
       blueChamps:g.blueChamps,
       redChamps:g.redChamps,
-      scanResult:g.scanResult,
+      scanResult:mappedScan,
     };
     MH.push(m);
+    toWrite.push({m,update:false});
     imported++;
   });
 
-  // Sort MH by gid desc
   MH.sort((a,b)=>Number(b.gid)-Number(a.gid));
-
-  // Clear buffer
   Object.keys(_importBuffer).forEach(k=>delete _importBuffer[k]);
 
   lsSave();
   PS=buildPS();AP=Object.keys(PS).sort();
   renderPL();renderProfileList();renderStats();renderHist();
   if(selPr)renderProfile(selPr);
-
   document.getElementById('importPreviewModal')?.remove();
-  toast(`✓ Zaimportowano ${imported} nowych meczy!`);
+  toast(`✓ Zaimportowano ${imported} meczy — zapisuję do Sheets...`);
+
+  // Write all to Sheets
+  const total=toWrite.length;
+  let done=0;
+  const next=()=>{
+    if(done>=total){
+      toast(`✓ ${total} meczy zapisanych do Sheets!`);
+      return;
+    }
+    const{m,update}=toWrite[done++];
+    const fn=update?gsUpdate:gsWrite;
+    fn(m).then(()=>next()).catch(()=>next());
+  };
+  next();
 }
 
 function exportCSV(){
@@ -4779,6 +4839,7 @@ async function gsWrite(matchData){
       matchData.scanResult&&Object.keys(matchData.scanResult).length?JSON.stringify(matchData.scanResult):'',
       matchData.imgUrl||'',
     ];
+    const r=await fetch(scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(row)));
     const res=await r.json();
     if(res.status==='ok'){
       gsLog('✓ Zapisano w Google Sheets','var(--success)');
