@@ -2496,6 +2496,70 @@ function parseLoLJsonFile(jsonData, fileName){
 
   gameEntries.forEach(g=>{
     const gameId=String(g.gameId);
+    if(!_importBuffer[gameId]){
+      _importBuffer[gameId]={
+        gameId,
+        date:g.gameCreationDate?g.gameCreationDate.slice(0,10):'',
+        patch:gameVersionToPatch(g.gameVersion||'16.10'),
+        winningTeam:null,
+        blue:{top:'',jng:'',mid:'',adc:'',supp:''},
+        red:{top:'',jng:'',mid:'',adc:'',supp:''},
+        blueChamps:{top:'',jng:'',mid:'',adc:'',supp:''},
+        redChamps:{top:'',jng:'',mid:'',adc:'',supp:''},
+        scanResult:{},
+        _pidSlots:{blue:{},red:{}},
+      };
+      added++;
+    } else { updated++; }
+
+    const buf=_importBuffer[gameId];
+    (g.teams||[]).forEach(t=>{if(t.win==='Win')buf.winningTeam=t.teamId;});
+
+    const idToName={};
+    (g.participantIdentities||[]).forEach(pi=>{
+      const pl=pi.player||{};
+      const name=pl.gameName||pl.tagLine||pl.summonerName||'';
+      if(name)idToName[pi.participantId]=name;
+    });
+
+    (g.participants||[]).forEach(p=>{
+      const pid=p.participantId;
+      const name=idToName[pid]||'';
+      const side=p.teamId===100?'blue':'red';
+      const ck=champIdToKey(p.championId)||'';
+      const champDisp=ck?champDisplayName(ck):'';
+      const tl=p.timeline||{};
+      const role=laneRoleToOurs(tl.lane||'NONE',tl.role||'NONE');
+      const stats=p.stats||{};
+      const k=stats.kills||0,d=stats.deaths||0,a=stats.assists||0;
+      if(!buf._pidSlots[side][pid]){
+        buf._pidSlots[side][pid]={pid,name,champKey:ck,champDisp,role,k,d,a};
+      } else if(name){
+        buf._pidSlots[side][pid].name=name;
+      }
+    });
+  });
+
+  // Rebuild team slots from _pidSlots
+  Object.values(_importBuffer).forEach(buf=>{
+    ['blue','red'].forEach(side=>{
+      const slots=Object.values(buf._pidSlots[side]).sort((a,b)=>a.pid-b.pid);
+      buf[side]={top:'',jng:'',mid:'',adc:'',supp:''};
+      buf[side+'Champs']={top:'',jng:'',mid:'',adc:'',supp:''};
+      buf.scanResult={};
+      slots.forEach(s=>{
+        const dispName=s.champDisp||champDisplayName(s.champKey)||'';
+        let r=s.role;
+        if(buf[side][r]!=='')r=ROLES.find(x=>buf[side][x]=='')||r;
+        buf[side][r]=s.name||buf[side][r];
+        buf[side+'Champs'][r]=dispName||buf[side+'Champs'][r];
+        if(s.name)buf.scanResult[s.name]={champ:dispName,k:s.k,d:s.d,a:s.a};
+      });
+    });
+  });
+
+  return{added,updated};
+}
 
 function importLoLJson(input){
   const files=[...input.files];
