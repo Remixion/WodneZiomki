@@ -661,6 +661,7 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <div class="nav-left-tabs">
     <button class="nav-tab" onclick="showPage('profiles',this)">Profile</button>
     <button class="nav-tab" onclick="showPage('history',this)">Historia</button>
+    <button class="nav-tab" onclick="showPage('mecze',this)">Mecze</button>
   </div>
 
   <!-- CENTER emblem: Skład -->
@@ -847,6 +848,25 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <div id="histList" style="display:flex;flex-direction:column;gap:8px"></div>
 </div>
 
+
+<!-- MECZE PAGE -->
+<div class="page" id="page-mecze">
+
+<!-- Upload zone -->
+<div id="mecze-upload-zone" style="border:2px dashed rgba(200,170,110,0.3);border-radius:12px;padding:48px 24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px" onclick="document.getElementById('mecze-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='#C8AA6E'" ondragleave="this.style.borderColor='rgba(200,170,110,0.3)'" ondrop="event.preventDefault();this.style.borderColor='rgba(200,170,110,0.3)';handleMeczeFiles(event.dataTransfer.files)">
+  <div style="font-size:32px;margin-bottom:8px">📂</div>
+  <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);margin-bottom:6px">Wgraj plik meczu JSON</div>
+  <div style="font-size:13px;color:var(--silver)">match_*.json lub sss.json — przeciągnij lub kliknij</div>
+  <input type="file" id="mecze-file-input" accept=".json" multiple style="display:none" onchange="handleMeczeFiles(this.files)">
+</div>
+
+<!-- Loaded matches list -->
+<div id="mecze-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px"></div>
+
+<!-- Main analyzer -->
+<div id="mecze-analyzer" style="display:none"></div>
+
+</div>
 
 </div><!-- /app -->
 
@@ -5079,6 +5099,655 @@ async function ghAutoFetch(){
 // =====================================================================
 function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);}
+
+// =====================================================================
+// MECZE — MATCH ANALYZER (niezależny od Historii)
+// =====================================================================
+
+let _meczeMatches = {};
+let _meczeActive = null;
+let _meczeTab = 'overview';
+
+var SPELL_NAMES = {4:'Flash',14:'Ignite',12:'Teleport',3:'Exhaust',7:'Heal',21:'Barrier',6:'Ghost',11:'Smite',1:'Cleanse',32:'Mark',13:'Clarity',31:'Challenge',39:'Hexflash'};
+var ROLE_MAP_RICH = {'TOP':'top','JNG':'jng','JUNGLE':'jng','MID':'mid','MIDDLE':'mid','ADC':'adc','BOT':'adc','BOTTOM':'adc','SUP':'supp','SUPPORT':'supp'};
+
+// Standalone helpers (niezależne od Historii)
+function meczeChampKey(champName){
+  if(!champName)return'';
+  // Try via CHAMP_DISPLAY reverse lookup
+  for(const [k,v] of Object.entries(CHAMP_DISPLAY||{})){
+    if(v.toLowerCase()===champName.toLowerCase())return k;
+  }
+  // Strip special chars
+  return champName.replace(/['\u2019\u2018 .\-&]/g,'');
+}
+
+function meczeVersionToPatch(ver){
+  const m=(ver||'').match(/^(\d+)\.(\d+)/);
+  if(!m)return'26.10';
+  return(parseInt(m[1])+10)+'.'+m[2];
+}
+
+function meczeChampIdToName(id){
+  if(!id)return'';
+  // Use CHAMP_ID_MAP if available
+  if(typeof CHAMP_ID_MAP!=='undefined'&&CHAMP_ID_MAP[id]){
+    const key=CHAMP_ID_MAP[id];
+    return(CHAMP_DISPLAY&&CHAMP_DISPLAY[key])||key;
+  }
+  return'';
+}
+
+function handleMeczeFiles(files){
+  if(!files||!files.length)return;
+  Array.from(files).forEach(file=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      try{
+        const data=JSON.parse(e.target.result);
+        const parsed=parseMeczeJson(data,file.name);
+        if(parsed){
+          _meczeMatches[parsed.gameId]=parsed;
+          renderMeczeList();
+          openMecze(parsed.gameId);
+        }
+      }catch(err){toast('Błąd: '+err.message);}
+    };
+    r.readAsText(file,'utf-8');
+  });
+  document.getElementById('mecze-file-input').value='';
+}
+
+function parseMeczeJson(data,fileName){
+  if(!data.gameId||!data.participants)return null;
+  const g=data;
+  const teams={};
+  (g.teams||[]).forEach(t=>{teams[t.teamId===100?'blue':'red']=t;});
+
+  const participants=g.participants.map(p=>{
+    const side=p.teamSide||( p.teamId===100?'blue':'red');
+    const rawRole=(p.inferredRole||p.laneRaw||'').toUpperCase();
+    const role=ROLE_MAP_RICH[rawRole]||'top';
+    return{
+      pid:p.participantId, side, role,
+      name:(p.summonerName||p.gameName||'').split('#')[0],
+      fullName:p.summonerName||p.gameName||'',
+      champ:p.championName||(p.championId?meczeChampIdToName(p.championId):''),
+      champId:p.championId||0,
+      champLevel:p.championLevel||0,
+      win:!!p.win,
+      k:p.kills||0, d:p.deaths||0, a:p.assists||0,
+      kda:Math.round((p.kdaRatio||0)*100)/100,
+      kp:Math.round((p.killParticipation||0)*100),
+      cs:p.cs||0, cspm:Math.round((p.csPerMin||0)*10)/10,
+      gold:p.goldEarned||0, goldpm:Math.round((p.goldPerMin||0)*10)/10,
+      dmg:p.damageDealt||0, dmgpm:Math.round((p.damageDealtPerMin||0)*10)/10,
+      dmgTotal:p.damageDealtTotal||0,
+      dmgTaken:p.damageTaken||0, dmgTakenpm:Math.round((p.damageTakenPerMin||0)*10)/10,
+      vision:p.visionScore||0,
+      wards:p.wardsPlaced||0, wardsKilled:p.wardsKilled||0, pinkWards:p.detectorWardsPlaced||0,
+      items:(p.items||[]).filter(i=>i&&i>0),
+      spell1:p.spell1Id||0, spell2:p.spell2Id||0,
+      perks:p.perks||[], perkPrimary:p.perkPrimaryStyle||0, perkSub:p.perkSubStyle||0,
+      double:p.doubleKills||0, triple:p.tripleKills||0, quadra:p.quadraKills||0, penta:p.pentaKills||0,
+      firstBlood:!!p.firstBloodKill, firstTower:!!p.firstTowerKill,
+      turrets:p.turretKills||0, inhibs:p.inhibitorKills||0,
+      healing:p.healingDone||0,
+      cc:p.ccApplied||0, ccScore:p.ccScore||0,
+      magicDmg:p.magicDamage||0, physDmg:p.physicalDamage||0, trueDmg:p.trueDamage||0,
+      longestAlive:p.longestTimeAlive||0,
+      selfMit:p.selfMitigatedDmg||0,
+    };
+  });
+
+  return{
+    gameId:String(g.gameId),
+    date:(g.date||'').slice(0,10),
+    duration:g.gameDurationFormatted||Math.floor((g.gameDuration||0)/60)+'m',
+    durationSecs:g.gameDuration||0,
+    patch:meczeVersionToPatch(g.gameVersion||'16.10'),
+    gameVersion:g.gameVersion||'',
+    win:( participants.find(p=>p.side==='red')?.win ? 'PRAWA' : 'LEWA'),
+    teams, participants,
+    blue:participants.filter(p=>p.side==='blue'),
+    red:participants.filter(p=>p.side==='red'),
+    _raw:g,
+  };
+}
+
+function renderMeczeList(){
+  const el=document.getElementById('mecze-list');
+  const matches=Object.values(_meczeMatches).sort((a,b)=>b.gameId.localeCompare(a.gameId));
+  el.innerHTML=matches.map(m=>`
+    <button onclick="openMecze('${m.gameId}')" style="padding:8px 14px;background:${_meczeActive===m.gameId?'rgba(200,170,110,0.15)':'rgba(255,255,255,0.03)'};border:1px solid ${_meczeActive===m.gameId?'var(--gold)':'var(--border)'};border-radius:7px;cursor:pointer;color:var(--text);font-size:13px;transition:all 0.15s">
+      <div style="font-weight:700;color:${m.win==='LEWA'?'#5DADE2':'#E84855'}">${m.win} wygrywa</div>
+      <div style="font-size:11px;color:var(--silver)">${m.date} · ${m.duration}</div>
+    </button>
+  `).join('');
+}
+
+function openMecze(gameId){
+  _meczeActive=gameId;
+  _meczeTab='overview';
+  renderMeczeList();
+  renderMeczeAnalyzer();
+}
+
+function renderMeczeAnalyzer(){
+  const el=document.getElementById('mecze-analyzer');
+  const m=_meczeMatches[_meczeActive];
+  if(!m){el.style.display='none';return;}
+  el.style.display='block';
+
+  const blueWin=m.win==='LEWA';
+  const bTeam=m.teams['blue']||{};
+  const rTeam=m.teams['red']||{};
+
+  // Chart.js data helpers
+  const bPlayers=m.blue.sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role));
+  const rPlayers=m.red.sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role));
+  const allPlayers=[...bPlayers,...rPlayers];
+  const names=allPlayers.map(p=>p.name);
+  const ddVer=window._ddVersion||'15.10.1';
+  const champIconUrl=champ=>{const k=meczeChampKey(champ);return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${k}.png`:''};
+  const itemIconUrl=id=>id?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/item/${id}.png`:'';
+
+  function teamBadge(p){
+    const c=PC[p.name]||'#C8AA6E';
+    const icon=champIconUrl(p.champ);
+    return`<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;background:${p.win?'rgba(93,173,226,0.08)':'rgba(232,72,85,0.05)'};border:1px solid ${p.win?'rgba(93,173,226,0.2)':'rgba(232,72,85,0.1)'}">
+      ${icon?`<img src="${icon}" style="width:28px;height:28px;border-radius:5px;object-fit:cover" onerror="this.style.display='none'">`:''}
+      <div>
+        <div style="font-size:13px;font-weight:700;color:${c}">${p.name}</div>
+        <div style="font-size:11px;color:var(--gold)">${p.champ}</div>
+      </div>
+    </div>`;
+  }
+
+  function editableField(id,val,label,type='text'){
+    return`<div style="margin-bottom:6px">
+      <label style="font-size:11px;color:var(--silver);display:block;margin-bottom:2px">${label}</label>
+      <input id="medit_${id}" value="${val}" type="${type}" class="ss" style="width:100%;font-size:13px;padding:4px 8px" onchange="updateMeczeField('${_meczeActive}','${id}',this.value)">
+    </div>`;
+  }
+
+  // Build edit panel entries (all players)
+  const editRows=allPlayers.map(p=>`
+    <div style="background:rgba(0,0,0,0.2);border-radius:7px;padding:10px;margin-bottom:8px;border-left:3px solid ${p.side==='blue'?'#5DADE2':'#E84855'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        ${champIconUrl(p.champ)?`<img src="${champIconUrl(p.champ)}" style="width:28px;height:28px;border-radius:5px">`:''}
+        <strong style="color:${PC[p.name]||'#C8AA6E'}">${p.name}</strong>
+        <span style="font-size:11px;color:var(--silver)">${p.champ} · ${p.role.toUpperCase()} · Lvl ${p.champLevel}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+        ${editableField(p.pid+'_name',p.name,'Nazwa gracza')}
+        ${editableField(p.pid+'_champ',p.champ,'Champion')}
+        ${editableField(p.pid+'_k',p.k,'Kills','number')}
+        ${editableField(p.pid+'_d',p.d,'Deaths','number')}
+        ${editableField(p.pid+'_a',p.a,'Assists','number')}
+        ${editableField(p.pid+'_cs',p.cs,'CS','number')}
+        ${editableField(p.pid+'_gold',p.gold,'Gold','number')}
+        ${editableField(p.pid+'_dmg',p.dmg,'Dmg dealt','number')}
+        ${editableField(p.pid+'_vision',p.vision,'Vision score','number')}
+      </div>
+    </div>
+  `).join('');
+
+  el.innerHTML=`
+    <!-- Header -->
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)">
+        <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold)">Mecz #${m.gameId}</div>
+        <div style="font-size:13px;color:var(--silver)">${m.date}</div>
+        <div style="font-size:13px;color:var(--silver)">⏱ ${m.duration}</div>
+        <div style="font-size:13px;color:var(--silver)">Patch ${m.patch}</div>
+        <div style="flex:1"></div>
+        <div style="font-size:14px;font-weight:700;color:${blueWin?'#5DADE2':'#E84855'}">${m.win} wygrywa</div>
+        <button onclick="exportMeczeToSheets('${m.gameId}')" style="padding:6px 14px;background:var(--gold-dark);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:12px">💾 Zapisz do Sheets</button>
+      </div>
+
+      <!-- Team score bar -->
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:0">
+        <div style="padding:12px 16px;background:${blueWin?'rgba(93,173,226,0.1)':'rgba(10,16,30,0.5)'}">
+          <div style="font-size:11px;font-weight:700;color:#5DADE2;letter-spacing:1px;margin-bottom:8px">${blueWin?'✓ VICTORY':'DEFEAT'} · LEWA</div>
+          <div style="display:flex;gap:12px;font-size:13px;flex-wrap:wrap">
+            <span style="color:var(--gold)"><b>${bTeam.totalKills||0}</b> Kill</span>
+            <span style="color:var(--silver)">🏰 ${bTeam.towerKills||0}</span>
+            <span style="color:var(--silver)">🐉 ${bTeam.dragonKills||0}</span>
+            <span style="color:var(--silver)">👑 ${bTeam.baronKills||0}</span>
+            ${bTeam.firstBlood?'<span style="color:var(--danger)">🩸 FB</span>':''}
+            ${bTeam.firstTower?'<span style="color:var(--success)">🏰 FT</span>':''}
+          </div>
+          <div style="font-size:12px;color:var(--silver);margin-top:6px">💰 ${(bTeam.totalGold||0).toLocaleString()} · ⚔️ ${((bTeam.totalDamage||0)/1000).toFixed(1)}k dmg</div>
+        </div>
+        <div style="padding:12px 16px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:20px;color:rgba(200,170,110,0.4);border-left:1px solid var(--border);border-right:1px solid var(--border)">VS</div>
+        <div style="padding:12px 16px;background:${!blueWin?'rgba(232,72,85,0.1)':'rgba(10,16,30,0.5)'}">
+          <div style="font-size:11px;font-weight:700;color:#E84855;letter-spacing:1px;margin-bottom:8px">${!blueWin?'✓ VICTORY':'DEFEAT'} · PRAWA</div>
+          <div style="display:flex;gap:12px;font-size:13px;flex-wrap:wrap">
+            <span style="color:var(--gold)"><b>${rTeam.totalKills||0}</b> Kill</span>
+            <span style="color:var(--silver)">🏰 ${rTeam.towerKills||0}</span>
+            <span style="color:var(--silver)">🐉 ${rTeam.dragonKills||0}</span>
+            <span style="color:var(--silver)">👑 ${rTeam.baronKills||0}</span>
+            ${rTeam.firstBlood?'<span style="color:var(--danger)">🩸 FB</span>':''}
+            ${rTeam.firstTower?'<span style="color:var(--success)">🏰 FT</span>':''}
+          </div>
+          <div style="font-size:12px;color:var(--silver);margin-top:6px">💰 ${(rTeam.totalGold||0).toLocaleString()} · ⚔️ ${((rTeam.totalDamage||0)/1000).toFixed(1)}k dmg</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:8px" id="mecze-tabs">
+      ${['overview','scoreboard','charts','edit'].map(tab=>`
+        <button onclick="setMeczeTab('${tab}')" id="meczetab_${tab}" style="padding:6px 16px;font-size:13px;border-radius:6px 6px 0 0;cursor:pointer;background:${_meczeTab===tab?'var(--panel)':'transparent'};border:${_meczeTab===tab?'1px solid var(--border)':'1px solid transparent'};border-bottom:${_meczeTab===tab?'1px solid var(--panel)':'none'};color:${_meczeTab===tab?'var(--gold)':'var(--silver)'}">
+          ${{overview:'Przegląd',scoreboard:'Scoreboard',charts:'Wykresy',edit:'Edytuj'}[tab]}
+        </button>
+      `).join('')}
+    </div>
+
+    <!-- Tab content -->
+    <div id="mecze-tab-content"></div>
+  `;
+
+  renderMeczeTab();
+}
+
+function setMeczeTab(tab){
+  _meczeTab=tab;
+  // Update tab styles
+  ['overview','scoreboard','charts','edit'].forEach(t=>{
+    const btn=document.getElementById('meczetab_'+t);
+    if(!btn)return;
+    if(t===tab){
+      btn.style.background='var(--panel)';btn.style.border='1px solid var(--border)';btn.style.borderBottom='1px solid var(--panel)';btn.style.color='var(--gold)';
+    } else {
+      btn.style.background='transparent';btn.style.border='1px solid transparent';btn.style.borderBottom='none';btn.style.color='var(--silver)';
+    }
+  });
+  renderMeczeTab();
+}
+
+function renderMeczeTab(){
+  const el=document.getElementById('mecze-tab-content');
+  if(!el)return;
+  const m=_meczeMatches[_meczeActive];
+  if(!m)return;
+
+  if(_meczeTab==='overview') renderMeczeOverview(el,m);
+  else if(_meczeTab==='scoreboard') renderMeczeScoreboard(el,m);
+  else if(_meczeTab==='charts') renderMeczeCharts(el,m);
+  else if(_meczeTab==='edit') renderMeczeEdit(el,m);
+}
+
+function renderMeczeOverview(el,m){
+  const ddVer=window._ddVersion||'15.10.1';
+  const champIcon=champ=>{const k=meczeChampKey(champ);return k?`<img src="https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${k}.png" style="width:32px;height:32px;border-radius:6px;object-fit:cover" onerror="this.style.display='none'">`:'';};
+  const itemIcon=id=>`<img src="https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/item/${id}.png" style="width:22px;height:22px;border-radius:3px;object-fit:cover" onerror="this.style.display='none'">`;
+
+  function playerCard(p){
+    const c=PC[p.name]||'#C8AA6E';
+    const kda=p.d>0?((p.k+p.a)/p.d).toFixed(1):(p.k+p.a).toString();
+    const kdaColor=Number(kda)>=5?'var(--success)':Number(kda)>=3?'var(--gold)':'var(--silver)';
+    const multi=p.penta?'🏆 PENTA':p.quadra?'⭐ Quadra':p.triple?'Triple':p.double?'Double':'';
+    return`<div style="display:grid;grid-template-columns:32px 1fr;gap:8px;align-items:start;padding:8px 10px;border-radius:6px;background:${p.win?'rgba(93,173,226,0.05)':'rgba(232,72,85,0.03)'}">
+      <div style="text-align:center">
+        ${champIcon(p.champ)}
+        <div style="font-size:9px;color:var(--silver);margin-top:2px">Lvl ${p.champLevel}</div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span style="font-size:14px;font-weight:700;color:${c}">${p.name}</span>
+          <span style="font-size:11px;color:var(--gold)">${p.champ}</span>
+          ${multi?`<span style="font-size:10px;color:var(--success);font-weight:700">${multi}</span>`:''}
+          ${p.firstBlood?'<span style="font-size:10px;color:var(--danger)">🩸FB</span>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:4px">
+          <span style="color:var(--success)">${p.k}</span><span style="color:var(--silver)">/</span><span style="color:var(--danger)">${p.d}</span><span style="color:var(--silver)">/</span><span style="color:#5DADE2">${p.a}</span>
+          <span style="color:${kdaColor};font-weight:700">${kda}:1</span>
+          <span style="color:var(--silver)">${p.kp}% KP</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:11px;color:var(--silver);margin-bottom:4px">
+          <span>CS ${p.cs} (${p.cspm}/m)</span>
+          <span>💰 ${(p.gold/1000).toFixed(1)}k (${p.goldpm}/m)</span>
+          <span>👁 ${p.vision} VS</span>
+          <span>🗺 ${p.wards}/${p.wardsKilled}</span>
+        </div>
+        <div style="display:flex;gap:2px;flex-wrap:wrap">
+          ${p.items.slice(0,6).map(id=>itemIcon(id)).join('')}
+          <div style="margin-left:4px;font-size:11px;color:var(--silver);align-self:center">${SPELL_NAMES[p.spell1]||p.spell1} + ${SPELL_NAMES[p.spell2]||p.spell2}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="background:var(--panel);border:1px solid rgba(93,173,226,0.2);border-radius:10px;overflow:hidden">
+        <div style="padding:8px 12px;background:rgba(93,173,226,0.08);font-size:11px;font-weight:700;color:#5DADE2;letter-spacing:1px">LEWA (BLUE)</div>
+        <div style="display:flex;flex-direction:column;gap:2px;padding:6px">
+          ${m.blue.map(playerCard).join('')}
+        </div>
+      </div>
+      <div style="background:var(--panel);border:1px solid rgba(232,72,85,0.2);border-radius:10px;overflow:hidden">
+        <div style="padding:8px 12px;background:rgba(232,72,85,0.08);font-size:11px;font-weight:700;color:#E84855;letter-spacing:1px">PRAWA (RED)</div>
+        <div style="display:flex;flex-direction:column;gap:2px;padding:6px">
+          ${m.red.map(playerCard).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMeczeScoreboard(el,m){
+  const ddVer=window._ddVersion||'15.10.1';
+  const champIcon=champ=>{const k=meczeChampKey(champ);return k?`<img src="https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${k}.png" style="width:26px;height:26px;border-radius:5px;object-fit:cover" onerror="this.style.display='none'">`:'';};
+
+  function scoreRow(p,isWin){
+    const c=PC[p.name]||'#C8AA6E';
+    const kda=p.d>0?((p.k+p.a)/p.d).toFixed(1):(p.k+p.a).toString();
+    const kdaColor=Number(kda)>=5?'var(--success)':Number(kda)>=3?'var(--gold)':'var(--silver)';
+    const dmgPct=Math.round(p.dmg/Math.max(...m.participants.map(x=>x.dmg))*100);
+    const goldPct=Math.round(p.gold/Math.max(...m.participants.map(x=>x.gold))*100);
+    return`<tr style="border-bottom:1px solid rgba(255,255,255,0.04);opacity:${isWin?1:0.75}">
+      <td style="padding:6px 8px">${champIcon(p.champ)}</td>
+      <td style="padding:6px 4px">
+        <div style="font-weight:700;color:${c};font-size:13px">${p.name}</div>
+        <div style="font-size:10px;color:var(--gold)">${p.champ}</div>
+      </td>
+      <td style="padding:6px 4px;text-align:center;font-size:12px"><span style="color:var(--success)">${p.k}</span>/<span style="color:var(--danger)">${p.d}</span>/<span style="color:#5DADE2">${p.a}</span><br><span style="font-size:10px;color:${kdaColor}">${kda}:1</span></td>
+      <td style="padding:6px 4px;text-align:right;font-size:12px">${p.kp}%</td>
+      <td style="padding:6px 4px;text-align:right;font-size:12px">${p.cs}<br><span style="font-size:10px;color:var(--silver)">${p.cspm}/m</span></td>
+      <td style="padding:6px 4px;text-align:right;font-size:12px;color:var(--gold)">${(p.gold/1000).toFixed(1)}k
+        <div style="height:3px;background:rgba(200,170,110,0.15);border-radius:2px;margin-top:2px"><div style="height:100%;width:${goldPct}%;background:var(--gold);border-radius:2px"></div></div>
+      </td>
+      <td style="padding:6px 4px;text-align:right;font-size:12px;color:#E84855">${(p.dmg/1000).toFixed(1)}k
+        <div style="height:3px;background:rgba(232,72,85,0.15);border-radius:2px;margin-top:2px"><div style="height:100%;width:${dmgPct}%;background:#E84855;border-radius:2px"></div></div>
+      </td>
+      <td style="padding:6px 4px;text-align:right;font-size:12px;color:var(--teal)">${p.vision}</td>
+      <td style="padding:6px 4px;text-align:right;font-size:11px;color:var(--silver)">${p.wards}/${p.wardsKilled}</td>
+    </tr>`;
+  }
+
+  const hdr=`<tr style="border-bottom:1px solid var(--border)"><th style="padding:4px 8px;text-align:left;font-size:10px;color:rgba(160,180,200,0.4);font-weight:400;text-transform:uppercase;letter-spacing:1px" colspan="2">Gracz</th><th style="padding:4px;font-size:10px;color:rgba(160,180,200,0.4);font-weight:400;text-transform:uppercase;letter-spacing:1px;text-align:center">K/D/A</th><th style="padding:4px;font-size:10px;color:rgba(160,180,200,0.4);font-weight:400;text-align:right">KP</th><th style="padding:4px;font-size:10px;color:rgba(160,180,200,0.4);font-weight:400;text-align:right">CS</th><th style="padding:4px;font-size:10px;color:rgba(160,180,200,0.4);font-weight:400;text-align:right">Gold</th><th style="padding:4px;font-size:10px;color:rgba(160,180,200,0.4);font-weight:400;text-align:right">Dmg</th><th style="padding:4px;font-size:10px;color:rgba(160,180,200,0.4);font-weight:400;text-align:right">VS</th><th style="padding:4px;font-size:10px;color:rgba(160,180,200,0.4);font-weight:400;text-align:right">Wards</th></tr>`;
+  const blueWin=m.win==='LEWA';
+
+  el.innerHTML=`
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>${hdr}</thead>
+        <tbody style="background:${blueWin?'rgba(93,173,226,0.06)':'rgba(10,16,30,0.4)'}">
+          ${m.blue.map(p=>scoreRow(p,blueWin)).join('')}
+        </tbody>
+        <tbody style="border-top:2px solid var(--border)">
+          <tr><td colspan="9" style="padding:4px 8px;font-size:10px;font-weight:700;color:#E84855;letter-spacing:1px;background:${!blueWin?'rgba(232,72,85,0.08)':'rgba(10,16,30,0.3)'}">PRAWA ${!blueWin?'✓ VICTORY':''}</td></tr>
+        </tbody>
+        <tbody style="background:${!blueWin?'rgba(232,72,85,0.06)':'rgba(10,16,30,0.4)'}">
+          ${m.red.map(p=>scoreRow(p,!blueWin)).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Extended stats grid -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px">
+      ${[
+        {label:'Most Kills',val:m.participants.reduce((b,p)=>p.k>b.k?p:b).name+' ('+m.participants.reduce((b,p)=>p.k>b.k?p:b).k+')',icon:'⚔️'},
+        {label:'Most Deaths',val:m.participants.reduce((b,p)=>p.d>b.d?p:b).name+' ('+m.participants.reduce((b,p)=>p.d>b.d?p:b).d+')',icon:'💀'},
+        {label:'Highest KDA',val:m.participants.reduce((b,p)=>p.kda>b.kda?p:b).name+' ('+m.participants.reduce((b,p)=>p.kda>b.kda?p:b).kda+')',icon:'🏆'},
+        {label:'Most Damage',val:m.participants.reduce((b,p)=>p.dmg>b.dmg?p:b).name+' ('+(m.participants.reduce((b,p)=>p.dmg>b.dmg?p:b).dmg/1000).toFixed(1)+'k)',icon:'💥'},
+        {label:'Most Gold',val:m.participants.reduce((b,p)=>p.gold>b.gold?p:b).name+' ('+(m.participants.reduce((b,p)=>p.gold>b.gold?p:b).gold/1000).toFixed(1)+'k)',icon:'💰'},
+        {label:'Best Vision',val:m.participants.reduce((b,p)=>p.vision>b.vision?p:b).name+' ('+m.participants.reduce((b,p)=>p.vision>b.vision?p:b).vision+')',icon:'👁'},
+      ].map(s=>`<div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;color:var(--silver);margin-bottom:3px">${s.icon} ${s.label}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--gold)">${s.val}</div>
+      </div>`).join('')}
+    </div>
+  `;
+}
+
+function renderMeczeCharts(el,m){
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:1px">OBRAŻENIA NA GRACZA</div>
+        <div style="position:relative;height:220px"><canvas id="mchart_dmg" role="img" aria-label="Damage per player bar chart"></canvas></div>
+      </div>
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:1px">ZŁOTO NA GRACZA</div>
+        <div style="position:relative;height:220px"><canvas id="mchart_gold" role="img" aria-label="Gold per player bar chart"></canvas></div>
+      </div>
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:1px">CS NA GRACZA</div>
+        <div style="position:relative;height:220px"><canvas id="mchart_cs" role="img" aria-label="CS per player bar chart"></canvas></div>
+      </div>
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:1px">VISION SCORE</div>
+        <div style="position:relative;height:220px"><canvas id="mchart_vision" role="img" aria-label="Vision score per player bar chart"></canvas></div>
+      </div>
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:1px">OBRAŻENIA WZIĘTE</div>
+        <div style="position:relative;height:220px"><canvas id="mchart_taken" role="img" aria-label="Damage taken per player"></canvas></div>
+      </div>
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:1px">TYP OBRAŻEŃ (SUMA)</div>
+        <div style="position:relative;height:220px"><canvas id="mchart_dmgtype" role="img" aria-label="Damage type breakdown"></canvas></div>
+      </div>
+    </div>
+    <!-- KDA comparison -->
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:1px">KDA RATIO — WSZYSCY GRACZE</div>
+      <div style="position:relative;height:260px"><canvas id="mchart_kda" role="img" aria-label="KDA ratio per player horizontal bar chart"></canvas></div>
+    </div>
+    <!-- Team comparison radar-like bars -->
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:12px;letter-spacing:1px">PORÓWNANIE DRUŻYN</div>
+      <div id="mchart_teamcmp"></div>
+    </div>
+  `;
+
+  // Load Chart.js and draw all charts
+  if(window.Chart){
+    _drawMeczeCharts(m);
+  } else {
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+    s.onload=()=>_drawMeczeCharts(m);
+    document.head.appendChild(s);
+  }
+}
+
+function _drawMeczeCharts(m){
+  const all=[...m.blue,...m.red].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role));
+  const names=all.map(p=>p.name.length>10?p.name.slice(0,10)+'…':p.name);
+  const colors=all.map(p=>p.side==='blue'?'rgba(93,173,226,0.8)':'rgba(232,72,85,0.8)');
+  const borderColors=all.map(p=>p.side==='blue'?'#5DADE2':'#E84855');
+
+  const baseOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'rgba(160,180,200,0.6)',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'rgba(160,180,200,0.6)',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}}};
+
+  function bar(id,data,label,fmt){
+    const el=document.getElementById(id);
+    if(!el||el._chart)return;
+    el._chart=new Chart(el,{type:'bar',data:{labels:names,datasets:[{label,data,backgroundColor:colors,borderColor:borderColors,borderWidth:1}]},options:{...JSON.parse(JSON.stringify(baseOpts)),plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>fmt?fmt(ctx.raw):ctx.raw}}}}});
+  }
+
+  bar('mchart_dmg',all.map(p=>p.dmg),'Dmg',v=>(v/1000).toFixed(1)+'k');
+  bar('mchart_gold',all.map(p=>p.gold),'Gold',v=>(v/1000).toFixed(1)+'k');
+  bar('mchart_cs',all.map(p=>p.cs),'CS');
+  bar('mchart_vision',all.map(p=>p.vision),'Vision');
+  bar('mchart_taken',all.map(p=>p.dmgTaken),'DmgTaken',v=>(v/1000).toFixed(1)+'k');
+
+  // Damage type stacked bar
+  const el=document.getElementById('mchart_dmgtype');
+  if(el&&!el._chart){
+    el._chart=new Chart(el,{type:'bar',data:{labels:names,datasets:[
+      {label:'Physical',data:all.map(p=>p.physDmg),backgroundColor:'rgba(232,72,85,0.7)',borderColor:'#E84855',borderWidth:1},
+      {label:'Magic',data:all.map(p=>p.magicDmg),backgroundColor:'rgba(93,173,226,0.7)',borderColor:'#5DADE2',borderWidth:1},
+      {label:'True',data:all.map(p=>p.trueDmg),backgroundColor:'rgba(29,233,182,0.7)',borderColor:'#1DE9B6',borderWidth:1},
+    ]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,ticks:{color:'rgba(160,180,200,0.6)',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}},y:{stacked:true,ticks:{color:'rgba(160,180,200,0.6)',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}},plugins:{legend:{display:true,labels:{color:'rgba(160,180,200,0.8)',font:{size:11},boxWidth:12}}}}});
+  }
+
+  // KDA horizontal bar
+  const kdaEl=document.getElementById('mchart_kda');
+  if(kdaEl&&!kdaEl._chart){
+    const sorted=[...all].sort((a,b)=>b.kda-a.kda);
+    kdaEl._chart=new Chart(kdaEl,{type:'bar',data:{labels:sorted.map(p=>p.name.length>12?p.name.slice(0,12)+'…':p.name),datasets:[{label:'KDA',data:sorted.map(p=>p.kda),backgroundColor:sorted.map(p=>p.side==='blue'?'rgba(93,173,226,0.8)':'rgba(232,72,85,0.8)'),borderColor:sorted.map(p=>p.side==='blue'?'#5DADE2':'#E84855'),borderWidth:1}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'rgba(160,180,200,0.6)',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'rgba(160,180,200,0.6)',font:{size:10}},grid:{display:false}}}}});
+  }
+
+  // Team comparison bars
+  const cmpEl=document.getElementById('mchart_teamcmp');
+  if(cmpEl){
+    const bTeam=m.teams['blue']||{}, rTeam=m.teams['red']||{};
+    const metrics=[
+      {label:'Kills',b:bTeam.totalKills||0,r:rTeam.totalKills||0},
+      {label:'Gold',b:Math.round((bTeam.totalGold||0)/100),r:Math.round((rTeam.totalGold||0)/100),suffix:'00'},
+      {label:'Dmg',b:Math.round((bTeam.totalDamage||0)/1000),r:Math.round((rTeam.totalDamage||0)/1000),suffix:'k'},
+      {label:'Towers',b:bTeam.towerKills||0,r:rTeam.towerKills||0},
+      {label:'Dragons',b:bTeam.dragonKills||0,r:rTeam.dragonKills||0},
+      {label:'Barons',b:bTeam.baronKills||0,r:rTeam.baronKills||0},
+    ];
+    cmpEl.innerHTML=metrics.map(mx=>{
+      const total=mx.b+mx.r||1;
+      const bPct=Math.round(mx.b/total*100);
+      const rPct=100-bPct;
+      return`<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="color:#5DADE2;font-weight:700">${mx.b}${mx.suffix||''}</span>
+          <span style="color:var(--silver)">${mx.label}</span>
+          <span style="color:#E84855;font-weight:700">${mx.r}${mx.suffix||''}</span>
+        </div>
+        <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,0.05)">
+          <div style="width:${bPct}%;background:#5DADE2;transition:width 0.5s"></div>
+          <div style="width:${rPct}%;background:#E84855;transition:width 0.5s"></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function renderMeczeEdit(el,m){
+  const ddVer=window._ddVersion||'15.10.1';
+
+  function editRow(p){
+    const c=PC[p.name]||'#C8AA6E';
+    const champIcon=p.champ?`<img src="https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${meczeChampKey(p.champ)}.png" style="width:28px;height:28px;border-radius:5px" onerror="this.style.display='none'">`:'';
+    return`<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+      <td style="padding:6px 8px">${champIcon}</td>
+      <td style="padding:6px 4px"><input value="${p.name}" style="font-size:13px;color:${c};background:transparent;border:none;border-bottom:1px solid var(--border);width:100%;color:${c}" onchange="_updateMeczeParticipant('${m.gameId}',${p.pid},'name',this.value)"></td>
+      <td style="padding:6px 4px"><input value="${p.champ}" list="champList" style="font-size:11px;color:var(--gold);background:transparent;border:none;border-bottom:1px solid var(--border);width:100%" onchange="_updateMeczeParticipant('${m.gameId}',${p.pid},'champ',this.value)"></td>
+      <td style="padding:6px 4px"><input type="number" value="${p.k}" min="0" style="width:40px;text-align:center;font-size:12px;color:var(--success);background:transparent;border:none;border-bottom:1px solid var(--border)" onchange="_updateMeczeParticipant('${m.gameId}',${p.pid},'k',+this.value)"></td>
+      <td style="padding:6px 4px"><input type="number" value="${p.d}" min="0" style="width:40px;text-align:center;font-size:12px;color:var(--danger);background:transparent;border:none;border-bottom:1px solid var(--border)" onchange="_updateMeczeParticipant('${m.gameId}',${p.pid},'d',+this.value)"></td>
+      <td style="padding:6px 4px"><input type="number" value="${p.a}" min="0" style="width:40px;text-align:center;font-size:12px;color:#5DADE2;background:transparent;border:none;border-bottom:1px solid var(--border)" onchange="_updateMeczeParticipant('${m.gameId}',${p.pid},'a',+this.value)"></td>
+      <td style="padding:6px 4px"><input type="number" value="${p.cs}" min="0" style="width:44px;text-align:right;font-size:12px;color:var(--silver);background:transparent;border:none;border-bottom:1px solid var(--border)" onchange="_updateMeczeParticipant('${m.gameId}',${p.pid},'cs',+this.value)"></td>
+      <td style="padding:6px 4px"><input type="number" value="${p.gold}" min="0" style="width:60px;text-align:right;font-size:12px;color:var(--gold);background:transparent;border:none;border-bottom:1px solid var(--border)" onchange="_updateMeczeParticipant('${m.gameId}',${p.pid},'gold',+this.value)"></td>
+      <td style="padding:6px 4px;text-align:center">
+        <select style="font-size:11px;background:var(--panel);border:1px solid var(--border);color:var(--silver);padding:2px 4px;border-radius:3px" onchange="_updateMeczeParticipant('${m.gameId}',${p.pid},'side',this.value)">
+          <option value="blue" ${p.side==='blue'?'selected':''}>LEWA</option>
+          <option value="red" ${p.side==='red'?'selected':''}>PRAWA</option>
+        </select>
+      </td>
+    </tr>`;
+  }
+
+  el.innerHTML=`
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:auto;margin-bottom:14px">
+      <table style="width:100%;border-collapse:collapse;min-width:700px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            ${['','Gracz','Champion','K','D','A','CS','Gold','Drużyna'].map(h=>`<th style="padding:6px 8px;text-align:left;font-size:10px;color:rgba(160,180,200,0.4);font-weight:400;letter-spacing:1px;text-transform:uppercase">${h}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="9" style="padding:4px 8px;font-size:10px;font-weight:700;color:#5DADE2;letter-spacing:1px;background:rgba(93,173,226,0.06)">LEWA (BLUE)</td></tr>
+          ${m.blue.map(editRow).join('')}
+          <tr><td colspan="9" style="padding:4px 8px;font-size:10px;font-weight:700;color:#E84855;letter-spacing:1px;background:rgba(232,72,85,0.06)">PRAWA (RED)</td></tr>
+          ${m.red.map(editRow).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button onclick="exportMeczeToSheets('${m.gameId}')" style="padding:8px 20px;background:rgba(200,170,110,0.15);border:1px solid var(--gold);color:var(--gold);border-radius:7px;cursor:pointer;font-size:14px;font-family:'Cinzel',serif">💾 Zapisz do Sheets</button>
+      <button onclick="exportMeczeToHistory('${m.gameId}')" style="padding:8px 20px;background:rgba(93,173,226,0.1);border:1px solid #5DADE2;color:#5DADE2;border-radius:7px;cursor:pointer;font-size:14px">📋 Dodaj do Historii</button>
+      <span style="font-size:12px;color:var(--silver)">Zmiany są zapisywane na bieżąco</span>
+    </div>
+  `;
+}
+
+function _updateMeczeParticipant(gameId,pid,field,val){
+  const m=_meczeMatches[gameId];
+  if(!m)return;
+  const p=m.participants.find(x=>x.pid===pid);
+  if(!p)return;
+  p[field]=val;
+  // Rebuild blue/red arrays
+  m.blue=m.participants.filter(x=>x.side==='blue');
+  m.red=m.participants.filter(x=>x.side==='red');
+}
+
+function exportMeczeToSheets(gameId){
+  const m=_meczeMatches[gameId];
+  if(!m){toast('Brak meczu');return;}
+  const win=m.win;
+  const blue={top:'',jng:'',mid:'',adc:'',supp:''};
+  const red={top:'',jng:'',mid:'',adc:'',supp:''};
+  const blueC={top:'',jng:'',mid:'',adc:'',supp:''};
+  const redC={top:'',jng:'',mid:'',adc:'',supp:''};
+  const scan={};
+  const ROLES_ORDER=['top','jng','mid','adc','supp'];
+
+  m.blue.forEach(p=>{
+    const r=p.role;
+    if(!blue[r]||blue[r]===''){blue[r]=p.name;blueC[r]=p.champ;}
+    else{const fr=ROLES_ORDER.find(x=>!blue[x]);if(fr){blue[fr]=p.name;blueC[fr]=p.champ;}}
+    scan[p.name]={champ:p.champ,k:p.k,d:p.d,a:p.a};
+  });
+  m.red.forEach(p=>{
+    const r=p.role;
+    if(!red[r]||red[r]===''){red[r]=p.name;redC[r]=p.champ;}
+    else{const fr=ROLES_ORDER.find(x=>!red[x]);if(fr){red[fr]=p.name;redC[fr]=p.champ;}}
+    scan[p.name]={champ:p.champ,k:p.k,d:p.d,a:p.a};
+  });
+
+  const matchObj={
+    gid:m.gameId, patch:m.patch, date:m.date, win,
+    blue,red,blueChamps:blueC,redChamps:redC,scanResult:scan,
+  };
+
+  gsWrite(matchObj).then(ok=>{
+    if(ok)toast('✓ Zapisano mecz do Sheets!');
+  });
+}
+
+function exportMeczeToHistory(gameId){
+  const m=_meczeMatches[gameId];
+  if(!m){toast('Brak meczu');return;}
+  const existing=MH.find(x=>x.gid===m.gameId);
+  if(existing){toast('Mecz już jest w historii!');return;}
+  const ROLES_ORDER=['top','jng','mid','adc','supp'];
+  const blue={top:'',jng:'',mid:'',adc:'',supp:''};
+  const red={top:'',jng:'',mid:'',adc:'',supp:''};
+  const blueC={top:'',jng:'',mid:'',adc:'',supp:''};
+  const redC={top:'',jng:'',mid:'',adc:'',supp:''};
+  const scan={};
+  m.blue.forEach(p=>{
+    const r=p.role;
+    if(!blue[r]){blue[r]=p.name;blueC[r]=p.champ;}
+    scan[p.name]={champ:p.champ,k:p.k,d:p.d,a:p.a};
+  });
+  m.red.forEach(p=>{
+    const r=p.role;
+    if(!red[r]){red[r]=p.name;redC[r]=p.champ;}
+    scan[p.name]={champ:p.champ,k:p.k,d:p.d,a:p.a};
+  });
+  MH.push({
+    gid:m.gameId,patch:m.patch,date:m.date,win:m.win,
+    blue,red,blueChamps:blueC,redChamps:redC,scanResult:scan,
+    participants:m.participants,teamStats:{blue:m.teams.blue||{},red:m.teams.red||{}},
+    duration:m.duration,
+  });
+  MH.sort((a,b)=>Number(b.gid)-Number(a.gid));
+  lsSave();PS=buildPS();AP=Object.keys(PS).sort();
+  renderStats();renderHist();
+  toast('✓ Dodano do Historii meczy!');
+}
 
 init();
 </script>
