@@ -293,6 +293,28 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .hist-sum-val{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--gold)}
 .hist-sum-lbl{font-size:11px;color:var(--silver);margin-top:3px;text-transform:uppercase;letter-spacing:1px}
 
+/* ── HISTORY SCOREBOARD ─────────────────────────────────────── */
+.sb-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform 0.15s,border-color 0.15s}
+.sb-card:hover{transform:translateX(2px);border-color:rgba(200,170,110,0.35)}
+.sb-card.sb-blue-win{border-left:4px solid #5DADE2}
+.sb-card.sb-red-win{border-left:4px solid #E84855}
+.sb-header{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)}
+.sb-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.sb-team-section{padding:6px 0}
+.sb-team-hdr{display:flex;align-items:center;justify-content:space-between;padding:4px 12px 4px 8px;font-size:11px;font-weight:700;letter-spacing:1.5px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:2px}
+.sb-col-hdr{display:grid;grid-template-columns:28px 1fr 60px 48px 60px 56px 46px;gap:4px;padding:2px 8px;font-size:10px;color:rgba(160,180,200,0.35);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.sb-row{display:grid;grid-template-columns:28px 1fr 60px 48px 60px 56px 46px;gap:4px;align-items:center;padding:4px 8px;border-radius:3px;font-size:12px;transition:background 0.1s;cursor:default}
+.sb-row:hover{background:rgba(255,255,255,0.04)}
+.sb-row.sb-row-win{background:rgba(93,173,226,0.05)}
+.sb-row.sb-row-loss{opacity:0.65}
+.sb-champ-icon{width:26px;height:26px;border-radius:4px;object-fit:cover;flex-shrink:0}
+.sb-kda-good{color:#1DE9B6}.sb-kda-ok{color:#C8AA6E}.sb-kda-bad{color:rgba(160,180,200,0.6)}
+.sb-num{text-align:right;font-size:11px;color:var(--silver);white-space:nowrap}
+.sb-items{display:flex;gap:2px}
+.sb-item{width:18px;height:18px;border-radius:3px;object-fit:cover;background:rgba(255,255,255,0.06)}
+/* Team stats bar */
+.sb-team-totals{display:flex;gap:12px;padding:4px 12px;font-size:11px;color:var(--silver);border-top:1px solid rgba(255,255,255,0.04);margin-top:3px}
+
 .lol-match{
   display:flex;align-items:stretch;
   background:var(--panel);border:1px solid var(--border);
@@ -806,20 +828,23 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 <!-- HISTORY -->
 <div class="page" id="page-history">
-  <!-- Filter + export bar -->
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
     <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--gold);letter-spacing:2px" id="histhdr">Historia meczy</div>
     <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap">
-      <input id="histSearch" class="ss" style="width:160px;font-size:13px;padding:5px 10px" placeholder="Szukaj gracza..." oninput="renderHist()">
+      <input id="histSearch" class="ss" style="width:160px;font-size:13px;padding:5px 10px" placeholder="Szukaj gracza/champ..." oninput="renderHist()">
+      <select id="histViewMode" class="ss" style="font-size:12px;padding:5px 8px" onchange="renderHist()">
+        <option value="compact">Kompakt</option>
+        <option value="scoreboard">Scoreboard</option>
+      </select>
       <button class="btn sbtn" style="font-size:12px;padding:6px 12px" onclick="renderHist()" title="Odśwież">↺</button>
       <button class="btn" style="font-size:12px;padding:6px 12px" onclick="exportCSV()">↓ CSV</button>
-      <label class="btn sbtn" style="font-size:12px;padding:6px 12px;cursor:pointer" title="Importuj pliki JSON z historii LoL (można wybrać wiele plików naraz)">
+      <label class="btn sbtn" style="font-size:12px;padding:6px 12px;cursor:pointer" title="Importuj pliki JSON (sss.json, match_*.json)">
         ↑ Import JSON
         <input type="file" accept=".json" multiple style="display:none" onchange="importLoLJson(this)">
       </label>
     </div>
   </div>
-  <div id="histList" style="display:flex;flex-direction:column;gap:6px"></div>
+  <div id="histList" style="display:flex;flex-direction:column;gap:8px"></div>
 </div>
 
 
@@ -2459,88 +2484,135 @@ function gameVersionToPatch(ver){
 const _importBuffer={};  // gameId -> partial game data
 
 function parseLoLJsonFile(jsonData, fileName){
-  // Normalize to array of game objects
-  // Format 1: single game object { gameId, participants, participantIdentities, teams, ... }
-  // Format 2: array of { game: {...}, participants: [...] }
   let gameEntries=[];
 
-  if(Array.isArray(jsonData)){
-    // Format 2: [{game:{...}, participants:[...]}, ...]
+  // RICH FORMAT: match_*.json — has summonerName, championName, inferredRole, cs, gold etc
+  if(!Array.isArray(jsonData)&&jsonData.gameId&&jsonData.participants&&
+     jsonData.participants.length&&jsonData.participants[0].summonerName!==undefined){
+    gameEntries.push({_richFormat:true,...jsonData});
+  }
+  // OLD ARRAY FORMAT: [{game:{...}, participants:[10]}]
+  else if(Array.isArray(jsonData)){
     jsonData.forEach(entry=>{
       if(entry.game&&entry.game.gameId){
-        // Merge: use entry.participants (full 10 players) with entry.game metadata
         const g=Object.assign({},entry.game);
         g.participants=entry.participants||g.participants||[];
         gameEntries.push(g);
       } else if(entry.gameId){
-        // Already a flat game object in array
         gameEntries.push(entry);
       }
     });
-  } else if(jsonData.gameId){
-    // Format 1: single flat game object
+  }
+  // OLD SINGLE FLAT FORMAT: {gameId, participantIdentities, participants, teams}
+  else if(jsonData.gameId){
     gameEntries.push(jsonData);
   } else if(jsonData.game&&jsonData.game.gameId){
-    // Single wrapped entry
     const g=Object.assign({},jsonData.game);
     g.participants=jsonData.participants||g.participants||[];
     gameEntries.push(g);
   }
 
   if(!gameEntries.length){
-    console.warn('importLoLJson: could not parse', fileName, 'keys:', Object.keys(jsonData||{}).slice(0,5));
+    console.warn('parseLoLJsonFile: unrecognized format in',fileName,'keys:',Object.keys(jsonData||{}).slice(0,5));
     return{added:0,updated:0};
   }
+
+  const ROLE_MAP={'TOP':'top','JNG':'jng','JUNGLE':'jng','MID':'mid','MIDDLE':'mid',
+    'ADC':'adc','BOT':'adc','BOTTOM':'adc','SUP':'supp','SUPPORT':'supp'};
 
   let added=0,updated=0;
 
   gameEntries.forEach(g=>{
     const gameId=String(g.gameId);
+    const isRich=!!g._richFormat;
+
     if(!_importBuffer[gameId]){
       _importBuffer[gameId]={
-        gameId,
-        date:g.gameCreationDate?g.gameCreationDate.slice(0,10):'',
-        patch:gameVersionToPatch(g.gameVersion||'16.10'),
-        winningTeam:null,
+        gameId,date:'',patch:'26.10',winningTeam:null,duration:'',
         blue:{top:'',jng:'',mid:'',adc:'',supp:''},
         red:{top:'',jng:'',mid:'',adc:'',supp:''},
         blueChamps:{top:'',jng:'',mid:'',adc:'',supp:''},
         redChamps:{top:'',jng:'',mid:'',adc:'',supp:''},
-        scanResult:{},
+        scanResult:{},participants:[],teamStats:{blue:{},red:{}},
         _pidSlots:{blue:{},red:{}},
       };
       added++;
     } else { updated++; }
 
     const buf=_importBuffer[gameId];
-    (g.teams||[]).forEach(t=>{if(t.win==='Win')buf.winningTeam=t.teamId;});
 
-    const idToName={};
-    (g.participantIdentities||[]).forEach(pi=>{
-      const pl=pi.player||{};
-      const name=pl.gameName||pl.tagLine||pl.summonerName||'';
-      if(name)idToName[pi.participantId]=name;
-    });
+    if(isRich){
+      buf.date=(g.date||g.gameCreationDate||'').slice(0,10);
+      buf.patch=gameVersionToPatch(g.gameVersion||'16.10');
+      buf.duration=g.gameDurationFormatted||Math.floor((g.gameDuration||0)/60)+'m';
 
-    (g.participants||[]).forEach(p=>{
-      const pid=p.participantId;
-      const name=idToName[pid]||'';
-      const side=p.teamId===100?'blue':'red';
-      const ck=champIdToKey(p.championId)||'';
-      const champDisp=ck?champDisplayName(ck):'';
-      const tl=p.timeline||{};
-      const role=laneRoleToOurs(tl.lane||'NONE',tl.role||'NONE');
-      const stats=p.stats||{};
-      const k=stats.kills||0,d=stats.deaths||0,a=stats.assists||0;
-      if(!buf._pidSlots[side][pid]){
-        buf._pidSlots[side][pid]={pid,name,champKey:ck,champDisp,role,k,d,a};
-      } else if(name){
-        buf._pidSlots[side][pid].name=name;
-      }
-    });
+      (g.teams||[]).forEach(t=>{
+        const side=t.teamId===100?'blue':'red';
+        if(t.win===true||t.win==='Win')buf.winningTeam=t.teamId;
+        buf.teamStats[side]={
+          kills:t.totalKills||0,gold:t.totalGold||0,dmg:t.totalDamage||0,
+          towers:t.towerKills||0,dragons:t.dragonKills||0,barons:t.baronKills||0,
+          firstBlood:t.firstBlood||false,firstTower:t.firstTower||false,
+        };
+      });
+
+      (g.participants||[]).forEach(p=>{
+        const side=p.teamId===100||p.teamSide==='blue'?'blue':'red';
+        const name=(p.summonerName||p.gameName||'').split('#')[0];
+        const champDisp=p.championName||champDisplayName(champIdToKey(p.championId)||'')||'';
+        const ck=champKey(champDisp);
+        const rawRole=(p.inferredRole||p.laneRaw||'').toUpperCase();
+        const role=ROLE_MAP[rawRole]||laneRoleToOurs('NONE','NONE');
+        const k=p.kills||0,d=p.deaths||0,a=p.assists||0;
+        const pid=p.participantId||Object.keys(buf._pidSlots[side]).length+1;
+        if(!buf._pidSlots[side][pid]){
+          buf._pidSlots[side][pid]={
+            pid,name,champKey:ck,champDisp,role,k,d,a,
+            cs:p.cs||0,gold:p.goldEarned||0,dmg:p.damageDealt||0,
+            vision:p.visionScore||0,kda:p.kdaRatio||0,
+            killPart:Math.round((p.killParticipation||0)*100),
+            items:p.items||[],win:!!p.win,
+            goldPerMin:p.goldPerMin||0,dmgPerMin:p.damageDealtPerMin||0,
+            doubleKills:p.doubleKills||0,tripleKills:p.tripleKills||0,
+            quadraKills:p.quadraKills||0,pentaKills:p.pentaKills||0,
+            firstBlood:p.firstBloodKill||false,turretKills:p.turretKills||0,
+            ccApplied:p.ccApplied||0,healingDone:p.healingDone||0,
+          };
+        } else if(name){ buf._pidSlots[side][pid].name=name; }
+      });
+    } else {
+      buf.date=(g.gameCreationDate||g.date||'').slice(0,10);
+      buf.patch=gameVersionToPatch(g.gameVersion||'16.10');
+      (g.teams||[]).forEach(t=>{if(t.win==='Win')buf.winningTeam=t.teamId;});
+      const idToName={};
+      (g.participantIdentities||[]).forEach(pi=>{
+        const pl=pi.player||{};
+        const name=pl.gameName||pl.tagLine||pl.summonerName||'';
+        if(name)idToName[pi.participantId]=name;
+      });
+      (g.participants||[]).forEach(p=>{
+        const pid=p.participantId;
+        const name=idToName[pid]||'';
+        const side=p.teamId===100?'blue':'red';
+        const ck=champIdToKey(p.championId)||'';
+        const champDisp=ck?champDisplayName(ck):'';
+        const tl=p.timeline||{};
+        const role=laneRoleToOurs(tl.lane||'NONE',tl.role||'NONE');
+        const stats=p.stats||{};
+        const k=stats.kills||0,d=stats.deaths||0,a=stats.assists||0;
+        if(!buf._pidSlots[side][pid]){
+          buf._pidSlots[side][pid]={
+            pid,name,champKey:ck,champDisp,role,k,d,a,
+            cs:stats.totalMinionsKilled||0,gold:stats.goldEarned||0,
+            dmg:stats.totalDamageDealtToChampions||stats.totalDamageDealt||0,
+            vision:stats.visionScore||0,items:[],win:false,
+          };
+        } else if(name){ buf._pidSlots[side][pid].name=name; }
+      });
+    }
   });
 
-  // Rebuild team slots from _pidSlots
+  // Rebuild team slots
   Object.values(_importBuffer).forEach(buf=>{
     ['blue','red'].forEach(side=>{
       const slots=Object.values(buf._pidSlots[side]).sort((a,b)=>a.pid-b.pid);
@@ -2556,10 +2628,12 @@ function parseLoLJsonFile(jsonData, fileName){
         if(s.name)buf.scanResult[s.name]={champ:dispName,k:s.k,d:s.d,a:s.a};
       });
     });
+    buf.participants=[...Object.values(buf._pidSlots.blue),...Object.values(buf._pidSlots.red)];
   });
 
   return{added,updated};
 }
+
 
 function importLoLJson(input){
   const files=[...input.files];
@@ -3597,82 +3671,165 @@ function renderStats(){
 // =====================================================================
 function renderHist(){
   const q=(document.getElementById('histSearch')?.value||'').toLowerCase().trim();
-  // Apply global stats filter if active
+  const view=document.getElementById('histViewMode')?.value||'compact';
   const statsFilter=document.getElementById('statsFilterType')?.value||'all';
   const baseMH=statsFilter!=='all'?getFilteredMatches():MH;
   const allMatches=[...baseMH].reverse();
   const matches=q?allMatches.filter(m=>
-    Object.values(m.blue).concat(Object.values(m.red)).some(n=>n&&n.toLowerCase().includes(q))
+    [...Object.values(m.blue),...Object.values(m.red)].some(n=>n&&n.toLowerCase().includes(q))||
+    [...Object.values(m.blueChamps||{}),...Object.values(m.redChamps||{})].some(c=>c&&c.toLowerCase().includes(q))||
+    (m.participants||[]).some(p=>p.summonerName?.toLowerCase().includes(q)||p.champDisp?.toLowerCase().includes(q))
   ):allMatches;
 
-
-
   const hdr=document.getElementById('histhdr');
-  if(hdr) hdr.textContent='Historia meczy'+(q?' (filtr: '+q+')':' ('+MH.length+')');
+  if(hdr)hdr.textContent='Historia meczy'+(q?' (filtr: '+q+')':' ('+MH.length+')');
 
-  function champRow(name, role, champs, scan){
-    const champ=(champs&&champs[role])||scan?.[name]?.champ||'';
+  if(view==='scoreboard'){
+    renderHistScoreboard(matches);
+  } else {
+    renderHistCompact(matches);
+  }
+}
+
+function renderHistCompact(matches){
+  function champRow(name,role,champs,scan,participants){
+    // Try rich participant data first
+    const richP=participants&&participants.find(p=>p.name===name||p.summonerName===name);
+    const champ=(champs&&champs[role])||richP?.champDisp||scan?.[name]?.champ||'';
     const key=champ?champKey(champ):'';
     const c=PC[name]||'#C8AA6E';
     const src=key?ddUrl(key):'';
-    const sr=scan?.[name]||{};
-    const hasKDA=sr.k!==undefined;
-    const kdaStr=hasKDA?(sr.k+'/'+sr.d+'/'+sr.a):'';
-    const kdaVal=hasKDA?(sr.d>0?((sr.k+sr.a)/sr.d).toFixed(1):(sr.k+sr.a).toString()):'';
+    const k=richP?.k??scan?.[name]?.k, d=richP?.d??scan?.[name]?.d, a=richP?.a??scan?.[name]?.a;
+    const hasKDA=k!==undefined;
+    const kdaStr=hasKDA?(k+'/'+d+'/'+a):'';
+    const kdaVal=hasKDA?(d>0?((k+a)/d).toFixed(1):(k+a).toString()):'';
     const kdaColor=Number(kdaVal)>=5?'#1DE9B6':Number(kdaVal)>=3?'#C8AA6E':'rgba(160,180,200,0.6)';
-    return '<div class="lm-champ-entry">'
-      +(src
-        ?'<img class="lm-champ-icon" src="'+src+'" loading="lazy" onerror="this.style.background=\''+c+'22\';this.src=\'\'">'
-        :'<div class="lm-champ-icon" style="background:'+c+'20;display:flex;align-items:center;justify-content:center;font-size:12px;color:'+c+'">'+RI[role]+'</div>')
-      +'<div class="lm-player-info">'
-      +'<div class="lm-player-name" style="color:'+c+'">'+name+'</div>'
-      +(champ?'<div class="lm-champ-name">'+champ+'</div>':'<div style="font-size:10px;color:rgba(160,180,200,0.35)">'+role.toUpperCase()+'</div>')
-      +(hasKDA?'<div style="font-size:10px;color:'+kdaColor+';font-weight:600;line-height:1">'+kdaStr+'</div>':'')
-      +'</div></div>';
-  }
+    const iconHtml=src
+      ?`<img class="lm-champ-icon" src="${src}" loading="lazy" onerror="this.style.background='${c}22';this.src=''">`
+      :`<div class="lm-champ-icon" style="background:${c}20;display:flex;align-items:center;justify-content:center;font-size:12px;color:${c}">${RI[role]}</div>`;
+    return `<div class="lm-champ-entry">${iconHtml}<div class="lm-player-info"><div class="lm-player-name" style="color:${c}">${name}</div>${champ?`<div class="lm-champ-name">${champ}</div>`:`<div style="font-size:10px;color:rgba(160,180,200,0.35)">${role.toUpperCase()}</div>`}${hasKDA?`<div style="font-size:10px;color:${kdaColor};font-weight:600;line-height:1">${kdaStr}</div>`:''}</div></div>`;
 
   document.getElementById('histList').innerHTML=matches.map(m=>{
     const blueWin=m.win==='LEWA';
     const scan=m.scanResult||{};
+    const parts=m.participants||[];
     const blueBg=blueWin?'rgba(93,173,226,0.18)':'rgba(10,16,30,0.6)';
     const redBg=blueWin?'rgba(10,16,30,0.6)':'rgba(232,72,85,0.18)';
     const blueGlow=blueWin?'box-shadow:inset 0 0 30px rgba(93,173,226,0.12)':'';
     const redGlow=!blueWin?'box-shadow:inset 0 0 30px rgba(232,72,85,0.12)':'';
-    const blueLabel=blueWin?'#5DADE2':'rgba(93,173,226,0.25)';
-    const redLabel=blueWin?'rgba(232,72,85,0.25)':'#E84855';
     const blueOpacity=blueWin?'1':'0.55';
     const redOpacity=blueWin?'0.55':'1';
+    const blueRows=ROLES.map(r=>m.blue[r]?champRow(m.blue[r],r,m.blueChamps,scan,parts):'').join('');
+    const redRows=ROLES.map(r=>m.red[r]?champRow(m.red[r],r,m.redChamps,scan,parts):'').join('');
+    return '<div class="lol-match '+(blueWin?'lm-win':'lm-loss')+'" onclick="openMatchDetail(\''+m.gid+'\')">'+
+      '<div class="lm-result">'+
+        '<div class="lm-win-badge '+(blueWin?'win':'loss')+'">'+m.win+'</div>'+
+        '<div class="lm-gid">#'+m.gid+'</div>'+
+        '<div class="lm-date">'+(m.date||'').slice(5)+'</div>'+
+        (m.duration?'<div class="lm-patch">'+m.duration+'</div>':'<div class="lm-patch">P'+m.patch+'</div>')+
+      '</div>'+
+      '<div class="lm-team blue-team" style="background:'+blueBg+';'+blueGlow+';opacity:'+blueOpacity+'">'+
+        '<div class="lm-team-label" style="color:'+(blueWin?'#5DADE2':'rgba(93,173,226,0.25)')+';font-size:'+(blueWin?'12':'9')+'px">'+(blueWin?'✓ WIN':'')+'LEWA</div>'+
+        '<div class="lm-champ-list">'+blueRows+'</div>'+
+      '</div>'+
+      '<div class="lm-vs"><div class="lm-vs-txt">VS</div></div>'+
+      '<div class="lm-team" style="background:'+redBg+';'+redGlow+';opacity:'+redOpacity+'">'+
+        '<div class="lm-team-label" style="color:'+(!blueWin?'#E84855':'rgba(232,72,85,0.25)')+';font-size:'+(!blueWin?'12':'9')+'px">'+(!blueWin?'✓ WIN':'')+'PRAWA</div>'+
+        '<div class="lm-champ-list">'+redRows+'</div>'+
+      '</div>'+
+      '<div class="lm-screen">'+
+        (m.imgUrl?`<img class="lm-screen-thumb" src="${m.imgUrl}" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation();window.open('${m.imgUrl}','_blank')">`
+          :'<div class="lm-screen-placeholder">📷</div>')+
+        `<div style="font-size:10px;color:var(--silver);text-align:center">${m.imgUrl?'Screen':'—'}</div>`+
+    '</div>';
+  }).join('');
+}
 
-    const blueRows=ROLES.map(r=>m.blue[r]?champRow(m.blue[r],r,m.blueChamps,scan):'').join('');
-    const redRows=ROLES.map(r=>m.red[r]?champRow(m.red[r],r,m.redChamps,scan):'').join('');
+function renderHistScoreboard(matches){
+  const DDVER=window._ddVersion||'15.10.1';
 
-    return `<div class="lol-match ${blueWin?'lm-win':'lm-loss'}" onclick="openMatchDetail('${m.gid}')">
-      <div class="lm-result">
+  document.getElementById('histList').innerHTML=matches.map(m=>{
+    const blueWin=m.win==='LEWA';
+    const parts=(m.participants||[]).slice().sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role));
+    if(!parts.length)return renderHistCompactCard(m);
+
+    // Split by pid (≤5 = blue, >5 = red) or by matching blue/red names
+    const blueNames=new Set(Object.values(m.blue||{}).filter(Boolean));
+    let blueParts=parts.filter(p=>blueNames.has(p.name)||p.pid<=5);
+    let redParts=parts.filter(p=>!blueParts.includes(p));
+    if(blueParts.length===0){blueParts=parts.slice(0,5);redParts=parts.slice(5);}
+
+    const bStats=m.teamStats?.blue||{};
+    const rStats=m.teamStats?.red||{};
+
+    function pRow(p){
+      const c=PC[p.name]||'#C8AA6E';
+      const icon=p.champKey?ddUrl(p.champKey):'';
+      const kda=p.d>0?((p.k+p.a)/p.d).toFixed(1):(p.k+p.a).toString();
+      const kdaColor=Number(kda)>=5?'var(--success)':Number(kda)>=3?'var(--gold)':'var(--silver)';
+      const dmgK=p.dmg?Math.round(p.dmg/1000)+'k':'—';
+      const goldK=p.gold?Math.round(p.gold/100)/10+'k':'—';
+      const duration=m.duration?parseInt(m.duration)||30:30;
+      return `<div class="sb-row ${p.win?'sb-row-win':'sb-row-loss'}">
+        ${icon?`<img class="sb-champ-icon" src="${icon}" loading="lazy" onerror="this.style.background='${c}22'">`:`<div class="sb-champ-icon" style="background:${c}20"></div>`}
+        <div style="min-width:0;overflow:hidden">
+          <div style="font-size:13px;font-weight:700;color:${c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+          <div style="font-size:10px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.champDisp||''}</div>
+        </div>
+        <div style="text-align:center;font-size:11px"><span style="color:var(--success)">${p.k}</span>/<span style="color:var(--danger)">${p.d}</span>/<span style="color:#5DADE2">${p.a}</span><div style="font-size:10px;color:${kdaColor}">${kda}:1</div></div>
+        <div class="sb-num">${p.cs||0}<div style="font-size:9px">${p.cs?+(p.cs/duration*10)/10:0}/m</div></div>
+        <div class="sb-num" style="color:var(--gold)">${goldK}</div>
+        <div class="sb-num" style="color:#E84855">${dmgK}</div>
+        <div class="sb-num" style="color:var(--teal)">${p.vision||0}<div style="font-size:9px">VS</div></div>
+      </div>`;
+    }
+
+    const colHdr=`<div class="sb-col-hdr"><span></span><span>Gracz</span><span style="text-align:center">K/D/A</span><span style="text-align:right">CS</span><span style="text-align:right">Gold</span><span style="text-align:right">Dmg</span><span style="text-align:right">VS</span></div>`;
+
+    const bKills=bStats.kills||'?', rKills=rStats.kills||'?';
+    const objBar=(s)=>[
+      s.firstBlood?'🩸FB':'',
+      s.towers?'🏰'+s.towers:'',
+      s.dragons?'🐉'+s.dragons:'',
+      s.barons?'👑'+s.barons:'',
+    ].filter(Boolean).join(' ');
+
+    return `<div class="sb-card ${blueWin?'sb-blue-win':'sb-red-win'}" onclick="openMatchDetail('${m.gid}')">
+      <div class="sb-header">
         <div class="lm-win-badge ${blueWin?'win':'loss'}">${m.win}</div>
-        <div class="lm-gid">#${m.gid}</div>
-        <div class="lm-date">${m.date.slice(5)}</div>
-        <div class="lm-patch">P${m.patch}</div>
-        ${m.scanResult?'<div style="font-size:10px;color:var(--success);margin-top:2px">✓ AI</div>':''}
+        <div style="font-size:13px;font-weight:700;color:var(--gold)">${(m.date||'').slice(5)}</div>
+        <div style="font-size:12px;color:var(--silver)">P${m.patch}</div>
+        ${m.duration?`<div style="font-size:12px;color:var(--silver)">⏱ ${m.duration}</div>`:''}
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px">
+          <span style="color:#5DADE2;font-weight:700">${bKills} Kills</span>
+          <span style="color:var(--silver);font-size:11px">${objBar(bStats)}</span>
+          <span style="color:rgba(200,170,110,0.3)">vs</span>
+          <span style="color:var(--silver);font-size:11px">${objBar(rStats)}</span>
+          <span style="color:#E84855;font-weight:700">${rKills} Kills</span>
+        </div>
+        ${m.imgUrl?`<img src="${m.imgUrl}" style="height:30px;border-radius:4px;object-fit:cover;cursor:zoom-in;margin-left:8px" onclick="event.stopPropagation();window.open('${m.imgUrl}','_blank')" title="Screenshot">`:'<span style="color:rgba(160,180,200,0.2);font-size:11px;margin-left:8px">📷</span>'}
       </div>
-      <div class="lm-team blue-team" style="background:${blueBg};${blueGlow};opacity:${blueOpacity}">
-        <div class="lm-team-label" style="color:${blueLabel};font-size:${blueWin?'12':'9'}px">${blueWin?'✓ WIN':''}LEWA</div>
-        <div class="lm-champ-list">${blueRows}</div>
+      <div class="sb-body">
+        <div class="sb-team-section" style="border-right:1px solid var(--border)">
+          <div class="sb-team-hdr" style="color:#5DADE2">${blueWin?'✓ VICTORY':'DEFEAT'} <span style="font-size:10px;color:var(--silver)">LEWA</span></div>
+          ${colHdr}
+          ${blueParts.map(pRow).join('')}
+        </div>
+        <div class="sb-team-section">
+          <div class="sb-team-hdr" style="color:#E84855">${!blueWin?'✓ VICTORY':'DEFEAT'} <span style="font-size:10px;color:var(--silver)">PRAWA</span></div>
+          ${colHdr}
+          ${redParts.map(pRow).join('')}
+        </div>
       </div>
-      <div class="lm-vs"><div class="lm-vs-txt">VS</div></div>
-      <div class="lm-team" style="background:${redBg};${redGlow};opacity:${redOpacity}">
-        <div class="lm-team-label" style="color:${redLabel};font-size:${!blueWin?'12':'9'}px">${!blueWin?'✓ WIN':''}PRAWA</div>
-        <div class="lm-champ-list">${redRows}</div>
-      </div>
-      <div class="lm-screen">
-        ${m.imgUrl
-          ?'<img class="lm-screen-thumb" src="'+m.imgUrl+'" loading="lazy" onerror="this.style.display=\'none\'" onclick="event.stopPropagation();window.open(\''+m.imgUrl+'\',\'_blank\')" title="Kliknij aby powiększyć">'
-          :'<div class="lm-screen-placeholder">📷</div>'}
-        <div style="font-size:10px;color:var(--silver);text-align:center">${m.imgUrl?'Screen':'—'}</div>
-      </div>
-
     </div>`;
   }).join('');
 }
+function renderHistCompactCard(m){
+  return ''; // fallback handled by compact renderer
+}
+
+
 function openImgPreview(url){window.open(url,'_blank');}
 
 // =====================================================================
