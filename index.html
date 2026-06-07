@@ -4929,7 +4929,11 @@ function parseSheetCSV(csv){
         if(typeof kda==='object'){m.scanResult=kda;}
       }catch(e){/* invalid JSON — ignore */}
     }
-    const existing=MH.find(x=>x.gid===m.gid);
+    const lolIdRaw=get(27);
+    if(lolIdRaw)m.lolId=lolIdRaw;
+    else m.lolId=m.gid; // fallback: old records where gid was the lolId
+
+    const existing=MH.find(x=>x.gid===m.gid||x.lolId===m.lolId);
     if(existing?.scanResult)m.scanResult=existing.scanResult;
     matches.push(m);
   }
@@ -5014,6 +5018,7 @@ async function gsWrite(matchData){
       matchData.scanResult&&Object.keys(matchData.scanResult).length?JSON.stringify(matchData.scanResult):'',
       matchData.imgUrl||'',
       matchData.participants&&matchData.participants.length?JSON.stringify(trimParticipants(matchData.participants)):'',
+      matchData.lolId||matchData.gid||'',
     ];
     const payload=JSON.stringify({action:'addRow',row});
     // Try POST first (avoids URL length limit), fall back to GET
@@ -5052,6 +5057,7 @@ async function gsUpdate(matchData){
       matchData.scanResult&&Object.keys(matchData.scanResult).length?JSON.stringify(matchData.scanResult):'',
       matchData.imgUrl||'',
       matchData.participants&&matchData.participants.length?JSON.stringify(trimP(matchData.participants)):'',
+      matchData.lolId||matchData.gid||'',
     ];
     const payload=JSON.stringify({action:'updateRow',gid:matchData.gid,row});
     let r;
@@ -5201,6 +5207,7 @@ function parseMeczeJson(data,fileName){
 
   return{
     gameId:String(g.gameId),
+    lolId:String(g.gameId), // Riot's match ID
     date:(g.date||g.gameCreationDate||'').slice(0,10),
     duration:g.gameDurationFormatted||Math.floor((g.gameDuration||0)/60)+'m',
     durationSecs:g.gameDuration||0,
@@ -5216,12 +5223,35 @@ function renderMeczeList(){
   const el=document.getElementById('mecze-list');
   if(!el)return;
 
-  const allIds=new Set([...MH.map(m=>m.gid),...Object.keys(_meczeData)]);
-  const allMatches=[...allIds].map(id=>{
-    const rich=_meczeData[id];
-    const hist=MH.find(m=>m.gid===id);
-    return{id,rich,hist};
-  }).sort((a,b)=>Number(b.id)-Number(a.id));
+  // Index rich data by lolId for quick lookup
+  const richByLolId={};
+  Object.values(_meczeData).forEach(r=>{richByLolId[r.lolId]=r;richByLolId[r.gameId]=r;});
+
+  // Gather all match IDs: from MH (gid) and from unmatched rich data
+  const allMatches=[];
+  const seenLolIds=new Set();
+
+  // Start with MH entries (have sequential GID)
+  MH.forEach(hist=>{
+    const lolId=hist.lolId||hist.gid;
+    const rich=richByLolId[lolId];
+    seenLolIds.add(lolId);
+    allMatches.push({id:hist.gid,gid:hist.gid,lolId,rich,hist});
+  });
+
+  // Add JSON-only imports not in MH yet
+  Object.values(_meczeData).forEach(rich=>{
+    if(!seenLolIds.has(rich.lolId)){
+      seenLolIds.add(rich.lolId);
+      allMatches.push({id:rich.lolId,gid:null,lolId:rich.lolId,rich,hist:null});
+    }
+  });
+
+  allMatches.sort((a,b)=>{
+    if(a.gid&&b.gid)return Number(b.gid)-Number(a.gid);
+    if(a.gid)return -1;if(b.gid)return 1;
+    return Number(b.lolId)-Number(a.lolId);
+  });
 
   if(!allMatches.length){
     el.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--silver);font-size:15px">Brak meczy — kliknij ↺ Sheets lub zaimportuj JSON</div>';
@@ -5242,7 +5272,7 @@ function renderMeczeList(){
     const date=(hist?.date||rich?.date||'');
     const patch=hist?.patch||rich?.patch||'';
     const duration=rich?.duration||hist?.duration||'';
-    const isActive=_meczeActive===id;
+    const isActive=_meczeActive===lolId;
     const lolId=id; // LoL match ID from Riot
     const seqNum=total-idx; // sequential #N (1=oldest)
 
@@ -5269,18 +5299,17 @@ function renderMeczeList(){
       </div>`;
     }
 
-    const cardHtml=`<div id="mcard_${id}" onclick="openMecze('${id}')" style="background:var(--panel);border:1px solid ${isActive?'rgba(200,170,110,0.5)':'var(--border)'};border-left:5px solid ${winColor};border-radius:8px;cursor:pointer;transition:border-color 0.15s">
+    const cardHtml=`<div id="mcard_${lolId}" onclick="openMecze('${lolId}')" style="background:var(--panel);border:1px solid ${isActive?'rgba(200,170,110,0.5)':'var(--border)'};border-left:5px solid ${winColor};border-radius:8px;cursor:pointer;transition:border-color 0.15s">
       <div style="display:grid;grid-template-columns:90px 1fr 36px 1fr 68px;align-items:stretch">
         <!-- Meta column -->
         <div style="padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px;border-right:1px solid var(--border)">
+          <!-- Sequential GID - prominent -->
+          ${gid?`<div style="font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:rgba(200,170,110,0.9);line-height:1">#${gid}</div>`:'<div style="font-size:11px;color:#F39C12;font-weight:700">— nie zapisano</div>'}
           <div style="font-size:15px;font-weight:700;color:${winColor}">${win}</div>
           <div style="font-size:12px;color:var(--silver)">${date.slice(5)||date}</div>
           <div style="font-size:11px;color:rgba(160,180,200,0.4)">${duration||('P'+patch)}</div>
-          <!-- LoL Match ID -->
-          <div style="margin-top:4px;padding:2px 5px;background:rgba(200,170,110,0.08);border:1px solid rgba(200,170,110,0.2);border-radius:4px;display:inline-block">
-            <div style="font-size:9px;color:rgba(200,170,110,0.5);letter-spacing:0.5px">LoL ID</div>
-            <div style="font-size:10px;color:var(--gold);font-weight:700;font-family:monospace">${lolId.slice(-6)}</div>
-          </div>
+          <!-- LoL ID small -->
+          <div style="font-size:9px;color:rgba(160,180,200,0.3);font-family:monospace;margin-top:2px">${lolId.slice(-8)}</div>
         </div>
         <!-- Blue team -->
         <div style="padding:6px 10px;background:${blueWin?winBg:loseBg}">
@@ -5332,26 +5361,126 @@ function openMecze(gameId){
 
 function handleMeczeFiles(files){
   if(!files||!files.length)return;
-  let loaded=0;
+  const pending=[];
+  let done=0;
+  const total=files.length;
+
   Array.from(files).forEach(file=>{
     const r=new FileReader();
     r.onload=e=>{
       try{
         const data=JSON.parse(e.target.result);
         const parsed=parseMeczeJson(data,file.name);
-        if(parsed){
-          _meczeData[parsed.gameId]=parsed;
-          loaded++;
-          renderMeczeList();
-          openMecze(parsed.gameId);
-          toast(`✓ Wczytano mecz ${parsed.gameId}`);
-        }
-      }catch(err){toast('Błąd: '+err.message);}
+        if(parsed) pending.push(parsed);
+      }catch(err){toast('Błąd parsowania: '+file.name+' — '+err.message);}
+      done++;
+      if(done===total) openMeczeImportPreview(pending);
     };
     r.readAsText(file,'utf-8');
   });
   document.getElementById('mecze-file-input').value='';
 }
+
+function openMeczeImportPreview(matches){
+  if(!matches.length){toast('Brak meczy do importu');return;}
+  const ddVer=window._ddVersion||'15.10.1';
+
+  function playerBadge(p){
+    const known=AP.includes(p.name)||AP.includes(p.rawName);
+    const c=known?(PC[p.name]||'#C8AA6E'):'#F39C12';
+    const ck=meczeChampKey(p.champ||'');
+    const icon=ck?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${ck}.png`:'';
+    const ri={top:'🛡',jng:'🌿',mid:'⚡',adc:'🏹',supp:'💫'};
+    return`<div style="display:flex;align-items:center;gap:5px;padding:3px 5px;border-radius:4px;background:${known?'rgba(255,255,255,0.03)':'rgba(243,156,18,0.08)'};${!known?'border:1px solid rgba(243,156,18,0.3)':''}">
+      <span style="font-size:10px;color:rgba(160,180,200,0.35)">${ri[p.role]||''}</span>
+      ${icon?`<img src="${icon}" style="width:18px;height:18px;border-radius:3px" onerror="this.style.display='none'">`:''}
+      <span style="font-size:12px;font-weight:700;color:${c}">${p.name}</span>
+      ${!known?'<span style="font-size:9px;color:#F39C12">?</span>':''}
+      <span style="font-size:10px;color:rgba(160,180,200,0.4)">${p.k}/${p.d}/${p.a}</span>
+    </div>`;
+  }
+
+  const rows=matches.map((m,i)=>{
+    const blueWin=m.win==='LEWA';
+    const existByLolId=MH.find(x=>x.lolId===m.lolId||x.gid===m.lolId);
+    const status=existByLolId?'UPDATE':'NEW';
+    const statusColor=existByLolId?'#F39C12':'#1DE9B6';
+    const unknownPlayers=m.participants.filter(p=>!AP.includes(p.name)&&!AP.includes(p.rawName));
+
+    return`<div id="mirow_${i}" style="background:var(--panel);border:1px solid var(--border);border-left:4px solid ${blueWin?'#5DADE2':'#E84855'};border-radius:8px;margin-bottom:10px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,0,0,0.2);border-bottom:1px solid var(--border)">
+        <input type="checkbox" id="michk_${i}" checked style="width:16px;height:16px;cursor:pointer">
+        <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">LoL ID: ${m.lolId}</div>
+        <div style="font-size:12px;color:var(--silver)">${m.date} · ${m.duration||''} · P${m.patch}</div>
+        <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${statusColor}22;color:${statusColor};border:1px solid ${statusColor}44">${status}</span>
+        <div style="font-size:13px;font-weight:700;color:${blueWin?'#5DADE2':'#E84855'};margin-left:auto">${m.win} wygrywa</div>
+        ${unknownPlayers.length?`<span style="font-size:11px;color:#F39C12">⚠ ${unknownPlayers.length} nieznanych graczy</span>`:''}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+        <div style="padding:10px 12px;background:${blueWin?'rgba(93,173,226,0.06)':''}">
+          <div style="font-size:10px;color:#5DADE2;font-weight:700;margin-bottom:6px">LEWA</div>
+          <div style="display:flex;flex-direction:column;gap:2px">${m.blue.map(playerBadge).join('')}</div>
+        </div>
+        <div style="padding:10px 12px;border-left:1px solid var(--border);background:${!blueWin?'rgba(232,72,85,0.06)':''}">
+          <div style="font-size:10px;color:#E84855;font-weight:700;margin-bottom:6px">PRAWA</div>
+          <div style="display:flex;flex-direction:column;gap:2px">${m.red.map(playerBadge).join('')}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const modal=document.createElement('div');
+  modal.id='meczeImportModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:flex-start;justify-content:center;padding-top:40px;z-index:9999;overflow-y:auto';
+  modal.innerHTML=`<div style="background:#0B1C38;border:1px solid var(--border);border-radius:12px;width:min(860px,95vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.3);flex-shrink:0">
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold)">Import ${matches.length} ${matches.length===1?'meczu':'meczy'}</div>
+      <div style="font-size:12px;color:var(--silver)">Odznacz mecze które chcesz pominąć</div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button onclick="confirmMeczeImport(${JSON.stringify(matches.map((_,i)=>i))})" style="padding:7px 18px;background:rgba(29,233,182,0.15);border:1px solid #1DE9B6;color:#1DE9B6;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700">✓ Importuj zaznaczone</button>
+        <button onclick="document.getElementById('meczeImportModal').remove()" style="padding:7px 14px;background:transparent;border:1px solid var(--border);color:var(--silver);border-radius:6px;cursor:pointer;font-size:14px">Anuluj</button>
+      </div>
+    </div>
+    <div style="overflow-y:auto;padding:14px 18px">${rows}</div>
+  </div>`;
+  document.body.appendChild(modal);
+
+  // Store matches for confirmImport
+  window._pendingMeczeImport=matches;
+}
+
+function confirmMeczeImport(indices){
+  const matches=window._pendingMeczeImport||[];
+  const selected=indices.filter(i=>{
+    const chk=document.getElementById('michk_'+i);
+    return chk?chk.checked:true;
+  }).map(i=>matches[i]);
+
+  document.getElementById('meczeImportModal')?.remove();
+
+  selected.forEach(parsed=>{
+    _meczeData[parsed.lolId]=parsed;
+    // Update existing MH record if lolId matches
+    const existing=MH.find(x=>x.lolId===parsed.lolId||x.gid===parsed.lolId);
+    if(existing){
+      // Enrich existing record with participant data
+      existing.participants=parsed.participants;
+      existing.teamStats={blue:parsed.teams?.blue||{},red:parsed.teams?.red||{}};
+      existing.duration=parsed.duration;
+      // Update champs and KDA
+      const scan={};
+      parsed.participants.forEach(p=>{scan[p.name]={champ:p.champ,k:p.k,d:p.d,a:p.a};});
+      existing.scanResult={...existing.scanResult,...scan};
+    }
+  });
+
+  lsSave();PS=buildPS();AP=Object.keys(PS).sort();
+  renderMeczeList();
+  if(selected.length===1) openMecze(selected[0].lolId);
+  toast(`✓ Zaimportowano ${selected.length} meczy`);
+}
+
+
 
 async function meczeFetchSheets(){
   toast('⟳ Ładuję mecze ze Sheets...');
@@ -5679,48 +5808,89 @@ function renderMeczeCharts(el,m){
 
 function renderMeczeEdit(el,m){
   const ddVer=window._ddVersion||'15.10.1';
+  const gameId=_meczeActive;
   const all=[...m.blue,...m.red].sort((a,b)=>{const s=a.side.localeCompare(b.side);return s||ROLES.indexOf(a.role)-ROLES.indexOf(b.role);});
 
-  el.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:680px">
-    <thead><tr style="border-bottom:1px solid var(--border)">${['','Gracz','Champion','K','D','A','CS','Gold','Drużyna'].map(h=>`<th style="padding:5px 6px;text-align:left;font-size:9px;color:rgba(160,180,200,0.4);font-weight:400;letter-spacing:1px;text-transform:uppercase">${h}</th>`).join('')}</tr></thead>
-    <tbody>${all.map(p=>{
-      const c=PC[p.name]||'#C8AA6E';
-      const icon=meczeChampKey(p.champ)?`<img src="https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${meczeChampKey(p.champ)}.png" style="width:24px;height:24px;border-radius:4px" onerror="this.style.display='none'">`:'';
-      const inp=(val,field,type='text',w='100%')=>`<input value="${val}" type="${type}" style="background:transparent;border:none;border-bottom:1px solid var(--border);color:${c};font-size:12px;width:${w};padding:2px 4px" onchange="_meczeEdit('${m.gameId}',${p.pid},'${field}',${type==='number'?'+this.value':'this.value'})">`;
-      return`<tr style="border-bottom:1px solid rgba(255,255,255,0.04);background:${p.side==='blue'?'rgba(93,173,226,0.03)':'rgba(232,72,85,0.03)'}">
-        <td style="padding:4px 8px">${icon}</td>
-        <td style="padding:4px 4px">${inp(p.name,'name')}</td>
-        <td style="padding:4px 4px"><input value="${p.champ}" list="champList" style="background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--gold);font-size:12px;width:100%;padding:2px 4px" onchange="_meczeEdit('${m.gameId}',${p.pid},'champ',this.value)"></td>
-        <td style="padding:4px 4px">${inp(p.k,'k','number','40px')}</td>
-        <td style="padding:4px 4px">${inp(p.d,'d','number','40px')}</td>
-        <td style="padding:4px 4px">${inp(p.a,'a','number','40px')}</td>
-        <td style="padding:4px 4px">${inp(p.cs,'cs','number','48px')}</td>
-        <td style="padding:4px 4px">${inp(p.gold,'gold','number','60px')}</td>
-        <td style="padding:4px 4px"><select style="font-size:11px;background:var(--panel);border:1px solid var(--border);color:var(--silver);padding:2px 4px;border-radius:3px" onchange="_meczeEdit('${m.gameId}',${p.pid},'side',this.value)"><option value="blue" ${p.side==='blue'?'selected':''}>LEWA</option><option value="red" ${p.side==='red'?'selected':''}>PRAWA</option></select></td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table></div>
-  <div style="display:flex;gap:8px;margin-top:12px">
-    <button onclick="exportMeczeToSheets('${m.gameId}')" style="padding:6px 16px;background:rgba(200,170,110,0.1);border:1px solid var(--gold);color:var(--gold);border-radius:6px;cursor:pointer;font-size:12px">💾 Zapisz do Sheets</button>
-    <button onclick="exportMeczeToHistory('${m.gameId}')" style="padding:6px 16px;background:rgba(93,173,226,0.08);border:1px solid #5DADE2;color:#5DADE2;border-radius:6px;cursor:pointer;font-size:12px">📋 Dodaj do Historii</button>
-  </div>`;
+  el.innerHTML=`
+    <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:10px">DANE MECZU</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <div><label style="font-size:11px;color:var(--silver);display:block;margin-bottom:3px">Data</label>
+          <input value="${m.date||''}" type="date" class="ss" style="width:100%;font-size:13px" onchange="_meczeEditMeta('${gameId}','date',this.value)"></div>
+        <div><label style="font-size:11px;color:var(--silver);display:block;margin-bottom:3px">Patch</label>
+          <input value="${m.patch||''}" class="ss" style="width:100%;font-size:13px" onchange="_meczeEditMeta('${gameId}','patch',this.value)"></div>
+        <div><label style="font-size:11px;color:var(--silver);display:block;margin-bottom:3px">Wygrała</label>
+          <select class="ss" style="width:100%;font-size:13px" onchange="_meczeEditMeta('${gameId}','win',this.value)">
+            <option value="LEWA" ${m.win==='LEWA'?'selected':''}>LEWA</option>
+            <option value="PRAWA" ${m.win==='PRAWA'?'selected':''}>PRAWA</option>
+          </select></div>
+        <div><label style="font-size:11px;color:var(--silver);display:block;margin-bottom:3px">Czas gry</label>
+          <input value="${m.duration||''}" class="ss" style="width:100%;font-size:13px" placeholder="np. 32:45" onchange="_meczeEditMeta('${gameId}','duration',this.value)"></div>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;min-width:820px">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        ${['','Gracz','Champion','Rola','K','D','A','CS','Gold','Dmg','VS','Drużyna'].map(h=>`<th style="padding:5px 6px;text-align:left;font-size:10px;color:rgba(160,180,200,0.4);font-weight:400;letter-spacing:1px;text-transform:uppercase;white-space:nowrap">${h}</th>`).join('')}
+      </tr></thead>
+      <tbody>${all.map(p=>{
+        const c=PC[p.name]||'#C8AA6E';
+        const known=AP.includes(p.name)||AP.includes(p.rawName||'');
+        const nc=known?c:'#F39C12';
+        const ck=meczeChampKey(p.champ||'');
+        const icon=ck?`<img src="https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${ck}.png" style="width:24px;height:24px;border-radius:4px" onerror="this.style.display='none'">`:'';
+        const ni=(val,field,type='text',w='100%',col='')=>`<input value="${val??''}" type="${type}" style="background:transparent;border:none;border-bottom:1px solid var(--border);color:${col||c};font-size:13px;width:${w};padding:2px 4px;-moz-appearance:textfield" onchange="_meczeEdit('${gameId}',${p.pid},'${field}',${type==='number'?'+this.value':'this.value'})">`;
+        return`<tr style="border-bottom:1px solid rgba(255,255,255,0.04);background:${p.side==='blue'?'rgba(93,173,226,0.03)':'rgba(232,72,85,0.03)'}">
+          <td style="padding:4px 8px">${icon}</td>
+          <td style="padding:4px 4px"><input value="${p.name}" style="background:transparent;border:none;border-bottom:1px solid ${known?'var(--border)':'rgba(243,156,18,0.5)'};color:${nc};font-size:13px;font-weight:700;width:90px;padding:2px 4px" title="${!known?'Nieznany gracz — pomarańczowy':'Znany gracz'}" onchange="_meczeEdit('${gameId}',${p.pid},'name',this.value)"></td>
+          <td style="padding:4px 4px"><input value="${p.champ||''}" list="champList" style="background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--gold);font-size:12px;width:110px;padding:2px 4px" onchange="_meczeEdit('${gameId}',${p.pid},'champ',this.value)"></td>
+          <td style="padding:4px 4px"><select style="background:var(--panel);border:1px solid var(--border);color:var(--silver);font-size:12px;padding:2px 4px;border-radius:3px" onchange="_meczeEdit('${gameId}',${p.pid},'role',this.value)">${ROLES.map(r=>`<option value="${r}" ${p.role===r?'selected':''}>${r.toUpperCase()}</option>`).join('')}</select></td>
+          <td style="padding:4px 4px">${ni(p.k,'k','number','40px','var(--success)')}</td>
+          <td style="padding:4px 4px">${ni(p.d,'d','number','40px','var(--danger)')}</td>
+          <td style="padding:4px 4px">${ni(p.a,'a','number','40px','#5DADE2')}</td>
+          <td style="padding:4px 4px">${ni(p.cs,'cs','number','48px','var(--silver)')}</td>
+          <td style="padding:4px 4px">${ni(p.gold,'gold','number','64px','var(--gold)')}</td>
+          <td style="padding:4px 4px">${ni(p.dmg,'dmg','number','64px','#E84855')}</td>
+          <td style="padding:4px 4px">${ni(p.vision,'vision','number','44px','var(--teal)')}</td>
+          <td style="padding:4px 4px"><select style="background:var(--panel);border:1px solid var(--border);color:var(--silver);font-size:12px;padding:2px 4px;border-radius:3px" onchange="_meczeEdit('${gameId}',${p.pid},'side',this.value)"><option value="blue" ${p.side==='blue'?'selected':''}>LEWA</option><option value="red" ${p.side==='red'?'selected':''}>PRAWA</option></select></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="exportMeczeToSheets('${gameId}')" style="padding:7px 18px;background:rgba(200,170,110,0.12);border:1px solid var(--gold);color:var(--gold);border-radius:6px;cursor:pointer;font-size:13px;font-weight:700">💾 Zapisz do Sheets</button>
+      <span style="font-size:12px;color:var(--silver);align-self:center">Nieznani gracze podświetleni na pomarańczowo</span>
+    </div>`;
+}
+
+function _meczeEditMeta(gameId,field,val){
+  const rich=_meczeData[gameId]||Object.values(_meczeData).find(r=>r.lolId===gameId);
+  if(rich)rich[field]=val;
+  const hist=MH.find(m=>m.gid===gameId||m.lolId===gameId);
+  if(hist)hist[field]=val;
 }
 
 function _meczeEdit(gameId,pid,field,val){
-  const m=_meczeData[gameId];if(!m)return;
-  const p=m.participants.find(x=>x.pid===pid);if(!p)return;
-  p[field]=val;
-  m.blue=m.participants.filter(x=>x.side==='blue');
-  m.red=m.participants.filter(x=>x.side==='red');
+  const rich=_meczeData[gameId]||Object.values(_meczeData).find(r=>r.lolId===gameId);
+  if(rich){
+    const p=rich.participants.find(x=>x.pid===pid);
+    if(p){p[field]=val;rich.blue=rich.participants.filter(x=>x.side==='blue');rich.red=rich.participants.filter(x=>x.side==='red');}
+  }
+  const hist=MH.find(m=>m.gid===gameId||m.lolId===gameId);
+  if(hist&&field==='name'&&hist.blue){}// TODO: update hist slots if needed
 }
 
+
 function exportMeczeToSheets(gameId){
-  const rich=_meczeData[gameId];
-  const hist=MH.find(m=>m.gid===gameId);
+  const rich=_meczeData[gameId]||Object.values(_meczeData).find(r=>r.lolId===gameId);
+  const hist=MH.find(m=>m.gid===gameId||m.lolId===gameId);
   const m=rich||hist;
   if(!m){toast('Brak danych');return;}
 
-  const ROLES_=ROLES;
+  const lolId=rich?.lolId||hist?.lolId||String(m.gameId||m.gid||gameId);
+  const existByLolId=MH.find(x=>x.lolId===lolId||x.gid===lolId);
+  const existingGid=existByLolId?.gid;
+  const nextGid=existingGid||String(MH.length+1);
+
   const blue={top:'',jng:'',mid:'',adc:'',supp:''};
   const red={top:'',jng:'',mid:'',adc:'',supp:''};
   const blueC={top:'',jng:'',mid:'',adc:'',supp:''};
@@ -5737,30 +5907,28 @@ function exportMeczeToSheets(gameId){
   }
 
   const matchObj={
-    gid:String(m.gameId||m.gid),
-    patch:m.patch, date:m.date,
+    gid:nextGid, lolId,
+    patch:m.patch||'', date:m.date||'',
     win:m.win||hist?.win||'LEWA',
-    blue, red, blueChamps:blueC, redChamps:redC,
-    scanResult:scan,
-    imgUrl:hist?.imgUrl||'',
-    participants:rich?.participants||[],
+    blue,red,blueChamps:blueC,redChamps:redC,
+    scanResult:scan,imgUrl:hist?.imgUrl||'',
+    participants:rich?.participants||hist?.participants||[],
   };
 
-  const existing=MH.find(x=>x.gid===matchObj.gid);
-  if(existing){
-    Object.assign(existing,matchObj);
-    gsUpdate(matchObj).then(()=>toast('✓ Zaktualizowano w Sheets'));
+  if(existByLolId){
+    Object.assign(existByLolId,{...matchObj,gid:existByLolId.gid});
+    gsUpdate({...matchObj,gid:existByLolId.gid}).then(()=>toast('✓ Zaktualizowano mecz #'+existByLolId.gid+' w Sheets'));
   } else {
-    gsWrite(matchObj).then(ok=>ok&&toast('✓ Zapisano do Sheets'));
+    MH.push({...matchObj});
+    MH.sort((a,b)=>Number(a.gid)-Number(b.gid));
+    gsWrite(matchObj).then(ok=>{if(ok)toast('✓ Dodano nowy mecz #'+nextGid+' do Sheets');});
   }
+  lsSave();PS=buildPS();AP=Object.keys(PS).sort();
+  renderMeczeList();
 }
 
 function exportMeczeToHistory(gameId){
-  const rich=_meczeData[gameId];
-  if(!rich){toast('Brak danych JSON');return;}
-  if(MH.find(x=>x.gid===rich.gameId)){toast('Mecz już jest w Historii!');return;}
   exportMeczeToSheets(gameId);
-  toast('✓ Dodano do Historii + Sheets');
 }
 
 
