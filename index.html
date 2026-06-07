@@ -2406,7 +2406,7 @@ const CHAMP_ID_MAP={
   27:'Singed',28:'Evelynn',29:'Twitch',30:'Karthus',31:'Chogath',32:'Amumu',
   33:'Rammus',34:'Anivia',35:'Shaco',36:'DrMundo',37:'Sona',38:'Kassadin',
   39:'Irelia',40:'Janna',41:'Gangplank',42:'Corki',43:'Karma',44:'Taric',
-  45:'Veigar',48:'Trundle',50:'Swain',51:'Caitlyn',54:'Malphite',55:'Katarina',
+  45:'Veigar',48:'Trundle',50:'Swain',51:'Caitlyn',53:'Blitzcrank',54:'Malphite',55:'Katarina',
   56:'Nocturne',57:'Maokai',58:'Renekton',59:'JarvanIV',60:'Elise',61:'Orianna',
   62:'MonkeyKing',63:'Brand',64:'LeeSin',67:'Vayne',68:'Rumble',69:'Cassiopeia',
   72:'Skarner',74:'Heimerdinger',75:'Nasus',76:'Nidalee',77:'Udyr',78:'Poppy',
@@ -2418,7 +2418,7 @@ const CHAMP_ID_MAP={
   120:'Hecarim',121:'Khazix',122:'Darius',126:'Jayce',127:'Lissandra',131:'Diana',
   133:'Quinn',134:'Syndra',136:'AurelionSol',141:'Kayn',142:'Zoe',143:'Zyra',
   145:'Kaisa',147:'Seraphine',150:'Gnar',154:'Zac',157:'Yasuo',161:'Velkoz',
-  163:'Taliyah',166:'Akshan',200:'Belveth',201:'Braum',202:'Jhin',203:'Kindred',
+  163:'Taliyah',164:'Camille',166:'Akshan',200:'Belveth',201:'Braum',202:'Jhin',203:'Kindred',
   221:'Zeri',222:'Jinx',223:'TahmKench',233:'Briar',234:'Viego',235:'Senna',
   236:'Lucian',238:'Zed',240:'Kled',245:'Ekko',246:'Qiyana',254:'Vi',
   266:'Aatrox',267:'Nami',268:'Azir',350:'Yuumi',360:'Samira',412:'Thresh',
@@ -2426,7 +2426,7 @@ const CHAMP_ID_MAP={
   517:'Sylas',518:'Neeko',523:'Aphelios',526:'Rell',555:'Pyke',711:'Vex',
   777:'Yone',800:'Ambessa',804:'Aurora',875:'Sett',876:'Lillia',887:'Gwen',
   888:'Renata',895:'Nilah',897:'KSante',901:'Smolder',902:'Milio',904:'Naafiri',
-  910:'Hwei',950:'Naafiri',
+  910:'Hwei',950:'Briar',
 };
 
 function champIdToKey(id){return CHAMP_ID_MAP[id]||null;}
@@ -2459,100 +2459,43 @@ function gameVersionToPatch(ver){
 const _importBuffer={};  // gameId -> partial game data
 
 function parseLoLJsonFile(jsonData, fileName){
-  const games=Array.isArray(jsonData)?jsonData:[jsonData];
-  let added=0,updated=0;
+  // Normalize to array of game objects
+  // Format 1: single game object { gameId, participants, participantIdentities, teams, ... }
+  // Format 2: array of { game: {...}, participants: [...] }
+  let gameEntries=[];
 
-  games.forEach(entry=>{
-    const g=entry.game;
-    if(!g)return;
-    const gameId=String(g.gameId);
-
-    if(!_importBuffer[gameId]){
-      _importBuffer[gameId]={
-        gameId,
-        date:g.gameCreationDate?g.gameCreationDate.slice(0,10):'',
-        patch:gameVersionToPatch(g.gameVersion||'16.10'),
-        winningTeam:null,
-        blue:{top:'',jng:'',mid:'',adc:'',supp:''},
-        red:{top:'',jng:'',mid:'',adc:'',supp:''},
-        blueChamps:{top:'',jng:'',mid:'',adc:'',supp:''},
-        redChamps:{top:'',jng:'',mid:'',adc:'',supp:''},
-        scanResult:{},
-        _pidSlots:{blue:{},red:{}},
-      };
-      added++;
-    } else {
-      updated++;
-    }
-
-    const buf=_importBuffer[gameId];
-
-    // Winning team from game.teams
-    const teams=g.teams||[];
-    const winTeam=teams.find(t=>t.win==='Win');
-    if(winTeam)buf.winningTeam=winTeam.teamId;
-
-    // Identity map: only the file owner has a real name
-    const idToName={};
-    (g.participantIdentities||[]).forEach(pi=>{
-      const pl=pi.player||{};
-      const name=pl.gameName||pl.tagLine||pl.summonerName||'';
-      if(name)idToName[pi.participantId]=name;
-    });
-
-    // KEY FIX: use entry.participants (outer array = all 10 players)
-    // not g.participants (inner = only 1 player)
-    const allParticipants=entry.participants||g.participants||[];
-
-    allParticipants.forEach(p=>{
-      const pid=p.participantId;
-      const name=idToName[pid]||'';  // empty if unknown player
-      const side=p.teamId===100?'blue':'red';
-      const champKey2=champIdToKey(p.championId)||'';
-      const champDisp=champKey2?champDisplayName(champKey2):'';
-      const tl=p.timeline||{};
-      const role=laneRoleToOurs(tl.lane||'NONE',tl.role||'NONE');
-      const stats=p.stats||{};
-      const k=stats.kills||0,d=stats.deaths||0,a=stats.assists||0;
-
-      // Store by participantId slot so merging across files works
-      if(!buf._pidSlots[side][pid]){
-        buf._pidSlots[side][pid]={pid,name,champKey:champKey2,champDisp,role,k,d,a};
-      } else if(name){
-        // Update name if we now know it (from another player's file)
-        buf._pidSlots[side][pid].name=name;
+  if(Array.isArray(jsonData)){
+    // Format 2: [{game:{...}, participants:[...]}, ...]
+    jsonData.forEach(entry=>{
+      if(entry.game&&entry.game.gameId){
+        // Merge: use entry.participants (full 10 players) with entry.game metadata
+        const g=Object.assign({},entry.game);
+        g.participants=entry.participants||g.participants||[];
+        gameEntries.push(g);
+      } else if(entry.gameId){
+        // Already a flat game object in array
+        gameEntries.push(entry);
       }
     });
-  });
+  } else if(jsonData.gameId){
+    // Format 1: single flat game object
+    gameEntries.push(jsonData);
+  } else if(jsonData.game&&jsonData.game.gameId){
+    // Single wrapped entry
+    const g=Object.assign({},jsonData.game);
+    g.participants=jsonData.participants||g.participants||[];
+    gameEntries.push(g);
+  }
 
-  // Rebuild blue/red/champs from _pidSlots after each file
-  Object.values(_importBuffer).forEach(buf=>{
-    ['blue','red'].forEach(side=>{
-      const slots=Object.values(buf._pidSlots[side]);
-      slots.sort((a,b)=>a.pid-b.pid);
-      buf[side]={top:'',jng:'',mid:'',adc:'',supp:''};
-      buf[side+'Champs']={top:'',jng:'',mid:'',adc:'',supp:''};
-      buf.scanResult={};
+  if(!gameEntries.length){
+    console.warn('importLoLJson: could not parse', fileName, 'keys:', Object.keys(jsonData||{}).slice(0,5));
+    return{added:0,updated:0};
+  }
 
-      slots.forEach(s=>{
-        // champDisp comes from champKey lookup
-        const dispName=s.champDisp||champDisplayName(s.champKey)||'';
-        let assignedRole=s.role;
-        if(buf[side][assignedRole]!==''){
-          // Role conflict — find first empty slot
-          assignedRole=ROLES.find(r=>buf[side][r]=='')||s.role;
-        }
-        buf[side][assignedRole]=s.name||buf[side][assignedRole];
-        buf[side+'Champs'][assignedRole]=dispName||buf[side+'Champs'][assignedRole];
-        if(s.name){
-          buf.scanResult[s.name]={champ:dispName,k:s.k,d:s.d,a:s.a};
-        }
-      });
-    });
-  });
+  let added=0,updated=0;
 
-  return{added,updated};
-}
+  gameEntries.forEach(g=>{
+    const gameId=String(g.gameId);
 
 function importLoLJson(input){
   const files=[...input.files];
