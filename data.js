@@ -191,6 +191,20 @@ function lsSave(){
     localStorage.setItem(LS_RESTR, JSON.stringify(restr));
     localStorage.setItem(LS_META, JSON.stringify(PLAYER_META));
     if(typeof recentPlayers!=='undefined') localStorage.setItem('rd_recent', JSON.stringify(recentPlayers));
+    // Save imported match JSON data (survives refresh)
+    if(typeof _meczeData!=='undefined'){
+      try{
+        // Trim runes/itemsEnriched to save space
+        const trimmed={};
+        Object.entries(_meczeData).forEach(([k,m])=>{
+          trimmed[k]={...m,participants:(m.participants||[]).map(p=>{
+            const {itemsEnriched,...rest}=p;
+            return rest;
+          })};
+        });
+        localStorage.setItem('wc_meczeData', JSON.stringify(trimmed));
+      }catch(e2){/* quota exceeded - skip */}
+    }
   }catch(e){console.warn('localStorage save failed',e);}
 }
 
@@ -211,6 +225,7 @@ function lsLoad(){
     const rc=localStorage.getItem('rd_recent');
     if(rc&&typeof recentPlayers!=='undefined'){ const arr=JSON.parse(rc); recentPlayers.splice(0,recentPlayers.length,...arr); }
   }catch(e){console.warn('localStorage load failed',e);}
+}
 }
 
 // =====================================================================
