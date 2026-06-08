@@ -4913,6 +4913,103 @@ function showAppsScriptGuide(){
     navigator.clipboard.writeText(sheetsInfo).then(()=>{this.textContent='\u2713 Skopiowano!';setTimeout(()=>{this.innerHTML='&#128203; Kopiuj';},2000);});
   });
 }
+// ── MECZE — globals ───────────────────────────────────────────────
+let _meczeData = {};
+let _meczeActive = null;
+let _meczeTab = 'overview';
+var SPELL_NAMES = {4:'Flash',14:'Ignite',12:'Teleport',3:'Exhaust',7:'Heal',21:'Barrier',6:'Ghost',11:'Smite',1:'Cleanse',32:'Mark',13:'Clarity',39:'Hexflash'};
+var ROLE_MAP_RICH = {'TOP':'top','JNG':'jng','JUNGLE':'jng','MID':'mid','MIDDLE':'mid','ADC':'adc','BOT':'adc','BOTTOM':'adc','SUP':'supp','SUPPORT':'supp'};
+
+function meczeChampKey(champName){
+  if(!champName)return'';
+  for(const [k,v] of Object.entries(CHAMP_DISPLAY||{})){
+    if(normApos(v).toLowerCase()===normApos(champName).toLowerCase())return k;
+  }
+  return champName.replace(/['\u2019\u2018 .\-&]/g,'');
+}
+function meczeVersionToPatch(ver){
+  const m=(ver||'').match(/^(\d+)\.(\d+)/);
+  if(!m)return'26.10';
+  return(parseInt(m[1])+10)+'.'+m[2];
+}
+function meczeChampIdToName(id){
+  if(!id)return'';
+  if(typeof CHAMP_ID_MAP!=='undefined'&&CHAMP_ID_MAP[id]){
+    const k=CHAMP_ID_MAP[id];
+    return(CHAMP_DISPLAY&&CHAMP_DISPLAY[k])||k;
+  }
+  return'';
+}
+function meczeMapName(jsonName){
+  if(!jsonName)return jsonName;
+  const base=jsonName.split('#')[0];
+  if(AP.includes(base))return base;
+  const lo=base.toLowerCase();
+  const aliasMatch=AP.find(n=>(ALIASES[n]||'').toLowerCase()===lo);
+  if(aliasMatch)return aliasMatch;
+  const metaMatch=AP.find(n=>(PLAYER_META[n]||{}).lolNick?.toLowerCase()===lo);
+  if(metaMatch)return metaMatch;
+  const caseMatch=AP.find(n=>n.toLowerCase()===lo);
+  if(caseMatch)return caseMatch;
+  if(lo.length>=4){
+    const partial=AP.find(n=>n.toLowerCase().startsWith(lo.slice(0,4))||lo.startsWith(n.toLowerCase().slice(0,4)));
+    if(partial)return partial;
+  }
+  return base;
+}
+function parseMeczeJson(data,fileName){
+  if(!data.gameId||!data.participants)return null;
+  const g=data;
+  const teams={};
+  (g.teams||[]).forEach(t=>{teams[t.teamId===100?'blue':'red']=t;});
+  const participants=g.participants.map(p=>{
+    const side=p.teamSide||(p.teamId===100?'blue':'red');
+    const rawRole=(p.inferredRole||p.laneRaw||'').toUpperCase();
+    const role=ROLE_MAP_RICH[rawRole]||'top';
+    const rawName=(p.summonerName||p.gameName||'').split('#')[0];
+    const name=meczeMapName(rawName);
+    return{
+      pid:p.participantId||0, side, role,
+      name, rawName,
+      champ:p.championName||(p.championId?meczeChampIdToName(p.championId):''),
+      champId:p.championId||0, champLevel:p.championLevel||0,
+      win:!!p.win, k:p.kills||0, d:p.deaths||0, a:p.assists||0,
+      kda:Math.round((p.kdaRatio||0)*100)/100,
+      kp:Math.round((p.killParticipation||0)*100),
+      cs:p.cs||0, cspm:Math.round((p.csPerMin||0)*10)/10,
+      gold:p.goldEarned||0, goldpm:Math.round((p.goldPerMin||0)*10)/10, goldSpent:p.goldSpent||0,
+      dmg:p.damageDealt||0, dmgpm:Math.round((p.damageDealtPerMin||0)*10)/10,
+      dmgTaken:p.damageTaken||0, dmgTakenPm:Math.round((p.damageTakenPerMin||0)*10)/10,
+      magicDmg:p.magicDamage||0, physDmg:p.physicalDamage||0, trueDmg:p.trueDamage||0,
+      vision:p.visionScore||0, wards:p.wardsPlaced||0, wardsKilled:p.wardsKilled||0, pinkWards:p.detectorWardsPlaced||0,
+      items:(p.items||[]).filter(i=>i&&i>0),
+      itemsEnriched:(p.itemsEnriched||[]).filter(i=>i&&i.id>0),
+      spell1:p.spell1Id||p.spells?.[0]?.id||0, spell2:p.spell2Id||p.spells?.[1]?.id||0,
+      spellNames:p.spells?p.spells.map(s=>s.name):null,
+      runes:p.runes||null,
+      double:p.doubleKills||0, triple:p.tripleKills||0, quadra:p.quadraKills||0, penta:p.pentaKills||0,
+      firstBlood:!!p.firstBloodKill, firstTower:!!p.firstTowerKill,
+      turrets:p.turretKills||0, inhibs:p.inhibitorKills||0,
+      dmgToTurrets:p.damageToTurrets||0, dmgToObj:p.damageToObjectives||0,
+      healing:p.healingDone||0, selfMit:p.selfMitigatedDmg||0,
+      cc:p.ccApplied||0, ccScore:p.ccScore||0,
+      longestAlive:p.longestTimeAlive||0, largestSpree:p.largestKillingSpree||0,
+      jungleCS:p.jungleCS||0,
+    };
+  });
+  const blueArr=participants.filter(p=>p.side==='blue');
+  const redArr=participants.filter(p=>p.side==='red');
+  const blueWins=blueArr.some(p=>p.win);
+  return{
+    gameId:String(g.gameId), lolId:String(g.gameId),
+    date:(g.date||g.gameCreationDate||'').slice(0,10),
+    duration:g.gameDurationFormatted||Math.floor((g.gameDuration||0)/60)+'m',
+    durationSecs:g.gameDuration||0,
+    patch:meczeVersionToPatch(g.gameVersion||'16.10'),
+    win:blueWins?'LEWA':'PRAWA',
+    teams, participants, blue:blueArr, red:redArr,
+  };
+}
 // ── MECZE LIST + IMPORT ───────────────────────────────────────────
 function renderMeczeList(){
   const el=document.getElementById('mecze-list');
