@@ -226,7 +226,6 @@ function lsLoad(){
     if(rc&&typeof recentPlayers!=='undefined'){ const arr=JSON.parse(rc); recentPlayers.splice(0,recentPlayers.length,...arr); }
   }catch(e){console.warn('localStorage load failed',e);}
 }
-}
 
 // =====================================================================
 // ALIASES: appName -> gameNick
