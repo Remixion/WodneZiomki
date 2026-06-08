@@ -4677,19 +4677,83 @@ function showAppsScriptGuide(){
 
 1. Otwórz swój arkusz Google Sheets
 2. Kliknij Extensions → Apps Script
-3. Wklej ten kod:
+3. Wklej ten kod (zastąp wszystko):
 
-function doGet(e) {
-  const action = e.parameter.action;
-  if (action === 'addRow') {
-    const row = JSON.parse(decodeURIComponent(e.parameter.row));
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    sheet.appendRow(row);
-    return ContentService.createTextOutput(JSON.stringify({status:'ok'}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-  return ContentService.createTextOutput(JSON.stringify({status:'error',error:'unknown action'}))
+// ── CORS headers helper ──────────────────────────────────────
+function corsOutput(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── MAIN HANDLER: POST (duże dane, participants JSON) ────────
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    return handleAction(body.action, body);
+  } catch(err) {
+    return corsOutput({status:'error', error: err.message});
+  }
+}
+
+// ── MAIN HANDLER: GET (fallback dla małych requestów) ────────
+function doGet(e) {
+  try {
+    const action = e.parameter.action;
+    const rowParam = e.parameter.row;
+    const gidParam = e.parameter.gid;
+    const body = {
+      action,
+      row: rowParam ? JSON.parse(decodeURIComponent(rowParam)) : null,
+      gid: gidParam ? decodeURIComponent(gidParam) : null,
+    };
+    return handleAction(action, body);
+  } catch(err) {
+    return corsOutput({status:'error', error: err.message});
+  }
+}
+
+// ── SHARED ACTION HANDLER ─────────────────────────────────────
+function handleAction(action, body) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheets()[0];
+
+  if (action === 'addRow') {
+    sheet.appendRow(body.row);
+    return corsOutput({status:'ok'});
+  }
+
+  if (action === 'updateRow') {
+    const gid = String(body.gid);
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === gid) {
+        const row = body.row;
+        for (let j = 0; j < row.length; j++) {
+          if (row[j] !== '' && row[j] !== null && row[j] !== undefined) {
+            sheet.getRange(i + 1, j + 1).setValue(row[j]);
+          }
+        }
+        return corsOutput({status:'ok'});
+      }
+    }
+    // GID not found — append as new row
+    sheet.appendRow(body.row);
+    return corsOutput({status:'ok', note:'appended'});
+  }
+
+  if (action === 'getImgUrls') {
+    const data = sheet.getDataRange().getValues();
+    const result = {};
+    for (let i = 1; i < data.length; i++) {
+      const gid = String(data[i][0]);
+      const imgUrl = data[i][25]; // col Z (0-indexed 25)
+      if (gid && imgUrl) result[gid] = String(imgUrl);
+    }
+    return corsOutput({status:'ok', data: result});
+  }
+
+  return corsOutput({status:'error', error:'unknown action: ' + action});
 }
 
 4. Kliknij Deploy → New deployment
@@ -4697,7 +4761,13 @@ function doGet(e) {
 6. Execute as: Me
 7. Who has access: Anyone
 8. Kliknij Deploy → skopiuj URL
-9. Wklej URL tutaj w polu "Apps Script URL"`;
+9. Wklej URL tutaj w polu "Apps Script URL"
+
+WAŻNE: Przy każdej zmianie kodu → Deploy → New deployment (nowy URL!)
+Nagłówki kolumn w Sheets (wiersz 1):
+A=GID | B=Patch | C=Data | D=WIN | E-I=Lewa (Top/Jng/Mid/Adc/Sup)
+J-N=Prawa | O-S=ChampsLewa | T-X=ChampsP | Y=KdaJson | Z=ImgUrl
+AA=ParticipantsJson | AB=LolId`;
   alert(guide);
 }
 
@@ -5045,12 +5115,22 @@ async function gsWrite(matchData){
       matchData.lolId||matchData.gid||'',
     ];
     const payload=JSON.stringify({action:'addRow',row});
-    // Try POST first (avoids URL length limit), fall back to GET
     let r;
-    try{
-      r=await fetch(scriptUrl,{method:'POST',body:payload,headers:{'Content-Type':'text/plain'}});
-    }catch(e){
-      r=await fetch(scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(row)));
+    // Apps Script Web Apps redirect POST to GET-like endpoint
+    // Use no-cors for POST to avoid CORS preflight, but then parse via GET
+    // Best approach: encode as URL params for GET (split if needed)
+    const rowJson=JSON.stringify(row);
+    const getUrl=scriptUrl+'?action=addRow&row='+encodeURIComponent(rowJson);
+    if(getUrl.length<=8000){
+      // Short enough for GET
+      r=await fetch(getUrl);
+    } else {
+      // Too large — try POST with no-cors then verify with separate GET
+      // Actually: remove participants from row and send separately
+      const rowNoParticipants=[...row];
+      rowNoParticipants[26]=''; // clear participantsJson from main row
+      const getUrlSmall=scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(rowNoParticipants));
+      r=await fetch(getUrlSmall);
     }
     const res=await r.json();
     if(res.status==='ok'){
@@ -5099,12 +5179,15 @@ async function gsUpdate(matchData){
       matchData.participants&&matchData.participants.length?JSON.stringify(trimP(matchData.participants)):'',
       matchData.lolId||matchData.gid||'',
     ];
-    const payload=JSON.stringify({action:'updateRow',gid:matchData.gid,row});
+    const rowJson=JSON.stringify(row);
+    const gidEnc=encodeURIComponent(matchData.gid);
+    const getUrl=scriptUrl+'?action=updateRow&gid='+gidEnc+'&row='+encodeURIComponent(rowJson);
     let r;
-    try{
-      r=await fetch(scriptUrl,{method:'POST',body:payload,headers:{'Content-Type':'text/plain'}});
-    }catch(e){
-      r=await fetch(scriptUrl+'?action=updateRow&gid='+encodeURIComponent(matchData.gid)+'&row='+encodeURIComponent(JSON.stringify(row)));
+    if(getUrl.length<=8000){
+      r=await fetch(getUrl);
+    } else {
+      const rowNoP=[...row];rowNoP[26]='';
+      r=await fetch(scriptUrl+'?action=updateRow&gid='+gidEnc+'&row='+encodeURIComponent(JSON.stringify(rowNoP)));
     }
     const res=await r.json();
     if(res.status==='ok'){toast('✓ Zaktualizowano w Sheets!');return true;}
@@ -5545,14 +5628,14 @@ function confirmMeczeImport(indices){
   toast(`✓ Zaimportowano ${selected.length} ${selected.length===1?'mecz':'meczy'} — zapisuję do Sheets...`);
 
   let i=0;
-  function saveNext(){
+  async function saveNext(){
     if(i>=selected.length){
       toast(`✓ ${selected.length} ${selected.length===1?'mecz zapisany':'meczy zapisanych'} do Sheets!`);
       renderMeczeList();return;
     }
     const parsed=selected[i++];
-    exportMeczeToSheets(parsed.lolId,parsed._assignedGid);
-    setTimeout(saveNext,600);
+    await exportMeczeToSheets(parsed.lolId,parsed._assignedGid);
+    saveNext();
   }
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
   if(scriptUrl)saveNext();
@@ -6096,7 +6179,7 @@ function _meczeEdit(gameId,pid,field,val){
 }
 
 
-function exportMeczeToSheets(gameId,forcedGid){
+async function exportMeczeToSheets(gameId,forcedGid){
   const rich=_meczeData[gameId]||Object.values(_meczeData).find(r=>r.lolId===gameId);
   const hist=MH.find(m=>m.gid===gameId||m.lolId===gameId);
   const m=rich||hist;
@@ -6134,11 +6217,11 @@ function exportMeczeToSheets(gameId,forcedGid){
 
   if(existByLolId){
     Object.assign(existByLolId,{...matchObj,gid:existByLolId.gid});
-    gsUpdate({...matchObj,gid:existByLolId.gid}).then(()=>toast('✓ Zaktualizowano mecz #'+existByLolId.gid+' w Sheets'));
+    return gsUpdate({...matchObj,gid:existByLolId.gid}).then(()=>toast('✓ Zaktualizowano mecz #'+existByLolId.gid+' w Sheets'));
   } else {
     MH.push({...matchObj});
     MH.sort((a,b)=>Number(a.gid)-Number(b.gid));
-    gsWrite(matchObj).then(ok=>{if(ok)toast('✓ Dodano nowy mecz #'+nextGid+' do Sheets');});
+    return gsWrite(matchObj).then(ok=>{if(ok)toast('✓ Dodano nowy mecz #'+nextGid+' do Sheets');});
   }
   lsSave();PS=buildPS();AP=Object.keys(PS).sort();
   renderMeczeList();
