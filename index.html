@@ -5016,9 +5016,21 @@ async function gsWrite(matchData){
     const trimParticipants=(pts)=>{
       if(!pts||!pts.length)return[];
       return pts.map(p=>({
-        pid:p.pid,side:p.side,role:p.role,name:p.name,champ:p.champ,win:p.win,
-        k:p.k,d:p.d,a:p.a,cs:p.cs,gold:p.gold,dmg:p.dmg,vision:p.vision,
-        kda:p.kda,kp:p.kp,items:p.items,
+        pid:p.pid,side:p.side,role:p.role,name:p.name,rawName:p.rawName||p.name,
+        champ:p.champ,champId:p.champId||0,champLevel:p.champLevel||0,win:p.win,
+        k:p.k,d:p.d,a:p.a,kda:p.kda||0,kp:p.kp||0,
+        cs:p.cs,cspm:p.cspm||0,jungleCS:p.jungleCS||0,
+        gold:p.gold,goldpm:p.goldpm||0,
+        dmg:p.dmg,dmgpm:p.dmgpm||0,dmgTaken:p.dmgTaken||0,
+        magicDmg:p.magicDmg||0,physDmg:p.physDmg||0,trueDmg:p.trueDmg||0,
+        vision:p.vision,wards:p.wards||0,wardsKilled:p.wardsKilled||0,pinkWards:p.pinkWards||0,
+        items:p.items||[],
+        spell1:p.spell1||0,spell2:p.spell2||0,spellNames:p.spellNames||null,
+        runes:p.runes||null,
+        double:p.double||0,triple:p.triple||0,quadra:p.quadra||0,penta:p.penta||0,
+        firstBlood:p.firstBlood||false,turrets:p.turrets||0,
+        selfMit:p.selfMit||0,healing:p.healing||0,cc:p.cc||0,
+        longestAlive:p.longestAlive||0,
       }));
     };
     const row=[
@@ -5059,7 +5071,23 @@ async function gsUpdate(matchData){
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
   if(!scriptUrl){toast('⚠ Brak Apps Script URL');return false;}
   try{
-    const trimP=(pts)=>(!pts||!pts.length)?[]:pts.map(p=>({pid:p.pid,side:p.side,role:p.role,name:p.name,champ:p.champ,win:p.win,k:p.k,d:p.d,a:p.a,cs:p.cs,gold:p.gold,dmg:p.dmg,vision:p.vision,kda:p.kda,kp:p.kp,items:p.items}));
+    const trimP=(pts)=>(!pts||!pts.length)?[]:pts.map(p=>({
+      pid:p.pid,side:p.side,role:p.role,name:p.name,rawName:p.rawName||p.name,
+      champ:p.champ,champId:p.champId||0,champLevel:p.champLevel||0,win:p.win,
+      k:p.k,d:p.d,a:p.a,kda:p.kda||0,kp:p.kp||0,
+      cs:p.cs,cspm:p.cspm||0,jungleCS:p.jungleCS||0,
+      gold:p.gold,goldpm:p.goldpm||0,
+      dmg:p.dmg,dmgpm:p.dmgpm||0,dmgTaken:p.dmgTaken||0,
+      magicDmg:p.magicDmg||0,physDmg:p.physDmg||0,trueDmg:p.trueDmg||0,
+      vision:p.vision,wards:p.wards||0,wardsKilled:p.wardsKilled||0,pinkWards:p.pinkWards||0,
+      items:p.items||[],
+      spell1:p.spell1||0,spell2:p.spell2||0,spellNames:p.spellNames||null,
+      runes:p.runes||null,
+      double:p.double||0,triple:p.triple||0,quadra:p.quadra||0,penta:p.penta||0,
+      firstBlood:p.firstBlood||false,turrets:p.turrets||0,
+      selfMit:p.selfMit||0,healing:p.healing||0,cc:p.cc||0,
+      longestAlive:p.longestAlive||0,
+    }));
     const row=[
       matchData.gid, matchData.patch, matchData.date, matchData.win,
       matchData.blue.top||'', matchData.blue.jng||'', matchData.blue.mid||'', matchData.blue.adc||'', matchData.blue.supp||'',
@@ -5821,7 +5849,6 @@ function renderMeczeScoreboard(el,m){
   const iUrl=id=>`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/item/${id}.png`;
   const maxDmg=Math.max(...m.participants.map(p=>p.dmg||0),1);
   const maxGold=Math.max(...m.participants.map(p=>p.gold||0),1);
-  const maxDmgTaken=Math.max(...m.participants.map(p=>p.dmgTaken||0),1);
   const bT=m.teams?.blue||{}, rT=m.teams?.red||{};
 
   function sRow(p,win){
@@ -5855,9 +5882,10 @@ function renderMeczeScoreboard(el,m){
         <div style="font-size:12px;color:#E84855;text-align:right">${(p.dmg/1000).toFixed(1)}k</div>
         <div style="height:3px;background:rgba(232,72,85,0.12);border-radius:2px;margin-top:2px"><div style="height:100%;width:${Math.round(p.dmg/maxDmg*100)}%;background:#E84855;border-radius:2px"></div></div>
       </td>
-      <td style="padding:6px 4px;min-width:60px">
-        <div style="font-size:12px;color:var(--silver);text-align:right">${(p.dmgTaken/1000).toFixed(1)}k</div>
-        <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:2px"><div style="height:100%;width:${Math.round(p.dmgTaken/maxDmgTaken*100)}%;background:rgba(160,180,200,0.4);border-radius:2px"></div></div>
+      <td style="padding:6px 4px;text-align:center;font-size:11px;color:var(--silver)">
+        ${p.penta?`<span style="color:#1DE9B6;font-weight:700">PENTA</span>`:p.quadra?`<span style="color:var(--gold);font-weight:700">Quadra</span>`:p.triple?`<span style="color:var(--warn)">Triple</span>`:p.double?`<span>Double</span>`:'—'}
+        ${p.firstBlood?`<div style="color:var(--danger);font-size:10px">🩸FB</div>`:''}
+        ${p.turrets?`<div style="font-size:10px">🏰×${p.turrets}</div>`:''}
       </td>
       <td style="padding:6px 4px;text-align:right;font-size:12px;color:#1DE9B6">${p.vision}<div style="font-size:10px;color:rgba(160,180,200,0.4)">${p.wards}/${p.wardsKilled}/${p.pinkWards||0}</div></td>
       <td style="padding:6px 4px">
@@ -5867,7 +5895,7 @@ function renderMeczeScoreboard(el,m){
   }
 
   const blueWin=m.win==='LEWA';
-  const hdr=`<tr style="border-bottom:1px solid var(--border)"><th colspan="2" style="padding:4px 8px;font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:left;letter-spacing:1px;text-transform:uppercase">Gracz</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:center">K/D/A</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:right">CS</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:right">Gold</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:right">Dmg</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:right">Wzięte</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:right">VS</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400">Itemy</th></tr>`;
+  const hdr=`<tr style="border-bottom:1px solid var(--border)"><th colspan="2" style="padding:4px 8px;font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:left;letter-spacing:1px;text-transform:uppercase">Gracz</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:center">K/D/A</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:right">CS</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:right">Gold</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:right">Dmg</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:center">Multi</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400;text-align:right">VS</th><th style="font-size:10px;color:rgba(160,180,200,0.35);font-weight:400">Itemy</th></tr>`;
 
   // Team totals row
   function teamTotals(t,color){
