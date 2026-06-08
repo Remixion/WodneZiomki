@@ -655,7 +655,8 @@ function doGet(e) {
     var gid = e.parameter.gid ? decodeURIComponent(e.parameter.gid) : null;
     var lolId = e.parameter.lolId ? decodeURIComponent(e.parameter.lolId) : null;
     var participants = e.parameter.participants ? JSON.parse(decodeURIComponent(e.parameter.participants)) : null;
-    return handleAction(action, { action:action, row:row, gid:gid, lolId:lolId, participants:participants });
+    var chunkIndex = e.parameter.chunkIndex ? parseInt(e.parameter.chunkIndex) : 0;
+    return handleAction(action, { action:action, row:row, gid:gid, lolId:lolId, participants:participants, chunkIndex:chunkIndex });
   } catch(err) {
     return corsOutput({ status:'error', error:err.message });
   }
@@ -734,6 +735,19 @@ function handleAction(action, body) {
       if (gid2 && url) result[gid2] = String(url);
     }
     return corsOutput({ status:'ok', data:result });
+  }
+
+  if (action === 'saveDetails') {
+    // Save participant details to MatchDetails (called separately after addRow/updateRow)
+    if (!body.lolId || !body.participants || !body.participants.length) {
+      return corsOutput({ status:'error', error:'brak lolId lub participants' });
+    }
+    // Only delete existing rows if this is the first chunk (chunk index 0 or not specified)
+    if (!body.chunkIndex || body.chunkIndex === 0) {
+      deleteParticipantDetails(detailSheet, body.lolId);
+    }
+    saveParticipantDetails(detailSheet, body.lolId, body.gid||body.lolId, body.participants);
+    return corsOutput({ status:'ok' });
   }
 
   return corsOutput({ status:'error', error:'nieznana akcja: ' + action });
@@ -5395,6 +5409,13 @@ async function gsFetch(silent=false){
   }
 }
 
+// Split participants into chunks that fit in URL (max 3 per request ~2400 chars each)
+function chunkParticipants(parts, chunkSize=5){
+  const chunks=[];
+  for(let i=0;i<parts.length;i+=chunkSize) chunks.push(parts.slice(i,i+chunkSize));
+  return chunks;
+}
+
 async function gsWrite(matchData){
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
   if(!scriptUrl){toast('⚠ Brak Apps Script URL — zapis tylko lokalny');return false;}
@@ -5431,14 +5452,30 @@ async function gsWrite(matchData){
     ];
     const rowForUrl=[...row];
     const lolIdParam=matchData.lolId||matchData.gid||'';
-    let url=scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(rowForUrl));
-    if(lolIdParam)url+='&lolId='+encodeURIComponent(lolIdParam);
-    const partsJson=matchData.participants&&matchData.participants.length?JSON.stringify(trimParticipants(matchData.participants)):'';
-    const urlWithParts=url+(partsJson?'&participants='+encodeURIComponent(partsJson):'');
-    const r=await fetch(urlWithParts.length<=8000?urlWithParts:url);
+    const baseUrl=scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(rowForUrl))
+      +(lolIdParam?'&lolId='+encodeURIComponent(lolIdParam):'');
+    const r=await fetch(baseUrl);
     const res=await r.json();
-    if(res.status==='ok'){gsLog('✓ Zapisano w Google Sheets','var(--success)');toast('✓ Mecz w Google Sheets!');return true;}
-    else throw new Error(res.error||'nieznany błąd');
+    if(res.status==='ok'){
+      gsLog('✓ Zapisano w Google Sheets','var(--success)');
+      toast('✓ Mecz w Google Sheets!');
+      // Send participants as separate request to fill MatchDetails
+      const parts=trimParticipants(matchData.participants||[]);
+      if(parts.length){
+        const chunks=chunkParticipants(parts);
+        for(const chunk of chunks){
+          const pUrl=scriptUrl+'?action=saveDetails&lolId='+encodeURIComponent(lolIdParam)
+            +'&gid='+encodeURIComponent(matchData.gid||'')
+            +'&participants='+encodeURIComponent(JSON.stringify(chunk));
+          if(pUrl.length<=8000){
+            fetch(pUrl).catch(()=>{});
+          }
+        }
+      }
+      return true;
+    } else {
+      throw new Error(res.error||'nieznany błąd');
+    }
   }catch(e){gsLog('✗ Sheets write: '+e.message,'var(--danger)');toast('Błąd zapisu Sheets: '+e.message);return false;}
 }
 
@@ -5473,13 +5510,20 @@ async function gsUpdate(matchData){
     ];
     const gidEnc=encodeURIComponent(matchData.gid);
     const lolIdEnc=encodeURIComponent(matchData.lolId||matchData.gid||'');
-    let url=scriptUrl+'?action=updateRow&gid='+gidEnc+'&row='+encodeURIComponent(JSON.stringify(row))+'&lolId='+lolIdEnc;
-    const partsJson=matchData.participants&&matchData.participants.length?JSON.stringify(trimP(matchData.participants)):'';
-    const urlWithParts=url+(partsJson?'&participants='+encodeURIComponent(partsJson):'');
-    const r=await fetch(urlWithParts.length<=8000?urlWithParts:url);
+    const r=await fetch(scriptUrl+'?action=updateRow&gid='+gidEnc+'&row='+encodeURIComponent(JSON.stringify(row))+'&lolId='+lolIdEnc);
     const res=await r.json();
-    if(res.status==='ok'){toast('✓ Zaktualizowano w Sheets!');return true;}
-    else throw new Error(res.error||'nieznany błąd');
+    if(res.status==='ok'){
+      toast('✓ Zaktualizowano w Sheets!');
+      const parts=trimP(matchData.participants||[]);
+      if(parts.length){
+        const chunks=chunkParticipants(parts);
+        for(const chunk of chunks){
+          const pUrl=scriptUrl+'?action=saveDetails&lolId='+lolIdEnc+'&gid='+gidEnc+'&participants='+encodeURIComponent(JSON.stringify(chunk));
+          if(pUrl.length<=8000)fetch(pUrl).catch(()=>{});
+        }
+      }
+      return true;
+    } else throw new Error(res.error||'nieznany błąd');
   }catch(e){toast('Błąd aktualizacji Sheets: '+e.message);return false;}
 }
 
