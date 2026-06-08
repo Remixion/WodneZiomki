@@ -630,6 +630,159 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .kda-tbl tr:hover td{background:rgba(200,170,110,0.03)}
 </style>
 </head>
+<!-- Hidden Apps Script code template -->
+<script type="text/plain" id="_asCode">
+// ── Wodne Customy — Apps Script v3 ──────────────────────────
+// Zastąp CAŁY kod tym poniżej
+
+function corsOutput(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getOrCreateSheet(name) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) sheet = ss.insertSheet(name);
+  return sheet;
+}
+
+function doGet(e) {
+  try {
+    var action = e.parameter.action;
+    var row = e.parameter.row ? JSON.parse(decodeURIComponent(e.parameter.row)) : null;
+    var gid = e.parameter.gid ? decodeURIComponent(e.parameter.gid) : null;
+    var lolId = e.parameter.lolId ? decodeURIComponent(e.parameter.lolId) : null;
+    var participants = e.parameter.participants ? JSON.parse(decodeURIComponent(e.parameter.participants)) : null;
+    return handleAction(action, { action:action, row:row, gid:gid, lolId:lolId, participants:participants });
+  } catch(err) {
+    return corsOutput({ status:'error', error:err.message });
+  }
+}
+
+function doPost(e) {
+  try {
+    var body = JSON.parse(e.postData.contents);
+    return handleAction(body.action, body);
+  } catch(err) {
+    return corsOutput({ status:'error', error:err.message });
+  }
+}
+
+function handleAction(action, body) {
+  var mainSheet = getOrCreateSheet('Mecze');
+  var detailSheet = getOrCreateSheet('MatchDetails');
+
+  if (detailSheet.getLastRow() === 0) {
+    detailSheet.appendRow([
+      'LolId','GID','Side','Role','SummonerName','ChampionName','ChampLevel','Win',
+      'Kills','Deaths','Assists','KDA','KillPart%',
+      'CS','CS/min','JungleCS','Gold','Gold/min','GoldSpent',
+      'DmgDealt','Dmg/min','DmgTaken','DmgTaken/min',
+      'MagicDmg','PhysDmg','TrueDmg','DmgToTurrets','DmgToObj',
+      'Vision','Wards','WardsKilled','CtrlWards',
+      'Healing','SelfMit','CC','CCScore',
+      'Double','Triple','Quadra','Penta',
+      'FirstBlood','Turrets','Inhibs','LongestAlive','LargestSpree',
+      'Spell1','Spell2','Keystone','RunePath','Items'
+    ]);
+  }
+
+  if (action === 'addRow') {
+    if (!body.row) return corsOutput({ status:'error', error:'brak row' });
+    mainSheet.appendRow(body.row);
+    if (body.participants && body.participants.length) {
+      var lolId = body.lolId || (body.row && body.row[27]) || body.row[0];
+      var gid = body.row[0];
+      saveParticipantDetails(detailSheet, lolId, gid, body.participants);
+    }
+    return corsOutput({ status:'ok' });
+  }
+
+  if (action === 'updateRow') {
+    if (!body.gid || !body.row) return corsOutput({ status:'error', error:'brak gid lub row' });
+    var data = mainSheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === String(body.gid)) {
+        for (var j = 0; j < body.row.length; j++) {
+          if (body.row[j] !== '' && body.row[j] !== null && body.row[j] !== undefined) {
+            mainSheet.getRange(i+1, j+1).setValue(body.row[j]);
+          }
+        }
+        if (body.participants && body.participants.length) {
+          var lid = body.lolId || body.gid;
+          deleteParticipantDetails(detailSheet, lid);
+          saveParticipantDetails(detailSheet, lid, body.gid, body.participants);
+        }
+        return corsOutput({ status:'ok' });
+      }
+    }
+    mainSheet.appendRow(body.row);
+    if (body.participants && body.participants.length) {
+      saveParticipantDetails(detailSheet, body.lolId||body.gid, body.gid, body.participants);
+    }
+    return corsOutput({ status:'ok', note:'appended' });
+  }
+
+  if (action === 'getImgUrls') {
+    var rows = mainSheet.getDataRange().getValues();
+    var result = {};
+    for (var k = 1; k < rows.length; k++) {
+      var gid2 = String(rows[k][0]);
+      var url = rows[k][25];
+      if (gid2 && url) result[gid2] = String(url);
+    }
+    return corsOutput({ status:'ok', data:result });
+  }
+
+  return corsOutput({ status:'error', error:'nieznana akcja: ' + action });
+}
+
+function saveParticipantDetails(sheet, lolId, gid, participants) {
+  participants.forEach(function(p) {
+    var items = (p.items||[]).slice(0,6).join(',');
+    sheet.appendRow([
+      lolId, gid,
+      p.side||'', p.role||'',
+      p.name||p.summonerName||'',
+      p.champ||p.championName||'',
+      p.champLevel||0,
+      p.win ? 'WIN' : 'LOSS',
+      p.k||0, p.d||0, p.a||0,
+      p.kda||0,
+      p.kp||0,
+      p.cs||0, p.cspm||0, p.jungleCS||0,
+      p.gold||0, p.goldpm||0, p.goldSpent||0,
+      p.dmg||0, p.dmgpm||0,
+      p.dmgTaken||0, p.dmgTakenPm||0,
+      p.magicDmg||0, p.physDmg||0, p.trueDmg||0,
+      p.dmgToTurrets||0, p.dmgToObj||0,
+      p.vision||0, p.wards||0, p.wardsKilled||0, p.pinkWards||0,
+      p.healing||0, p.selfMit||0, p.cc||0, p.ccScore||0,
+      p.double||0, p.triple||0, p.quadra||0, p.penta||0,
+      p.firstBlood ? 'TAK' : '',
+      p.turrets||0, p.inhibs||0,
+      p.longestAlive||0, p.largestSpree||0,
+      (p.spellNames&&p.spellNames[0])||'',
+      (p.spellNames&&p.spellNames[1])||'',
+      p.runes&&p.runes.keystone ? p.runes.keystone.name : '',
+      p.runes&&p.runes.primaryPath ? p.runes.primaryPath.name : '',
+      items
+    ]);
+  });
+}
+
+function deleteParticipantDetails(sheet, lolId) {
+  var data = sheet.getDataRange().getValues();
+  for (var i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][0]) === String(lolId)) {
+      sheet.deleteRow(i + 1);
+    }
+  }
+}
+</script>
+
 <body>
 <div class="wave-bg"><div class="wave w1"></div><div class="wave w2"></div><div class="wave w3"></div></div>
 <div class="hex-bg"></div>
@@ -1193,6 +1346,11 @@ let draggedPlayer=null;
 // =====================================================================
 function init(){
   lsLoad();
+  // Load persisted imported match data
+  try{
+    const md=localStorage.getItem('wc_meczeData');
+    if(md)Object.assign(_meczeData,JSON.parse(md));
+  }catch(e){}
   PS=buildPS();
   AP=Object.keys(PS).sort();
   assignMonsters();
@@ -4673,961 +4831,51 @@ function saveGsScript(){
 }
 
 function showAppsScriptGuide(){
-  const appsScriptCode=`// ── Wodne Customy — Apps Script ──────────────────────────────
-// Wklej CAŁY ten kod w Apps Script, zastępując istniejący
-
-function corsOutput(data) {
-  return ContentService
-    .createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doGet(e) {
-  try {
-    const action = e.parameter.action;
-    const rowParam = e.parameter.row;
-    const gidParam = e.parameter.gid;
-    const row = rowParam ? JSON.parse(decodeURIComponent(rowParam)) : null;
-    const gid = gidParam ? decodeURIComponent(gidParam) : null;
-    return handleAction(action, { action, row, gid });
-  } catch(err) {
-    return corsOutput({ status: 'error', error: err.message });
-  }
-}
-
-function doPost(e) {
-  try {
-    const body = JSON.parse(e.postData.contents);
-    return handleAction(body.action, body);
-  } catch(err) {
-    return corsOutput({ status: 'error', error: err.message });
-  }
-}
-
-function handleAction(action, body) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-
-  if (action === 'addRow') {
-    if (!body.row) return corsOutput({ status: 'error', error: 'brak row' });
-    sheet.appendRow(body.row);
-    return corsOutput({ status: 'ok' });
-  }
-
-  if (action === 'updateRow') {
-    if (!body.gid || !body.row) return corsOutput({ status: 'error', error: 'brak gid lub row' });
-    const data = sheet.getDataRange().getValues();
-    for (let i = 1; i < data.length; i++) {
-      if (String(data[i][0]) === String(body.gid)) {
-        for (let j = 0; j < body.row.length; j++) {
-          if (body.row[j] !== '' && body.row[j] !== null && body.row[j] !== undefined) {
-            sheet.getRange(i + 1, j + 1).setValue(body.row[j]);
-          }
-        }
-        return corsOutput({ status: 'ok' });
-      }
-    }
-    sheet.appendRow(body.row);
-    return corsOutput({ status: 'ok', note: 'appended' });
-  }
-
-  if (action === 'getImgUrls') {
-    const data = sheet.getDataRange().getValues();
-    const result = {};
-    for (let i = 1; i < data.length; i++) {
-      const gid = String(data[i][0]);
-      const imgUrl = data[i][25];
-      if (gid && imgUrl) result[gid] = String(imgUrl);
-    }
-    return corsOutput({ status: 'ok', data: result });
-  }
-
-  return corsOutput({ status: 'error', error: 'nieznana akcja: ' + action });
-}`;
-
-  const sheetsHeaders=`A=GID | B=Patch | C=Data | D=WIN
-E=Top_L | F=Jng_L | G=Mid_L | H=Adc_L | I=Sup_L
-J=Top_P | K=Jng_P | L=Mid_P | M=Adc_P | N=Sup_P
-O=ChampTop_L | P=ChampJng_L | Q=ChampMid_L | R=ChampAdc_L | S=ChampSup_L
-T=ChampTop_P | U=ChampJng_P | V=ChampMid_P | W=ChampAdc_P | X=ChampSup_P
-Y=KdaJson | Z=ImgUrl | AA=ParticipantsJson | AB=LolId`;
-
-  // Remove existing modal
+  const appsScriptCode=document.getElementById('_asCode')?.textContent||'';
+  const sheetsInfo='Arkusz Mecze: A=GID B=Patch C=Data D=WIN E-I=Lewa(top/jng/mid/adc/sup) J-N=Prawa O-S=ChampsL T-X=ChampsP Y=KdaJson Z=ImgUrl AA=ParticipantsJson AB=LolId | Arkusz MatchDetails (auto): LolId GID Side Role Name Champ Level Win K D A KDA KP CS CSpm JungleCS Gold Goldpm GoldSpent Dmg DmgPm DmgTaken MagicDmg PhysDmg TrueDmg TurrDmg ObjDmg VS Wards WKill Ctrl Heal SelfMit CC CCScore Double Triple Quadra Penta FB Turrets Inhibs LongestAlive Spree Spell1 Spell2 Keystone RunePath';
   document.getElementById('appsScriptModal')?.remove();
-
   const modal=document.createElement('div');
   modal.id='appsScriptModal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
-  modal.innerHTML=`
-  <div style="background:#0B1C38;border:1px solid var(--border);border-radius:12px;width:min(760px,95vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden">
-    <!-- Header -->
-    <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.3);flex-shrink:0">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold)">Konfiguracja Apps Script</div>
-      <button onclick="document.getElementById('appsScriptModal').remove()" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--silver);cursor:pointer;font-size:15px;padding:3px 10px;border-radius:4px">✕</button>
-    </div>
-    <!-- Content -->
-    <div style="overflow-y:auto;padding:18px">
-
-      <!-- Step 1 -->
-      <div style="margin-bottom:20px">
-        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">
-          Krok 1 — Wklej kod do Apps Script
-        </div>
-        <div style="font-size:12px;color:var(--silver);margin-bottom:8px">
-          Otwórz arkusz Google Sheets → <b>Extensions → Apps Script</b> → zaznacz wszystko (Ctrl+A) → wklej poniższy kod (Ctrl+V) → zapisz (Ctrl+S)
-        </div>
-        <div style="position:relative">
-          <button onclick="navigator.clipboard.writeText(document.getElementById('asCode').textContent).then(()=>{this.textContent='✓ Skopiowano!';setTimeout(()=>this.textContent='📋 Kopiuj kod',2000)})" style="position:absolute;top:8px;right:8px;background:rgba(200,170,110,0.15);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:12px;padding:4px 10px;z-index:1">📋 Kopiuj kod</button>
-          <pre id="asCode" style="background:#06111F;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;color:#A8D8A8;overflow-x:auto;margin:0;line-height:1.5;tab-size:2;white-space:pre">${appsScriptCode.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
-        </div>
-      </div>
-
-      <!-- Step 2 -->
-      <div style="margin-bottom:20px">
-        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">
-          Krok 2 — Opublikuj jako Web App
-        </div>
-        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:13px;color:var(--silver);line-height:2">
-          1. Kliknij <b style="color:var(--text)">Deploy → New deployment</b><br>
-          2. Kliknij ikonkę ⚙️ → wybierz <b style="color:var(--text)">Web app</b><br>
-          3. <b style="color:var(--text)">Execute as:</b> Me<br>
-          4. <b style="color:var(--text)">Who has access:</b> Anyone<br>
-          5. Kliknij <b style="color:var(--text)">Deploy</b> → <b style="color:#1DE9B6">skopiuj URL</b><br>
-          6. Wklej URL w polu "Apps Script URL" w sekcji DEV
-        </div>
-        <div style="margin-top:8px;padding:8px 12px;background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.3);border-radius:5px;font-size:12px;color:#F39C12">
-          ⚠ Po każdej zmianie kodu → <b>New deployment</b> (nie "Manage deployments"!) — URL się zmienia!
-        </div>
-      </div>
-
-      <!-- Step 3 -->
-      <div style="margin-bottom:16px">
-        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">
-          Krok 3 — Nagłówki kolumn w Sheets (wiersz 1)
-        </div>
-        <div style="position:relative">
-          <button onclick="navigator.clipboard.writeText(document.getElementById('asHeaders').textContent).then(()=>{this.textContent='✓ Skopiowano!';setTimeout(()=>this.textContent='📋 Kopiuj',2000)})" style="position:absolute;top:8px;right:8px;background:rgba(93,173,226,0.12);border:1px solid #5DADE2;color:#5DADE2;border-radius:5px;cursor:pointer;font-size:12px;padding:4px 10px;z-index:1">📋 Kopiuj</button>
-          <pre id="asHeaders" style="background:#06111F;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;color:var(--silver);margin:0;line-height:1.6">${sheetsHeaders}</pre>
-        </div>
-      </div>
-
-    </div>
-  </div>`;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  modal.innerHTML='<div style="background:#0B1C38;border:1px solid var(--border);border-radius:12px;width:min(760px,95vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden">'
+    +'<div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.3);flex-shrink:0">'
+    +'<div style="font-family:\"Cinzel\",serif;font-size:16px;color:var(--gold)">Konfiguracja Apps Script</div>'
+    +'<div style="font-size:12px;color:var(--silver);margin-left:12px">v3 — arkusz MatchDetails ze wszystkimi statystykami</div>'
+    +'<button onclick="document.getElementById(\"appsScriptModal\").remove()" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--silver);cursor:pointer;font-size:15px;padding:3px 10px;border-radius:4px">&#10005;</button>'
+    +'</div>'
+    +'<div style="overflow-y:auto;padding:18px">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">Krok 1 — Wklej kod do Apps Script</div>'
+    +'<div style="font-size:12px;color:var(--silver);margin-bottom:8px">Otwórz arkusz Google Sheets &rarr; <b>Extensions &rarr; Apps Script</b> &rarr; zaznacz wszystko (Ctrl+A) &rarr; wklej (Ctrl+V) &rarr; zapisz (Ctrl+S)</div>'
+    +'<div style="position:relative">'
+    +'<button id="_asCopyBtn" style="position:absolute;top:8px;right:8px;background:rgba(200,170,110,0.15);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:12px;padding:4px 10px;z-index:1">&#128203; Kopiuj kod</button>'
+    +'<pre id="_asPreview" style="background:#06111F;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;color:#A8D8A8;overflow:auto;max-height:40vh;margin:0;line-height:1.5;white-space:pre">'+esc(appsScriptCode)+'</pre>'
+    +'</div>'
+    +'<div style="margin-top:16px;font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">Krok 2 — Deploy jako Web App</div>'
+    +'<div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:13px;color:var(--silver);line-height:2">'
+    +'<b style="color:var(--text)">Deploy &rarr; New deployment</b> &rarr; &#9881; &rarr; Web app &rarr; Execute as: Me &rarr; Who has access: Anyone &rarr; <b style="color:#1DE9B6">Deploy &rarr; skopiuj URL</b>'
+    +'</div>'
+    +'<div style="margin-top:8px;padding:8px 12px;background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.3);border-radius:5px;font-size:12px;color:#F39C12">'
+    +'&#9888; Po każdej zmianie kodu: <b>New deployment</b> (nie Manage!) — URL się zmienia'
+    +'</div>'
+    +'<div style="margin-top:16px;font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">Struktura arkuszy</div>'
+    +'<div style="position:relative">'
+    +'<button id="_asHdrBtn" style="position:absolute;top:8px;right:8px;background:rgba(93,173,226,0.12);border:1px solid #5DADE2;color:#5DADE2;border-radius:5px;cursor:pointer;font-size:12px;padding:4px 10px;z-index:1">&#128203; Kopiuj</button>'
+    +'<pre id="_asHdr" style="background:#06111F;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;color:var(--silver);margin:0;line-height:1.6;white-space:pre-wrap">'+esc(sheetsInfo)+'</pre>'
+    +'</div>'
+    +'<div style="margin-top:8px;padding:8px 12px;background:rgba(29,233,182,0.06);border:1px solid rgba(29,233,182,0.2);border-radius:5px;font-size:12px;color:#1DE9B6">'
+    +'&#10003; Arkusz MatchDetails tworzony automatycznie przy pierwszym zapisie meczu'
+    +'</div>'
+    +'</div></div>';
   document.body.appendChild(modal);
   modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
-}
-
-function ghLog(msg,color='var(--silver)'){
-  const el=document.getElementById('ghLog');
-  if(!el)return;
-  el.style.display='block';
-  const ts=new Date().toLocaleTimeString('pl');
-  el.innerHTML+=`<div style="color:${color}">[${ts}] ${msg}</div>`;
-  el.scrollTop=el.scrollHeight;
-}
-
-async function ghRefreshStatus(){
-  const statusEl=document.getElementById('ghStatusText');
-  if(!statusEl)return;
-  const configOk=!!(GH_CONFIG.owner && GH_CONFIG.repo);
-  const hasToken=!!localStorage.getItem(LS_GH_TOKEN);
-
-  if(!configOk){
-    statusEl.innerHTML=`<span style="color:var(--danger)">⚠ Uzupełnij GH_CONFIG w pliku <code>data.js</code> (owner, repo)</span>`;
-    return;
-  }
-
-  statusEl.innerHTML=`<span style="color:var(--silver)">⏳ Sprawdzam repo...</span>`;
-  try{
-    const r=await fetch(`https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/${GH_CONFIG.path}?ref=${GH_CONFIG.branch}`,{
-      headers:{'Accept':'application/vnd.github+json',...(hasToken?{'Authorization':`token ${localStorage.getItem(LS_GH_TOKEN)}`}:{})}
-    });
-    if(r.ok){
-      const d=await r.json();
-      ghFileSha=d.sha;
-      const lastModified=d.encoding?'':'';
-      statusEl.innerHTML=`
-        <span style="color:var(--success)">✓ Połączono z GitHub</span><br>
-        <span style="color:var(--silver)">SHA: ${ghFileSha.slice(0,8)}... · Rozmiar: ${(d.size/1024).toFixed(1)} KB</span><br>
-        ${hasToken
-          ? `<span style="color:var(--success)">🔑 Token aktywny — zapis włączony</span>`
-          : `<span style="color:var(--warn)">⚠ Brak tokena — tylko odczyt</span>`}`;
-    } else if(r.status===404){
-      statusEl.innerHTML=`<span style="color:var(--danger)">✗ Repo nie znalezione (404). Sprawdź GH_CONFIG.owner i GH_CONFIG.repo</span>`;
-    } else {
-      statusEl.innerHTML=`<span style="color:var(--danger)">✗ Błąd ${r.status}</span>`;
-    }
-  } catch(e){
-    statusEl.innerHTML=`<span style="color:var(--danger)">✗ Błąd sieci: ${e.message}</span>`;
-  }
-}
-
-// ── FETCH (read from GitHub raw) ──────────────────────────────────────
-async function ghFetchData(silent=false){
-  if(!GH_CONFIG.owner || !GH_CONFIG.repo){
-    if(!silent) toast('Skonfiguruj GH_CONFIG w data.js!');
-    return false;
-  }
-  try{
-    if(!silent) ghLog('Pobieranie data.js z GitHub...');
-    const url=GH_RAW_URL+'?cb='+Date.now(); // cache-bust
-    const r=await fetch(url);
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const text=await r.text();
-
-    // Extract MH array from fetched text
-    const mhMatch=text.match(/^let MH=\[[\s\S]*?^\];/m);
-    if(mhMatch){
-      try{
-        // eslint-disable-next-line no-new-func
-        const newMH=new Function(`return ${mhMatch[0].replace('let MH=','')}`)();
-        // Merge: keep local scanResults, add new matches
-        const localScans={};
-        MH.forEach(m=>{if(m.scanResult)localScans[m.gid]=m.scanResult;});
-        MH.splice(0,MH.length,...newMH);
-        MH.forEach(m=>{if(localScans[m.gid])m.scanResult=localScans[m.gid];});
-        if(!silent) ghLog(`✓ Załadowano ${MH.length} meczy`,'var(--success)');
-      } catch(e){ if(!silent) ghLog('Błąd parsowania MH: '+e.message,'var(--danger)'); }
-    }
-
-    // Extract PC (player colors)
-    const pcMatch=text.match(/^const PC=\{[^}]+\};/m);
-    if(pcMatch){
-      try{
-        const newPC=new Function(`return ${pcMatch[0].replace('const PC=','').replace(';','')}`)();
-        Object.assign(PC, newPC);
-        if(!silent) ghLog('✓ Kolory graczy zaktualizowane','var(--success)');
-      } catch(e){}
-    }
-
-    // Extract ALIASES
-    const alMatch=text.match(/^let ALIASES\s*=\s*\{[^}]*\};/m);
-    if(alMatch){
-      try{
-        const newAL=new Function(`return ${alMatch[0].replace(/^let ALIASES\s*=\s*/,'').replace(';','')}`)();
-        Object.assign(ALIASES, newAL);
-      } catch(e){}
-    }
-
-    PS=buildPS(); AP=Object.keys(PS).sort();
-    renderPL(); renderProfileList(); renderStats(); 
-    if(selPr) renderProfile(selPr);
-    if(!silent){ toast('✓ Dane odświeżone z GitHub!'); ghRefreshStatus(); }
-    return true;
-  } catch(e){
-    if(!silent){ ghLog('✗ Błąd pobierania: '+e.message,'var(--danger)'); toast('Błąd pobierania z GitHub'); }
-    return false;
-  }
-}
-
-// ── PUSH (write to GitHub via API) ───────────────────────────────────
-async function ghPushData(reason='save'){
-  const token=localStorage.getItem(LS_GH_TOKEN);
-  if(!token){ toast('Brak tokena GitHub — wejdź w ⚙ GitHub żeby go dodać'); return false; }
-  if(!GH_CONFIG.owner || !GH_CONFIG.repo){ toast('Skonfiguruj GH_CONFIG w data.js!'); return false; }
-
-  ghLog('Przygotowuję data.js do wysłania...');
-
-  // Build new data.js content with updated MH and PC
-  const mhJson=JSON.stringify(MH,null,2)
-    .replace(/"imgUrl"/g,'"imgUrl"')
-    .replace(/"scanResult"[^,\n]*/g,''); // strip scan results from repo (too large)
-
-  // Fetch current file to get SHA (required for update)
-  try{
-    if(!ghFileSha){
-      const r=await fetch(`https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/${GH_CONFIG.path}?ref=${GH_CONFIG.branch}`,{
-        headers:{'Accept':'application/vnd.github+json','Authorization':`token ${token}`}
-      });
-      if(r.ok){ const d=await r.json(); ghFileSha=d.sha; }
-    }
-  } catch(e){}
-
-  // Read current raw data.js and replace MH + PC sections
-  let baseContent;
-  try{
-    const r=await fetch(GH_RAW_URL+'?cb='+Date.now());
-    baseContent=await r.text();
-  } catch(e){
-    ghLog('✗ Nie można pobrać aktualnego data.js: '+e.message,'var(--danger)');
-    return false;
-  }
-
-  // Replace MH block
-  let newContent=baseContent.replace(/^let MH=\[[\s\S]*?^\];/m, `let MH=${mhJson};`);
-
-  // Replace PC block with current PC (including custom players)
-  const pcStr='const PC='+JSON.stringify(PC)+';';
-  newContent=newContent.replace(/^const PC=\{[^}]+\};/m, pcStr);
-
-  // Replace ALIASES
-  const alStr='let ALIASES = '+JSON.stringify(ALIASES)+';';
-  newContent=newContent.replace(/^let ALIASES\s*=\s*\{[^}]*\};/m, alStr);
-
-  // Commit via GitHub API
-  const body={
-    message:`[rift-draft] ${reason} — ${new Date().toLocaleString('pl')}`,
-    content:btoa(unescape(encodeURIComponent(newContent))),
-    branch:GH_CONFIG.branch
-  };
-  if(ghFileSha) body.sha=ghFileSha;
-
-  try{
-    ghLog('Wysyłam commit do GitHub...');
-    const r=await fetch(`https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/${GH_CONFIG.path}`,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json','Accept':'application/vnd.github+json','Authorization':`token ${token}`},
-      body:JSON.stringify(body)
-    });
-    const resp=await r.json();
-    if(r.ok){
-      ghFileSha=resp.content?.sha||ghFileSha;
-      ghLog(`✓ Commit zapisany! SHA: ${ghFileSha?.slice(0,8)}...`,'var(--success)');
-      toast('✓ Zapisano na GitHub!');
-      return true;
-    } else {
-      ghLog(`✗ Błąd ${r.status}: ${resp.message}`,'var(--danger)');
-      toast(`Błąd zapisu: ${resp.message}`);
-      return false;
-    }
-  } catch(e){
-    ghLog('✗ Błąd sieci: '+e.message,'var(--danger)');
-    toast('Błąd sieci przy zapisie');
-    return false;
-  }
-}
-
-// ── AUTO FETCH ON STARTUP ─────────────────────────────────────────────
-// =====================================================================
-// GOOGLE SHEETS SYNC
-// =====================================================================
-
-// Parse CSV text → array of match objects
-function parseSheetCSV(csv){
-  // Parse CSV properly — handles quoted fields, no lookbehind regex
-  function parseLine(line){
-    const cols=[];let cur='';let inQ=false;
-    for(let i=0;i<line.length;i++){
-      const ch=line[i];
-      if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
-      else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}
-      else cur+=ch;
-    }
-    cols.push(cur.trim());
-    return cols;
-  }
-  const lines=csv.trim().split('\n');
-  if(lines.length<2)return[];
-  const matches=[];
-  for(let i=1;i<lines.length;i++){
-    const row=parseLine(lines[i]);
-    const get=(idx)=>(row[idx]||'').replace(/^"|"$/g,'').trim();
-    if(!get(0)||!get(0).match(/^\d+$/))continue;
-    const m={
-      gid:get(0), patch:get(1)||getCurrentPatch(get(2)), date:get(2), win:get(3),
-      blue:{top:get(4),jng:get(5),mid:get(6),adc:get(7),supp:get(8)},
-      red: {top:get(9),jng:get(10),mid:get(11),adc:get(12),supp:get(13)},
-    };
-    const bct=get(14),bcj=get(15),bcm=get(16),bca=get(17),bcs=get(18);
-    const rct=get(19),rcj=get(20),rcm=get(21),rca=get(22),rcs=get(23);
-    if(bct||bcj||bcm||bca||bcs) m.blueChamps={top:bct,jng:bcj,mid:bcm,adc:bca,supp:bcs};
-    if(rct||rcj||rcm||rca||rcs) m.redChamps={top:rct,jng:rcj,mid:rcm,adc:rca,supp:rcs};
-    const kdaRaw2=get(24);
-    const imgUrl=get(25);
-    const participantsRaw=get(26);
-    if(participantsRaw){
-      try{const pp=JSON.parse(participantsRaw);if(Array.isArray(pp))m.participants=pp;}catch(e){}
-    }
-    const extractUrl=(raw)=>{
-      if(!raw)return'';
-      if(raw.startsWith('http'))return raw;
-      const hm=raw.match(/HYPERLINK\s*\(\s*"([^"]+)"/i);
-      if(hm)return hm[1];
-      const urlMatch=raw.match(/https?:\/\/[^\s"')]+/);
-      if(urlMatch)return urlMatch[0];
-      return'';
-    };
-    const resolvedUrl=extractUrl(imgUrl);
-    if(resolvedUrl)m.imgUrl=resolvedUrl;
-    // Col 25: KdaJson
-    // kdaRaw already parsed above as kdaRaw2
-    if(kdaRaw2){
-      try{
-        const kda=JSON.parse(kdaRaw2);
-        if(typeof kda==='object'){m.scanResult=kda;}
-      }catch(e){/* invalid JSON — ignore */}
-    }
-    const lolIdRaw=get(27);
-    if(lolIdRaw)m.lolId=lolIdRaw;
-    else m.lolId=m.gid; // fallback: old records where gid was the lolId
-
-    const existing=MH.find(x=>x.gid===m.gid||x.lolId===m.lolId);
-    if(existing?.scanResult)m.scanResult=existing.scanResult;
-    matches.push(m);
-  }
-  return matches;
-}
-
-// Fetch matches from Google Sheets CSV
-async function gsFetch(silent=false){
-  const url=GS_CONFIG.csvUrl||(localStorage.getItem(LS_GS_SCRIPT+'_csv')||'');
-  if(!url){if(!silent)toast('Brak URL do arkusza Google Sheets');return false;}
-  try{
-    if(!silent)gsLog('Pobieranie z Google Sheets...');
-    // Simple fetch without custom headers — avoids CORS preflight on Sheets published URL
-    const r=await fetch(url+'&t='+Date.now());
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const csv=await r.text();
-    if(!csv||csv.trim().length<10)throw new Error('Pusta odpowiedź');
-    const parsed=parseSheetCSV(csv);
-    if(!parsed.length){
-      if(!silent)toast('Arkusz pusty lub błędny format CSV');
-      return false;
-    }
-    const localScans={};
-    MH.forEach(m=>{if(m.scanResult)localScans[m.gid]=m.scanResult;});
-    MH.splice(0,MH.length,...parsed);
-    MH.forEach(m=>{if(localScans[m.gid])m.scanResult=localScans[m.gid];});
-    // Fetch ImgUrls via Apps Script
-    const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
-    if(scriptUrl){
-      try{
-        const ir=await fetch(scriptUrl+'?action=getImgUrls');
-        if(ir.ok){
-          const imgData=await ir.json();
-          if(imgData.status==='ok'&&imgData.urls){
-            MH.forEach(m=>{
-              if(imgData.urls[m.gid]&&imgData.urls[m.gid].startsWith('http')){
-                m.imgUrl=imgData.urls[m.gid];
-              }
-            });
-          }
-        }
-      }catch(e){/* optional */}
-    }
-    lsSave();
-    PS=buildPS();AP=Object.keys(PS).sort();
-    renderPL();renderProfileList();renderStats();renderMeczeList();
-    if(selPr)renderProfile(selPr);
-    if(!silent)toast(`✓ Załadowano ${MH.length} meczy ze Sheets`);
-    return true;
-  }catch(e){
-    if(!silent){toast('Błąd Sheets: '+e.message);gsLog('✗ '+e.message,'var(--danger)');}
-    else console.warn('gsFetch silent error:',e.message);
-    return false;
-  }
-}
-
-// Send new match to Google Apps Script
-async function gsWrite(matchData){
-  const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
-  if(!scriptUrl){
-    toast('⚠ Brak Apps Script URL — zapis tylko lokalny');
-    gsLog('Brak scriptUrl — zapis tylko lokalny','var(--warn)');
-    return false;
-  }
-  try{
-    gsLog('Wysyłam do Google Sheets...');
-    // Truncate participants to avoid huge payloads — store only key stats
-    const trimParticipants=(pts)=>{
-      if(!pts||!pts.length)return[];
-      return pts.map(p=>({
-        pid:p.pid,side:p.side,role:p.role,name:p.name,rawName:p.rawName||p.name,
-        champ:p.champ,champId:p.champId||0,champLevel:p.champLevel||0,win:p.win,
-        k:p.k,d:p.d,a:p.a,kda:p.kda||0,kp:p.kp||0,
-        cs:p.cs,cspm:p.cspm||0,jungleCS:p.jungleCS||0,
-        gold:p.gold,goldpm:p.goldpm||0,
-        dmg:p.dmg,dmgpm:p.dmgpm||0,dmgTaken:p.dmgTaken||0,
-        magicDmg:p.magicDmg||0,physDmg:p.physDmg||0,trueDmg:p.trueDmg||0,
-        vision:p.vision,wards:p.wards||0,wardsKilled:p.wardsKilled||0,pinkWards:p.pinkWards||0,
-        items:p.items||[],
-        spell1:p.spell1||0,spell2:p.spell2||0,spellNames:p.spellNames||null,
-        runes:p.runes||null,
-        double:p.double||0,triple:p.triple||0,quadra:p.quadra||0,penta:p.penta||0,
-        firstBlood:p.firstBlood||false,turrets:p.turrets||0,
-        selfMit:p.selfMit||0,healing:p.healing||0,cc:p.cc||0,
-        longestAlive:p.longestAlive||0,
-      }));
-    };
-    const row=[
-      matchData.gid, matchData.patch, matchData.date, matchData.win,
-      matchData.blue.top||'', matchData.blue.jng||'', matchData.blue.mid||'', matchData.blue.adc||'', matchData.blue.supp||'',
-      matchData.red.top||'',  matchData.red.jng||'',  matchData.red.mid||'',  matchData.red.adc||'',  matchData.red.supp||'',
-      matchData.blueChamps?.top||'', matchData.blueChamps?.jng||'', matchData.blueChamps?.mid||'', matchData.blueChamps?.adc||'', matchData.blueChamps?.supp||'',
-      matchData.redChamps?.top||'',  matchData.redChamps?.jng||'',  matchData.redChamps?.mid||'',  matchData.redChamps?.adc||'',  matchData.redChamps?.supp||'',
-      matchData.scanResult&&Object.keys(matchData.scanResult).length?JSON.stringify(matchData.scanResult):'',
-      matchData.imgUrl||'',
-      matchData.participants&&matchData.participants.length?JSON.stringify(trimParticipants(matchData.participants)):'',
-      matchData.lolId||matchData.gid||'',
-    ];
-    const payload=JSON.stringify({action:'addRow',row});
-    let r;
-    // Apps Script Web Apps redirect POST to GET-like endpoint
-    // Use no-cors for POST to avoid CORS preflight, but then parse via GET
-    // Best approach: encode as URL params for GET (split if needed)
-    const rowJson=JSON.stringify(row);
-    const getUrl=scriptUrl+'?action=addRow&row='+encodeURIComponent(rowJson);
-    if(getUrl.length<=8000){
-      // Short enough for GET
-      r=await fetch(getUrl);
-    } else {
-      // Too large — try POST with no-cors then verify with separate GET
-      // Actually: remove participants from row and send separately
-      const rowNoParticipants=[...row];
-      rowNoParticipants[26]=''; // clear participantsJson from main row
-      const getUrlSmall=scriptUrl+'?action=addRow&row='+encodeURIComponent(JSON.stringify(rowNoParticipants));
-      r=await fetch(getUrlSmall);
-    }
-    const res=await r.json();
-    if(res.status==='ok'){
-      gsLog('✓ Zapisano w Google Sheets','var(--success)');
-      toast('✓ Mecz w Google Sheets!');
-      return true;
-    } else {
-      throw new Error(res.error||'nieznany błąd');
-    }
-  }catch(e){
-    gsLog('✗ Sheets write: '+e.message,'var(--danger)');
-    toast('Błąd zapisu Sheets: '+e.message);
-    return false;
-  }
-}
-
-async function gsUpdate(matchData){
-  const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
-  if(!scriptUrl){toast('⚠ Brak Apps Script URL');return false;}
-  try{
-    const trimP=(pts)=>(!pts||!pts.length)?[]:pts.map(p=>({
-      pid:p.pid,side:p.side,role:p.role,name:p.name,rawName:p.rawName||p.name,
-      champ:p.champ,champId:p.champId||0,champLevel:p.champLevel||0,win:p.win,
-      k:p.k,d:p.d,a:p.a,kda:p.kda||0,kp:p.kp||0,
-      cs:p.cs,cspm:p.cspm||0,jungleCS:p.jungleCS||0,
-      gold:p.gold,goldpm:p.goldpm||0,
-      dmg:p.dmg,dmgpm:p.dmgpm||0,dmgTaken:p.dmgTaken||0,
-      magicDmg:p.magicDmg||0,physDmg:p.physDmg||0,trueDmg:p.trueDmg||0,
-      vision:p.vision,wards:p.wards||0,wardsKilled:p.wardsKilled||0,pinkWards:p.pinkWards||0,
-      items:p.items||[],
-      spell1:p.spell1||0,spell2:p.spell2||0,spellNames:p.spellNames||null,
-      runes:p.runes||null,
-      double:p.double||0,triple:p.triple||0,quadra:p.quadra||0,penta:p.penta||0,
-      firstBlood:p.firstBlood||false,turrets:p.turrets||0,
-      selfMit:p.selfMit||0,healing:p.healing||0,cc:p.cc||0,
-      longestAlive:p.longestAlive||0,
-    }));
-    const row=[
-      matchData.gid, matchData.patch, matchData.date, matchData.win,
-      matchData.blue.top||'', matchData.blue.jng||'', matchData.blue.mid||'', matchData.blue.adc||'', matchData.blue.supp||'',
-      matchData.red.top||'',  matchData.red.jng||'',  matchData.red.mid||'',  matchData.red.adc||'',  matchData.red.supp||'',
-      matchData.blueChamps?.top||'', matchData.blueChamps?.jng||'', matchData.blueChamps?.mid||'', matchData.blueChamps?.adc||'', matchData.blueChamps?.supp||'',
-      matchData.redChamps?.top||'',  matchData.redChamps?.jng||'',  matchData.redChamps?.mid||'',  matchData.redChamps?.adc||'',  matchData.redChamps?.supp||'',
-      matchData.scanResult&&Object.keys(matchData.scanResult).length?JSON.stringify(matchData.scanResult):'',
-      matchData.imgUrl||'',
-      matchData.participants&&matchData.participants.length?JSON.stringify(trimP(matchData.participants)):'',
-      matchData.lolId||matchData.gid||'',
-    ];
-    const rowJson=JSON.stringify(row);
-    const gidEnc=encodeURIComponent(matchData.gid);
-    const getUrl=scriptUrl+'?action=updateRow&gid='+gidEnc+'&row='+encodeURIComponent(rowJson);
-    let r;
-    if(getUrl.length<=8000){
-      r=await fetch(getUrl);
-    } else {
-      const rowNoP=[...row];rowNoP[26]='';
-      r=await fetch(scriptUrl+'?action=updateRow&gid='+gidEnc+'&row='+encodeURIComponent(JSON.stringify(rowNoP)));
-    }
-    const res=await r.json();
-    if(res.status==='ok'){toast('✓ Zaktualizowano w Sheets!');return true;}
-    else throw new Error(res.error||'nieznany błąd');
-  }catch(e){
-    toast('Błąd aktualizacji Sheets: '+e.message);
-    return false;
-  }
-}
-
-function gsLog(msg,color='var(--silver)'){
-  const el=document.getElementById('gsLog');
-  if(!el)return;
-  el.style.display='block';
-  const ts=new Date().toLocaleTimeString('pl');
-  el.innerHTML+=`<div style="color:${color}">[${ts}] ${msg}</div>`;
-  el.scrollTop=el.scrollHeight;
-}
-
-async function ghAutoFetch(){
-  // Google Sheets takes priority for match data
-  const sheetsOk=await gsFetch(true);
-  // Also sync GitHub for player data (colors, aliases, meta)
-  if(!GH_CONFIG.owner||!GH_CONFIG.repo)return;
-  const indicator=document.getElementById('ghSyncBtn');
-  if(indicator){indicator.textContent='⏳ Sync';indicator.style.opacity='0.6';}
-  const ghOk=await ghFetchData(true);
-  if(indicator){
-    indicator.textContent='⚙ GitHub';
-    indicator.style.opacity='1';
-    const ok=sheetsOk||ghOk;
-    indicator.style.borderColor=ok?'rgba(29,233,182,0.45)':'rgba(200,170,110,0.35)';
-    indicator.style.color=ok?'var(--success)':'var(--gold)';
-    setTimeout(()=>{indicator.style.borderColor='rgba(200,170,110,0.35)';indicator.style.color='var(--gold)';},3000);
-  }
-}
-
-// =====================================================================
-// NAV + UTILS
-// =====================================================================
-function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);}
-
-// =====================================================================
-// MECZE — NIEZALEŻNA STRONA ANALIZY MECZY
-// =====================================================================
-
-let _meczeData = {};     // gameId -> rich parsed match (z importu JSON)
-let _meczeActive = null; // aktywny gameId
-let _meczeTab = 'overview';
-
-var SPELL_NAMES = {4:'Flash',14:'Ignite',12:'Teleport',3:'Exhaust',7:'Heal',21:'Barrier',6:'Ghost',11:'Smite',1:'Cleanse',32:'Mark',13:'Clarity',39:'Hexflash'};
-var ROLE_MAP_RICH = {'TOP':'top','JNG':'jng','JUNGLE':'jng','MID':'mid','MIDDLE':'mid','ADC':'adc','BOT':'adc','BOTTOM':'adc','SUP':'supp','SUPPORT':'supp'};
-
-function meczeChampKey(champName){
-  if(!champName)return'';
-  for(const [k,v] of Object.entries(CHAMP_DISPLAY||{})){
-    if(normApos(v).toLowerCase()===normApos(champName).toLowerCase())return k;
-  }
-  return champName.replace(/['\u2019\u2018 .\-&]/g,'');
-}
-function meczeVersionToPatch(ver){
-  const m=(ver||'').match(/^(\d+)\.(\d+)/);
-  if(!m)return'26.10';
-  return(parseInt(m[1])+10)+'.'+m[2];
-}
-function meczeChampIdToName(id){
-  if(!id)return'';
-  if(typeof CHAMP_ID_MAP!=='undefined'&&CHAMP_ID_MAP[id]){
-    const k=CHAMP_ID_MAP[id];
-    return(CHAMP_DISPLAY&&CHAMP_DISPLAY[k])||k;
-  }
-  return'';
-}
-
-// Map JSON nickname to app player name using ALIASES and PLAYER_META
-function meczeMapName(jsonName){
-  if(!jsonName)return jsonName;
-  const base=jsonName.split('#')[0];
-  if(AP.includes(base))return base;
-  const lo=base.toLowerCase();
-  // Check ALIASES (ALIASES[appName] = lolNick)
-  const aliasMatch=AP.find(n=>(ALIASES[n]||'').toLowerCase()===lo);
-  if(aliasMatch)return aliasMatch;
-  // Check PLAYER_META.lolNick
-  const metaMatch=AP.find(n=>(PLAYER_META[n]||{}).lolNick?.toLowerCase()===lo);
-  if(metaMatch)return metaMatch;
-  // Case insensitive
-  const caseMatch=AP.find(n=>n.toLowerCase()===lo);
-  if(caseMatch)return caseMatch;
-  // Partial (first 4 chars)
-  if(lo.length>=4){
-    const partial=AP.find(n=>n.toLowerCase().startsWith(lo.slice(0,4))||lo.startsWith(n.toLowerCase().slice(0,4)));
-    if(partial)return partial;
-  }
-  return base; // unknown player - use as-is
-}
-
-function parseMeczeJson(data,fileName){
-  if(!data.gameId||!data.participants)return null;
-  const g=data;
-  const teams={};
-  (g.teams||[]).forEach(t=>{teams[t.teamId===100?'blue':'red']=t;});
-
-  const participants=g.participants.map(p=>{
-    const side=p.teamSide||(p.teamId===100?'blue':'red');
-    const rawRole=(p.inferredRole||p.laneRaw||'').toUpperCase();
-    const role=ROLE_MAP_RICH[rawRole]||'top';
-    const rawName=(p.summonerName||p.gameName||'').split('#')[0];
-    const name=meczeMapName(rawName);
-    return{
-      pid:p.participantId||0, side, role,
-      name, rawName,
-      champ:p.championName||(p.championId?meczeChampIdToName(p.championId):''),
-      champId:p.championId||0, champLevel:p.championLevel||0,
-      win:!!p.win,
-      k:p.kills||0, d:p.deaths||0, a:p.assists||0,
-      kda:Math.round((p.kdaRatio||0)*100)/100,
-      kp:Math.round((p.killParticipation||0)*100),
-      cs:p.cs||0, cspm:Math.round((p.csPerMin||0)*10)/10,
-      gold:p.goldEarned||0, goldpm:Math.round((p.goldPerMin||0)*10)/10,
-      dmg:p.damageDealt||0, dmgpm:Math.round((p.damageDealtPerMin||0)*10)/10,
-      dmgTotal:p.damageDealtTotal||0,
-      dmgTaken:p.damageTaken||0,
-      vision:p.visionScore||0,
-      wards:p.wardsPlaced||0, wardsKilled:p.wardsKilled||0, pinkWards:p.detectorWardsPlaced||0,
-      items:(p.items||[]).filter(i=>i&&i>0),
-      itemsEnriched:(p.itemsEnriched||[]).filter(i=>i&&i.id>0),
-      spell1:p.spell1Id||p.spells?.[0]?.id||0,
-      spell2:p.spell2Id||p.spells?.[1]?.id||0,
-      spellNames:p.spells?p.spells.map(s=>s.name):null,
-      runes:p.runes||null,
-      double:p.doubleKills||0, triple:p.tripleKills||0,
-      quadra:p.quadraKills||0, penta:p.pentaKills||0,
-      firstBlood:!!p.firstBloodKill, firstTower:!!p.firstTowerKill,
-      turrets:p.turretKills||0, inhibs:p.inhibitorKills||0,
-      dmgToTurrets:p.damageToTurrets||0, dmgToObj:p.damageToObjectives||0,
-      healing:p.healingDone||0, cc:p.ccApplied||0, ccScore:p.ccScore||0,
-      selfMit:p.selfMitigatedDmg||0,
-      magicDmg:p.magicDamage||0, physDmg:p.physicalDamage||0, trueDmg:p.trueDamage||0,
-      longestAlive:p.longestTimeAlive||0,
-      largestSpree:p.largestKillingSpree||0,
-      jungleCS:p.jungleCS||0,
-      goldSpent:p.goldSpent||0,
-    };
+  document.getElementById('_asCopyBtn')?.addEventListener('click',function(){
+    navigator.clipboard.writeText(appsScriptCode).then(()=>{this.textContent='\u2713 Skopiowano!';setTimeout(()=>{this.innerHTML='&#128203; Kopiuj kod';},2000);});
   });
-
-  const blueArr=participants.filter(p=>p.side==='blue');
-  const redArr=participants.filter(p=>p.side==='red');
-  const blueWins=blueArr.some(p=>p.win);
-
-  return{
-    gameId:String(g.gameId),
-    lolId:String(g.gameId), // Riot's match ID
-    date:(g.date||g.gameCreationDate||'').slice(0,10),
-    duration:g.gameDurationFormatted||Math.floor((g.gameDuration||0)/60)+'m',
-    durationSecs:g.gameDuration||0,
-    patch:meczeVersionToPatch(g.gameVersion||'16.10'),
-    win:blueWins?'LEWA':'PRAWA',
-    teams, participants,
-    blue:blueArr, red:redArr,
-  };
-}
-
-// ── Build match list combining MH (from Sheets) + _meczeData (imported JSON) ──
-function renderMeczeList(){
-  const el=document.getElementById('mecze-list');
-  if(!el)return;
-
-  // Index rich data by lolId for quick lookup
-  const richByLolId={};
-  Object.values(_meczeData).forEach(r=>{richByLolId[r.lolId]=r;richByLolId[r.gameId]=r;});
-
-  // Gather all match IDs: from MH (gid) and from unmatched rich data
-  const allMatches=[];
-  const seenLolIds=new Set();
-
-  // Start with MH entries (have sequential GID)
-  MH.forEach(hist=>{
-    const lolId=hist.lolId||hist.gid;
-    const rich=richByLolId[lolId];
-    seenLolIds.add(lolId);
-    allMatches.push({id:hist.gid,gid:hist.gid,lolId,rich,hist});
+  document.getElementById('_asHdrBtn')?.addEventListener('click',function(){
+    navigator.clipboard.writeText(sheetsInfo).then(()=>{this.textContent='\u2713 Skopiowano!';setTimeout(()=>{this.innerHTML='&#128203; Kopiuj';},2000);});
   });
-
-  // Add JSON-only imports not in MH yet
-  Object.values(_meczeData).forEach(rich=>{
-    if(!seenLolIds.has(rich.lolId)){
-      seenLolIds.add(rich.lolId);
-      allMatches.push({id:rich.lolId,gid:null,lolId:rich.lolId,rich,hist:null});
-    }
-  });
-
-  allMatches.sort((a,b)=>{
-    if(a.gid&&b.gid)return Number(b.gid)-Number(a.gid);
-    if(a.gid)return -1;if(b.gid)return 1;
-    return Number(b.lolId)-Number(a.lolId);
-  });
-
-  if(!allMatches.length){
-    el.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--silver);font-size:15px">Brak meczy — kliknij ↺ Sheets lub zaimportuj JSON</div>';
-    return;
-  }
-
-  const ddVer=window._ddVersion||'15.10.1';
-
-  // Match sequential number (order among all matches)
-  const total=allMatches.length;
-
-  el.innerHTML=allMatches.map(({id,gid,lolId:lolIdFromMap,rich,hist},idx)=>{
-    const win=rich?.win||hist?.win||'?';
-    const blueWin=win==='LEWA';
-    const winColor=blueWin?'#5DADE2':'#E84855';
-    const winBg=blueWin?'rgba(93,173,226,0.12)':'rgba(232,72,85,0.12)';
-    const loseBg='rgba(10,16,30,0.5)';
-    const date=(hist?.date||rich?.date||'');
-    const patch=hist?.patch||rich?.patch||'';
-    const duration=rich?.duration||hist?.duration||'';
-    const lolId=lolIdFromMap||id; // LoL match ID from Riot
-    const seqNum=total-idx; // sequential #N (1=oldest)
-    const isActive=_meczeActive===lolId;
-
-    const parts=rich?.participants||hist?.participants||[];
-    const blueRaw=rich?.blue||parts.filter(p=>p.side==='blue')||[];
-    const redRaw=rich?.red||parts.filter(p=>p.side==='red')||[];
-    const blue=blueRaw.length?blueRaw:Object.entries(hist?.blue||{}).map(([role,name])=>({name,role,champ:(hist?.blueChamps||{})[role]||'',k:hist?.scanResult?.[name]?.k,d:hist?.scanResult?.[name]?.d,a:hist?.scanResult?.[name]?.a})).filter(x=>x.name);
-    const red=redRaw.length?redRaw:Object.entries(hist?.red||{}).map(([role,name])=>({name,role,champ:(hist?.redChamps||{})[role]||'',k:hist?.scanResult?.[name]?.k,d:hist?.scanResult?.[name]?.d,a:hist?.scanResult?.[name]?.a})).filter(x=>x.name);
-
-    function mp(p){
-      const c=PC[p.name]||PC[p.rawName]||'#C8AA6E';
-      const ck=meczeChampKey(p.champ||'');
-      const icon=ck?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${ck}.png`:'';
-      const ri={top:'🛡',jng:'🌿',mid:'⚡',adc:'🏹',supp:'💫'};
-      const hasKDA=p.k!==undefined&&p.d!==undefined;
-      const kdaStr=hasKDA?`${p.k}/${p.d}/${p.a}`:'';
-      const kda=hasKDA&&p.d>0?((p.k+p.a)/p.d).toFixed(1):hasKDA?(p.k+p.a).toString():'';
-      const kdaC=Number(kda)>=5?'#1DE9B6':Number(kda)>=3?'var(--gold)':'rgba(160,180,200,0.55)';
-      return`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;min-width:0">
-        <span style="font-size:10px;color:rgba(160,180,200,0.35);width:14px;text-align:center;flex-shrink:0">${ri[p.role]||''}</span>
-        ${icon?`<img src="${icon}" style="width:22px;height:22px;border-radius:4px;flex-shrink:0" onerror="this.style.display='none'">`:'<div style="width:22px;height:22px;background:rgba(255,255,255,0.05);border-radius:4px;flex-shrink:0"></div>'}
-        <span style="font-size:13px;font-weight:700;color:${c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${p.name}</span>
-        ${kdaStr?`<span style="font-size:11px;color:${kdaC};flex-shrink:0;white-space:nowrap">${kdaStr}</span>`:''}
-      </div>`;
-    }
-
-    const cardHtml=`<div id="mcard_${lolId}" onclick="openMecze('${lolId}')" style="background:var(--panel);border:1px solid ${isActive?'rgba(200,170,110,0.5)':'var(--border)'};border-left:5px solid ${winColor};border-radius:8px;cursor:pointer;transition:border-color 0.15s">
-      <div style="display:grid;grid-template-columns:90px 1fr 36px 1fr 68px;align-items:stretch">
-        <!-- Meta column -->
-        <div style="padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px;border-right:1px solid var(--border)">
-          <!-- Sequential GID - prominent -->
-          ${gid?`<div style="font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:rgba(200,170,110,0.9);line-height:1">#${gid}</div>`:'<div style="font-size:11px;color:#F39C12;font-weight:700">— nie zapisano</div>'}
-          <div style="font-size:15px;font-weight:700;color:${winColor}">${win}</div>
-          <div style="font-size:12px;color:var(--silver)">${date.slice(5)||date}</div>
-          <div style="font-size:11px;color:rgba(160,180,200,0.4)">${duration||('P'+patch)}</div>
-          <!-- LoL ID small -->
-          <div style="font-size:9px;color:rgba(160,180,200,0.3);font-family:monospace;margin-top:2px">${lolId.slice(-8)}</div>
-        </div>
-        <!-- Blue team -->
-        <div style="padding:6px 10px;background:${blueWin?winBg:loseBg}">
-          <div style="font-size:10px;font-weight:700;color:${blueWin?winColor:'rgba(93,173,226,0.3)'};letter-spacing:1px;margin-bottom:4px">LEWA ${blueWin?'✓':''}</div>
-          ${blue.map(mp).join('')}
-        </div>
-        <!-- VS -->
-        <div style="display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(160,180,200,0.2);font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border)">VS</div>
-        <!-- Red team -->
-        <div style="padding:6px 10px;background:${!blueWin?'rgba(232,72,85,0.12)':loseBg}">
-          <div style="font-size:10px;font-weight:700;color:${!blueWin?'#E84855':'rgba(232,72,85,0.3)'};letter-spacing:1px;margin-bottom:4px">PRAWA ${!blueWin?'✓':''}</div>
-          ${red.map(mp).join('')}
-        </div>
-        <!-- Right column: screen + badge -->
-        <div style="padding:6px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-left:1px solid var(--border)">
-          ${hist?.imgUrl?`<img src="${hist.imgUrl}" style="width:52px;height:34px;border-radius:4px;object-fit:cover;cursor:zoom-in" onclick="event.stopPropagation();window.open('${hist.imgUrl}','_blank')" title="Screenshot">`:'<div style="font-size:20px;color:rgba(160,180,200,0.15)">📷</div>'}
-          ${rich?'<div style="font-size:9px;font-weight:700;color:var(--teal);letter-spacing:0.5px">JSON</div>':''}
-          <div style="font-size:9px;color:rgba(160,180,200,0.3)">#${seqNum}</div>
-        </div>
-      </div>
-    </div>`;
-
-    // Inline analyzer panel (shows below card when active)
-    const analyzerHtml=isActive?`<div id="mecze-analyzer" style="margin-top:2px;margin-bottom:4px"></div>`:'';
-
-    return cardHtml+analyzerHtml;
-  }).join('');
-
-  // If active, render analyzer into the inline slot
-  if(_meczeActive){
-    setTimeout(()=>{
-      renderMeczeAnalyzer();
-      document.getElementById('mcard_'+_meczeActive)?.scrollIntoView({behavior:'smooth',block:'start'});
-    },10);
-  }
 }
-
-function openMecze(gameId){
-  if(_meczeActive===gameId){
-    _meczeActive=null;
-    renderMeczeList();
-    return;
-  }
-  _meczeActive=gameId;
-  _meczeTab='overview';
-  renderMeczeList();
-}
-
-
-function handleMeczeFiles(files){
-  if(!files||!files.length)return;
-  const pending=[];
-  let done=0;
-  const total=files.length;
-
-  Array.from(files).forEach(file=>{
-    const r=new FileReader();
-    r.onload=e=>{
-      try{
-        const data=JSON.parse(e.target.result);
-        const parsed=parseMeczeJson(data,file.name);
-        if(parsed) pending.push(parsed);
-      }catch(err){toast('Błąd parsowania: '+file.name+' — '+err.message);}
-      done++;
-      if(done===total) openMeczeImportPreview(pending);
-    };
-    r.readAsText(file,'utf-8');
-  });
-  document.getElementById('mecze-file-input').value='';
-}
-
-function openMeczeImportPreview(matches){
-  if(!matches.length){toast('Brak meczy do importu');return;}
-  const ddVer=window._ddVersion||'15.10.1';
-
-  function playerBadge(p){
-    const known=AP.includes(p.name)||AP.includes(p.rawName);
-    const c=known?(PC[p.name]||'#C8AA6E'):'#F39C12';
-    const ck=meczeChampKey(p.champ||'');
-    const icon=ck?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${ck}.png`:'';
-    const ri={top:'🛡',jng:'🌿',mid:'⚡',adc:'🏹',supp:'💫'};
-    return`<div style="display:flex;align-items:center;gap:5px;padding:3px 5px;border-radius:4px;background:${known?'rgba(255,255,255,0.03)':'rgba(243,156,18,0.08)'};${!known?'border:1px solid rgba(243,156,18,0.3)':''}">
-      <span style="font-size:10px;color:rgba(160,180,200,0.35)">${ri[p.role]||''}</span>
-      ${icon?`<img src="${icon}" style="width:18px;height:18px;border-radius:3px" onerror="this.style.display='none'">`:''}
-      <span style="font-size:12px;font-weight:700;color:${c}">${p.name}</span>
-      ${!known?'<span style="font-size:9px;color:#F39C12">?</span>':''}
-      <span style="font-size:10px;color:rgba(160,180,200,0.4)">${p.k}/${p.d}/${p.a}</span>
-    </div>`;
-  }
-
-  const rows=matches.map((m,i)=>{
-    const blueWin=m.win==='LEWA';
-    const existByLolId=MH.find(x=>x.lolId===m.lolId||x.gid===m.lolId);
-    const status=existByLolId?'UPDATE':'NEW';
-    const statusColor=existByLolId?'#F39C12':'#1DE9B6';
-    const unknownPlayers=m.participants.filter(p=>!AP.includes(p.name)&&!AP.includes(p.rawName));
-
-    return`<div id="mirow_${i}" style="background:var(--panel);border:1px solid var(--border);border-left:4px solid ${blueWin?'#5DADE2':'#E84855'};border-radius:8px;margin-bottom:10px;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,0,0,0.2);border-bottom:1px solid var(--border)">
-        <input type="checkbox" id="michk_${i}" checked style="width:16px;height:16px;cursor:pointer">
-        <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">LoL ID: ${m.lolId}</div>
-        <div style="font-size:12px;color:var(--silver)">${m.date} · ${m.duration||''} · P${m.patch}</div>
-        <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${statusColor}22;color:${statusColor};border:1px solid ${statusColor}44">${status}</span>
-        <div style="font-size:13px;font-weight:700;color:${blueWin?'#5DADE2':'#E84855'};margin-left:auto">${m.win} wygrywa</div>
-        ${unknownPlayers.length?`<span style="font-size:11px;color:#F39C12">⚠ ${unknownPlayers.length} nieznanych graczy</span>`:''}
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
-        <div style="padding:10px 12px;background:${blueWin?'rgba(93,173,226,0.06)':''}">
-          <div style="font-size:10px;color:#5DADE2;font-weight:700;margin-bottom:6px">LEWA</div>
-          <div style="display:flex;flex-direction:column;gap:2px">${m.blue.map(playerBadge).join('')}</div>
-        </div>
-        <div style="padding:10px 12px;border-left:1px solid var(--border);background:${!blueWin?'rgba(232,72,85,0.06)':''}">
-          <div style="font-size:10px;color:#E84855;font-weight:700;margin-bottom:6px">PRAWA</div>
-          <div style="display:flex;flex-direction:column;gap:2px">${m.red.map(playerBadge).join('')}</div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  const modal=document.createElement('div');
-  modal.id='meczeImportModal';
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:flex-start;justify-content:center;padding-top:40px;z-index:9999;overflow-y:auto';
-  modal.innerHTML=`<div style="background:#0B1C38;border:1px solid var(--border);border-radius:12px;width:min(860px,95vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
-    <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.3);flex-shrink:0">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold)">Import ${matches.length} ${matches.length===1?'meczu':'meczy'}</div>
-      <div style="font-size:12px;color:var(--silver)">Odznacz mecze które chcesz pominąć</div>
-      <div style="margin-left:auto;display:flex;gap:8px">
-        <button onclick="confirmMeczeImport(${JSON.stringify(matches.map((_,i)=>i))})" style="padding:7px 18px;background:rgba(29,233,182,0.15);border:1px solid #1DE9B6;color:#1DE9B6;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700">✓ Importuj zaznaczone</button>
-        <button onclick="document.getElementById('meczeImportModal').remove()" style="padding:7px 14px;background:transparent;border:1px solid var(--border);color:var(--silver);border-radius:6px;cursor:pointer;font-size:14px">Anuluj</button>
-      </div>
-    </div>
-    <div style="overflow-y:auto;padding:14px 18px">${rows}</div>
-  </div>`;
-  document.body.appendChild(modal);
-
-  // Store matches for confirmImport
-  window._pendingMeczeImport=matches;
-}
-
 function confirmMeczeImport(indices){
   const matches=window._pendingMeczeImport||[];
   const selected=indices.filter(i=>{
@@ -5753,7 +5001,7 @@ function renderMeczeAnalyzer(){
       <div style="padding:12px 16px;background:${blueWin?'rgba(29,233,182,0.07)':'rgba(10,16,30,0.5)'}">
         <div style="font-size:13px;font-weight:700;color:${blueWin?'#1DE9B6':'rgba(93,173,226,0.35)'};letter-spacing:1.5px;margin-bottom:7px">${blueWin?'✓ VICTORY':'DEFEAT'} · LEWA</div>
         <div style="display:flex;gap:14px;font-size:15px;flex-wrap:wrap;align-items:center">
-          <span style="font-weight:700;color:var(--gold)">${bT.totalKills||0} Kills</span>
+          ${bT.totalKills?`<span style="font-weight:700;color:var(--gold)">${bT.totalKills} Kills</span>`:''}
           ${bT.towerKills?`<span style="color:var(--silver)">🏰 ${bT.towerKills}</span>`:''}
           ${bT.dragonKills?`<span style="color:var(--silver)">🐉 ${bT.dragonKills}</span>`:''}
           ${bT.baronKills?`<span style="color:var(--silver)">👑 ${bT.baronKills}</span>`:''}
@@ -5765,7 +5013,7 @@ function renderMeczeAnalyzer(){
       <div style="padding:12px 16px;background:${!blueWin?'rgba(29,233,182,0.07)':'rgba(10,16,30,0.5)'}">
         <div style="font-size:13px;font-weight:700;color:${!blueWin?'#1DE9B6':'rgba(232,72,85,0.35)'};letter-spacing:1.5px;margin-bottom:7px">${!blueWin?'✓ VICTORY':'DEFEAT'} · PRAWA</div>
         <div style="display:flex;gap:14px;font-size:15px;flex-wrap:wrap;align-items:center">
-          <span style="font-weight:700;color:var(--gold)">${rT.totalKills||0} Kills</span>
+          ${rT.totalKills?`<span style="font-weight:700;color:var(--gold)">${rT.totalKills} Kills</span>`:''}
           ${rT.towerKills?`<span style="color:var(--silver)">🏰 ${rT.towerKills}</span>`:''}
           ${rT.dragonKills?`<span style="color:var(--silver)">🐉 ${rT.dragonKills}</span>`:''}
           ${rT.baronKills?`<span style="color:var(--silver)">👑 ${rT.baronKills}</span>`:''}
@@ -5907,9 +5155,10 @@ function renderMeczeOverview(el,m){
             ${p.cs?`<span style="color:var(--silver)">CS <b style="color:var(--text)">${p.cs}</b>${p.cspm?` <span style="color:rgba(160,180,200,0.5)">(${p.cspm}/m)</span>`:''}</span>`:''}
             ${p.gold?`<span>💰 <b style="color:var(--gold)">${(p.gold/1000).toFixed(1)}k</b></span>`:''}
             ${p.dmg?`<span>⚔️ <b style="color:#E84855">${(p.dmg/1000).toFixed(1)}k</b></span>`:''}
-            ${p.dmgTaken?`<span style="color:var(--silver)">🛡 ${(p.dmgTaken/1000).toFixed(1)}k vzięte</span>`:''}
+            ${p.dmgTaken?`<span style="color:var(--silver)">🛡 ${(p.dmgTaken/1000).toFixed(1)}k</span>`:''}
             ${p.vision?`<span style="color:var(--silver)">👁 ${p.vision}</span>`:''}
             ${p.wards?`<span style="color:var(--silver)">🗺 ${p.wards}/${p.wardsKilled}/${p.pinkWards||0}</span>`:''}
+            ${(!p.cs&&!p.gold&&!p.dmg)?`<span style="font-size:11px;color:rgba(160,180,200,0.3);font-style:italic">Brak pełnych danych — zaimportuj JSON</span>`:''}
           </div>
           <!-- Row 4: extra stats -->
           <div style="display:flex;gap:10px;font-size:11px;color:rgba(160,180,200,0.5);margin-bottom:6px;flex-wrap:wrap">
@@ -5951,7 +5200,7 @@ function renderMeczeOverview(el,m){
     <div style="border:1px solid rgba(93,173,226,0.2);border-radius:8px;overflow:hidden">
       <div style="padding:8px 12px;background:rgba(93,173,226,0.08);display:flex;align-items:center;gap:8px">
         <span style="font-size:11px;font-weight:700;color:#5DADE2;letter-spacing:1px">LEWA (BLUE)</span>
-        <span style="font-size:11px;color:var(--silver)">CS ${bT.totalCS||0} · VS ${bT.totalVisionScore||0}</span>
+        ${(bT.totalCS||bT.totalVisionScore)?`<span style="font-size:11px;color:var(--silver)">CS ${bT.totalCS||0} · VS ${bT.totalVisionScore||0}</span>`:''}
       </div>
       ${m.blue.map(pCard).join('')}
       ${bBans.length?`<div style="display:flex;gap:4px;align-items:center;padding:6px 12px;background:rgba(0,0,0,0.2);flex-wrap:wrap">
@@ -5961,7 +5210,7 @@ function renderMeczeOverview(el,m){
     <div style="border:1px solid rgba(232,72,85,0.2);border-radius:8px;overflow:hidden">
       <div style="padding:8px 12px;background:rgba(232,72,85,0.08);display:flex;align-items:center;gap:8px">
         <span style="font-size:11px;font-weight:700;color:#E84855;letter-spacing:1px">PRAWA (RED)</span>
-        <span style="font-size:11px;color:var(--silver)">CS ${rT.totalCS||0} · VS ${rT.totalVisionScore||0}</span>
+        ${(rT.totalCS||rT.totalVisionScore)?`<span style="font-size:11px;color:var(--silver)">CS ${rT.totalCS||0} · VS ${rT.totalVisionScore||0}</span>`:''}
       </div>
       ${m.red.map(pCard).join('')}
       ${rBans.length?`<div style="display:flex;gap:4px;align-items:center;padding:6px 12px;background:rgba(0,0,0,0.2);flex-wrap:wrap">
