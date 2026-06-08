@@ -4673,73 +4673,61 @@ function saveGsScript(){
 }
 
 function showAppsScriptGuide(){
-  const guide=`INSTRUKCJA — Google Apps Script (zapis meczy):
+  const appsScriptCode=`// ── Wodne Customy — Apps Script ──────────────────────────────
+// Wklej CAŁY ten kod w Apps Script, zastępując istniejący
 
-1. Otwórz swój arkusz Google Sheets
-2. Kliknij Extensions → Apps Script
-3. Wklej ten kod (zastąp wszystko):
-
-// ── CORS headers helper ──────────────────────────────────────
 function corsOutput(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ── MAIN HANDLER: POST (duże dane, participants JSON) ────────
-function doPost(e) {
-  try {
-    const body = JSON.parse(e.postData.contents);
-    return handleAction(body.action, body);
-  } catch(err) {
-    return corsOutput({status:'error', error: err.message});
-  }
-}
-
-// ── MAIN HANDLER: GET (fallback dla małych requestów) ────────
 function doGet(e) {
   try {
     const action = e.parameter.action;
     const rowParam = e.parameter.row;
     const gidParam = e.parameter.gid;
-    const body = {
-      action,
-      row: rowParam ? JSON.parse(decodeURIComponent(rowParam)) : null,
-      gid: gidParam ? decodeURIComponent(gidParam) : null,
-    };
-    return handleAction(action, body);
+    const row = rowParam ? JSON.parse(decodeURIComponent(rowParam)) : null;
+    const gid = gidParam ? decodeURIComponent(gidParam) : null;
+    return handleAction(action, { action, row, gid });
   } catch(err) {
-    return corsOutput({status:'error', error: err.message});
+    return corsOutput({ status: 'error', error: err.message });
   }
 }
 
-// ── SHARED ACTION HANDLER ─────────────────────────────────────
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    return handleAction(body.action, body);
+  } catch(err) {
+    return corsOutput({ status: 'error', error: err.message });
+  }
+}
+
 function handleAction(action, body) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheets()[0];
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
 
   if (action === 'addRow') {
+    if (!body.row) return corsOutput({ status: 'error', error: 'brak row' });
     sheet.appendRow(body.row);
-    return corsOutput({status:'ok'});
+    return corsOutput({ status: 'ok' });
   }
 
   if (action === 'updateRow') {
-    const gid = String(body.gid);
+    if (!body.gid || !body.row) return corsOutput({ status: 'error', error: 'brak gid lub row' });
     const data = sheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
-      if (String(data[i][0]) === gid) {
-        const row = body.row;
-        for (let j = 0; j < row.length; j++) {
-          if (row[j] !== '' && row[j] !== null && row[j] !== undefined) {
-            sheet.getRange(i + 1, j + 1).setValue(row[j]);
+      if (String(data[i][0]) === String(body.gid)) {
+        for (let j = 0; j < body.row.length; j++) {
+          if (body.row[j] !== '' && body.row[j] !== null && body.row[j] !== undefined) {
+            sheet.getRange(i + 1, j + 1).setValue(body.row[j]);
           }
         }
-        return corsOutput({status:'ok'});
+        return corsOutput({ status: 'ok' });
       }
     }
-    // GID not found — append as new row
     sheet.appendRow(body.row);
-    return corsOutput({status:'ok', note:'appended'});
+    return corsOutput({ status: 'ok', note: 'appended' });
   }
 
   if (action === 'getImgUrls') {
@@ -4747,28 +4735,85 @@ function handleAction(action, body) {
     const result = {};
     for (let i = 1; i < data.length; i++) {
       const gid = String(data[i][0]);
-      const imgUrl = data[i][25]; // col Z (0-indexed 25)
+      const imgUrl = data[i][25];
       if (gid && imgUrl) result[gid] = String(imgUrl);
     }
-    return corsOutput({status:'ok', data: result});
+    return corsOutput({ status: 'ok', data: result });
   }
 
-  return corsOutput({status:'error', error:'unknown action: ' + action});
-}
+  return corsOutput({ status: 'error', error: 'nieznana akcja: ' + action });
+}`;
 
-4. Kliknij Deploy → New deployment
-5. Type: Web App
-6. Execute as: Me
-7. Who has access: Anyone
-8. Kliknij Deploy → skopiuj URL
-9. Wklej URL tutaj w polu "Apps Script URL"
+  const sheetsHeaders=`A=GID | B=Patch | C=Data | D=WIN
+E=Top_L | F=Jng_L | G=Mid_L | H=Adc_L | I=Sup_L
+J=Top_P | K=Jng_P | L=Mid_P | M=Adc_P | N=Sup_P
+O=ChampTop_L | P=ChampJng_L | Q=ChampMid_L | R=ChampAdc_L | S=ChampSup_L
+T=ChampTop_P | U=ChampJng_P | V=ChampMid_P | W=ChampAdc_P | X=ChampSup_P
+Y=KdaJson | Z=ImgUrl | AA=ParticipantsJson | AB=LolId`;
 
-WAŻNE: Przy każdej zmianie kodu → Deploy → New deployment (nowy URL!)
-Nagłówki kolumn w Sheets (wiersz 1):
-A=GID | B=Patch | C=Data | D=WIN | E-I=Lewa (Top/Jng/Mid/Adc/Sup)
-J-N=Prawa | O-S=ChampsLewa | T-X=ChampsP | Y=KdaJson | Z=ImgUrl
-AA=ParticipantsJson | AB=LolId`;
-  alert(guide);
+  // Remove existing modal
+  document.getElementById('appsScriptModal')?.remove();
+
+  const modal=document.createElement('div');
+  modal.id='appsScriptModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+  modal.innerHTML=`
+  <div style="background:#0B1C38;border:1px solid var(--border);border-radius:12px;width:min(760px,95vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.3);flex-shrink:0">
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold)">Konfiguracja Apps Script</div>
+      <button onclick="document.getElementById('appsScriptModal').remove()" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--silver);cursor:pointer;font-size:15px;padding:3px 10px;border-radius:4px">✕</button>
+    </div>
+    <!-- Content -->
+    <div style="overflow-y:auto;padding:18px">
+
+      <!-- Step 1 -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">
+          Krok 1 — Wklej kod do Apps Script
+        </div>
+        <div style="font-size:12px;color:var(--silver);margin-bottom:8px">
+          Otwórz arkusz Google Sheets → <b>Extensions → Apps Script</b> → zaznacz wszystko (Ctrl+A) → wklej poniższy kod (Ctrl+V) → zapisz (Ctrl+S)
+        </div>
+        <div style="position:relative">
+          <button onclick="navigator.clipboard.writeText(document.getElementById('asCode').textContent).then(()=>{this.textContent='✓ Skopiowano!';setTimeout(()=>this.textContent='📋 Kopiuj kod',2000)})" style="position:absolute;top:8px;right:8px;background:rgba(200,170,110,0.15);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:12px;padding:4px 10px;z-index:1">📋 Kopiuj kod</button>
+          <pre id="asCode" style="background:#06111F;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;color:#A8D8A8;overflow-x:auto;margin:0;line-height:1.5;tab-size:2;white-space:pre">${appsScriptCode.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">
+          Krok 2 — Opublikuj jako Web App
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:13px;color:var(--silver);line-height:2">
+          1. Kliknij <b style="color:var(--text)">Deploy → New deployment</b><br>
+          2. Kliknij ikonkę ⚙️ → wybierz <b style="color:var(--text)">Web app</b><br>
+          3. <b style="color:var(--text)">Execute as:</b> Me<br>
+          4. <b style="color:var(--text)">Who has access:</b> Anyone<br>
+          5. Kliknij <b style="color:var(--text)">Deploy</b> → <b style="color:#1DE9B6">skopiuj URL</b><br>
+          6. Wklej URL w polu "Apps Script URL" w sekcji DEV
+        </div>
+        <div style="margin-top:8px;padding:8px 12px;background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.3);border-radius:5px;font-size:12px;color:#F39C12">
+          ⚠ Po każdej zmianie kodu → <b>New deployment</b> (nie "Manage deployments"!) — URL się zmienia!
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">
+          Krok 3 — Nagłówki kolumn w Sheets (wiersz 1)
+        </div>
+        <div style="position:relative">
+          <button onclick="navigator.clipboard.writeText(document.getElementById('asHeaders').textContent).then(()=>{this.textContent='✓ Skopiowano!';setTimeout(()=>this.textContent='📋 Kopiuj',2000)})" style="position:absolute;top:8px;right:8px;background:rgba(93,173,226,0.12);border:1px solid #5DADE2;color:#5DADE2;border-radius:5px;cursor:pointer;font-size:12px;padding:4px 10px;z-index:1">📋 Kopiuj</button>
+          <pre id="asHeaders" style="background:#06111F;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;color:var(--silver);margin:0;line-height:1.6">${sheetsHeaders}</pre>
+        </div>
+      </div>
+
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
 }
 
 function ghLog(msg,color='var(--silver)'){
