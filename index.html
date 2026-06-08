@@ -1126,8 +1126,7 @@ function deleteParticipantDetails(sheet, lolId) {
         W Google Sheets: <b>File → Share → Publish to web</b> → wybierz arkusz <b>Mecze</b> → CSV → skopiuj URL
       </div>
       <div style="display:flex;gap:8px">
-        <input id="csvUrlInput" class="ss" style="flex:1;font-size:12px" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=XXX&single=true&output=csv"
-          value="${localStorage.getItem('wc_csv_url')||''}">
+        <input id="csvUrlInput" class="ss" style="flex:1;font-size:12px" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=XXX&single=true&output=csv">
         <button class="btn tbtn" style="padding:5px 12px;font-size:13px" onclick="saveCsvUrl()">Zapisz</button>
         <button class="btn sbtn" style="padding:5px 12px;font-size:13px" onclick="clearCsvUrl()">✕</button>
       </div>
@@ -4524,6 +4523,13 @@ function openGhSettings(){
   if(inp) inp.value=scriptUrl?'••••••••••••••••':'';
   const st=document.getElementById('gsScriptStatus');
   if(st) st.innerHTML=`📤 Apps Script: <span style="color:${scriptUrl?'var(--success)':'var(--warn)'}">${scriptUrl?'skonfigurowany ✓':'nie skonfigurowany'}</span>`;
+  // CSV URL override
+  const csvEl=document.getElementById('csvUrlInput');
+  if(csvEl){
+    const saved=localStorage.getItem('wc_csv_url')||'';
+    csvEl.value=saved;
+    csvEl.placeholder=GS_CONFIG.csvUrl||'https://docs.google.com/...';
+  }
   ghRefreshStatus();
 }
 function closeGhSettings(){ document.getElementById('ghModal').style.display='none'; }
@@ -4846,8 +4852,9 @@ function saveCsvUrl(){
 }
 function clearCsvUrl(){
   localStorage.removeItem('wc_csv_url');
-  document.getElementById('csvUrlInput').value='';
-  toast('✓ Usunięto nadpisanie CSV URL — używam domyślnego z data.js');
+  const el=document.getElementById('csvUrlInput');
+  if(el)el.value='';
+  toast('✓ Usunięto nadpisanie — używam URL z data.js');
   gsFetch(false);
 }
 function saveGsScript(){
