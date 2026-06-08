@@ -5167,11 +5167,29 @@ function parseSheetRow(row){
   return m;
 }
 
+function parseCSVLine(line){
+  const result=[];
+  let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){
+      if(inQ&&line[i+1]==='"'){cur+='"';i++;}
+      else inQ=!inQ;
+    } else if(ch===','&&!inQ){
+      result.push(cur);cur='';
+    } else {
+      cur+=ch;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
 function parseSheetCSV(csv){
-  const lines=csv.split('\n').filter(l=>l.trim());
+  const lines=csv.split(/\r?\n/).filter(l=>l.trim());
   const matches=[];
   for(let i=1;i<lines.length;i++){
-    const row=lines[i].split(',').map(c=>c.trim().replace(/^"|"$/g,'').replace(/""/g,'"'));
+    const row=parseCSVLine(lines[i]);
     if(!row[0]||row[0]==='GID')continue;
     const m=parseSheetRow(row);
     if(!m.gid)continue;
