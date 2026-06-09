@@ -729,6 +729,13 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .sb2-dmg-bar>div{height:100%;border-radius:3px}
 .sb2-mvp-badge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:1px;color:#05121b;background:var(--gold);padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle}
 @media(max-width:760px){.sb2-team{overflow-x:auto}.sb2-rows{min-width:680px}.sb2-thdr{min-width:680px}}
+.apl-lbl{font-size:12px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.apl-chip{display:inline-flex;align-items:center;padding:5px 11px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--silver);transition:all 0.15s;user-select:none}
+.apl-chip:hover{border-color:var(--gold);color:var(--gold)}
+.apl-chip.on{background:rgba(200,170,110,0.18);border-color:var(--gold);color:var(--gold-light)}
+.apl-chip.role.on{background:rgba(232,72,85,0.2);border-color:var(--danger);color:#ff9aa6}
+.apl-chip.keep.on{background:rgba(11,196,227,0.18);border-color:var(--teal);color:#9fe9f5}
+.opgg-tag{display:inline-block;padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700;background:rgba(200,170,110,0.16);border:1px solid var(--border);color:var(--gold-light)}
 </style>
 </head>
 <!-- Hidden Apps Script code template -->
@@ -960,8 +967,8 @@ function deleteParticipantDetails(sheet, lolId) {
       <button class="btn" onclick="openSave()" title="Zapisz wynik meczu" style="padding:8px 10px">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       </button>
-      <button id="mmrBalanceBtn" onclick="toggleMMRBalance()" title="Balansowanie MMR — losuje drużyny z wyrównanymi sumami MMR" style="padding:8px 10px;background:transparent;border:1px solid rgba(200,170,110,0.35);color:var(--silver);border-radius:4px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><path d="M3 12h18"/><path d="M3 6l9-3 9 3"/><path d="M3 18l9 3 9-3"/></svg>
+      <button id="randSettingsBtn" onclick="openRandSettings()" title="Ustawienia losowania — tryb balansu drużyn, liczba rerollów postaci" style="padding:8px 10px;background:transparent;border:1px solid rgba(200,170,110,0.35);color:var(--silver);border-radius:4px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
     </div>
     <!-- Center: Losuj buttons -->
@@ -1259,43 +1266,85 @@ function deleteParticipantDetails(sheet, lolId) {
 
 <!-- ADD PLAYER MODAL -->
 <div id="addPlayerModal" class="modal-overlay" style="display:none">
-  <div class="modal-box" style="width:min(400px,95vw)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:2px" id="addPlayerTitle">Dodaj nowego gracza</div>
-      <button class="btn dbtn" style="padding:3px 10px;font-size:13px" onclick="closeAddPlayer()">✕</button>
+  <div class="modal-box" style="width:min(680px,96vw);max-height:92vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--white);letter-spacing:1px" id="addPlayerTitle">DODAJ GRACZA</div>
+      <button class="btn dbtn" style="padding:3px 10px;font-size:14px" onclick="closeAddPlayer()">✕</button>
     </div>
-
-    <div style="margin-bottom:12px">
-      <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Nick w aplikacji *</div>
-      <input id="apName" class="ss" style="width:100%" placeholder="np. Janusz" oninput="updateAddPreview()">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div><div class="apl-lbl">NICK (U NAS)</div><input id="apName" class="ss" style="width:100%" placeholder="np. Radio" oninput="updateAddPreview();apRenderKeep()"></div>
+      <div><div class="apl-lbl">NICK Z GRY (RIOT ID)</div><input id="apGameNick" class="ss" style="width:100%" placeholder="np. RadioMagnetofon"></div>
     </div>
-
-    <div style="margin-bottom:12px">
-      <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Nick w grze (Riot ID)</div>
-      <input id="apGameNick" class="ss" style="width:100%" placeholder="np. Janusz#EUW">
+    <div style="margin-bottom:12px"><div class="apl-lbl">AVATAR (URL OBRAZKA)</div><input id="apAvatar" class="ss" style="width:100%" placeholder="https://..."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div><div class="apl-lbl">RANGA</div>
+        <select id="apRank" class="ss" style="width:100%" onchange="apRankChanged()">
+          <option value="">Unranked</option>
+          <option>Iron</option><option>Bronze</option><option>Silver</option><option>Gold</option><option>Platinum</option><option>Emerald</option><option>Diamond</option><option>Master</option><option>Grandmaster</option><option>Challenger</option>
+        </select>
+      </div>
+      <div><div class="apl-lbl">DYWIZJA</div>
+        <select id="apDiv" class="ss" style="width:100%">
+          <option>I</option><option>II</option><option>III</option><option>IV</option>
+        </select>
+      </div>
     </div>
-
-    <div style="margin-bottom:16px">
-      <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Kolor gracza</div>
+    <div style="margin-bottom:14px"><div class="apl-lbl">KOLOR GRACZA</div>
       <div class="color-picker-row" id="colorPickerRow"></div>
-      <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
-        <div id="apPreviewAv" style="width:40px;height:40px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;flex-shrink:0">??</div>
-        <div>
-          <div id="apPreviewName" style="font-size:17px;font-weight:600;color:var(--white)">Podgląd</div>
-          <div style="font-size:13px;color:var(--silver)">0 meczy · 0% WR</div>
-        </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+        <div id="apPreviewAv" class="av" style="width:38px;height:38px;font-size:15px;font-weight:700;border:2px solid">??</div>
+        <div id="apPreviewName" style="font-weight:700;font-size:16px">Podgląd</div>
         <input type="color" id="apCustomColor" value="#C8AA6E" style="margin-left:auto;width:32px;height:32px;border:none;background:transparent;cursor:pointer;border-radius:4px" oninput="pickCustomColor(this.value)" title="Własny kolor">
       </div>
     </div>
-
-    <div style="display:flex;gap:8px">
-      <button class="btn primary" style="flex:1;justify-content:center" onclick="confirmAddPlayer()">✓ Dodaj gracza</button>
-      <button class="btn dbtn" style="flex:1;justify-content:center" onclick="closeAddPlayer()">Anuluj</button>
+    <div style="margin-bottom:14px"><div class="apl-lbl">TAGI</div>
+      <div id="apTagRow" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input id="apNewTag" class="ss" style="flex:1;font-size:13px" placeholder="Nowy tag..." onkeydown="if(event.key==='Enter'){event.preventDefault();apAddTag();}">
+        <button class="btn" style="padding:4px 12px;font-size:13px" onclick="apAddTag()">+ Dodaj tag</button>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:10px">
+      <div style="font-size:13px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:10px">— Flagi Losowania</div>
+      <div class="apl-lbl">NIE GRA NA POZYCJI</div>
+      <div id="apRoleRow" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
+      <div class="apl-lbl">NIE GRA PRZECIW (TRZYMAJ W JEDNEJ DRUŻYNIE)</div>
+      <div id="apKeepRow" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+      <button class="btn" onclick="closeAddPlayer()">Anuluj</button>
+      <button class="btn dbtn" id="apDeleteBtn" style="display:none" onclick="apDeleteFromModal()">Usuń</button>
+      <button class="btn primary" onclick="confirmAddPlayer()">Zapisz</button>
     </div>
   </div>
 </div>
 
-
+<!-- USTAWIENIA LOSOWANIA -->
+<div id="randSettingsModal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="width:min(440px,95vw)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:2px">⚙ Ustawienia Losowania</div>
+      <button class="btn dbtn" style="padding:3px 10px;font-size:13px" onclick="closeRandSettings()">✕</button>
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="apl-lbl">Balans drużyn przy „Losuj drużyny"</div>
+      <select id="randModeSel" class="ss" style="width:100%">
+        <option value="random">Czysto losowo (bez balansu)</option>
+        <option value="role">Wg preferencji ról</option>
+        <option value="rank">Wg Rangi Live</option>
+        <option value="wr">Wg WR (winrate)</option>
+      </select>
+    </div>
+    <div style="margin-bottom:16px">
+      <div class="apl-lbl">Liczba rerollów postaci (na slot)</div>
+      <input id="randRerolls" type="number" min="0" max="9" class="ss" style="width:100px">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeRandSettings()">Anuluj</button>
+      <button class="btn primary" onclick="saveRandSettings()">Zapisz</button>
+    </div>
+  </div>
+</div>
 
 <!-- AI SCAN MODAL -->
 <div id="scanModal" class="modal-overlay" style="display:none">
@@ -1445,10 +1494,16 @@ let CT={blue:[],red:[],bR:{},rR:{}};
 let recentPlayers=[]; // names of players from last draft, persisted in localStorage
 const LS_RECENT='rd_recent';
 let plSort='alpha'; // 'alpha' | 'games' | 'active'
-let mmrBalanceOn=false; // MMR balancing toggle
 let CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
 let RR={blue:[0,0,0,0,0],red:[0,0,0,0,0]};
-const MXR=3;
+// ── USTAWIENIA LOSOWANIA + TAGI ─────────────────────────────────
+let RAND_SETTINGS={balanceMode:'random',maxRerolls:3};
+try{const _rs=localStorage.getItem('rd_randset');if(_rs)RAND_SETTINGS=Object.assign(RAND_SETTINGS,JSON.parse(_rs));}catch(e){}
+const DEFAULT_TAGS=['Stała ekipa','Rezerwa'];
+let CUSTOM_TAGS=[];
+try{const _ct=localStorage.getItem('rd_customtags');if(_ct)CUSTOM_TAGS=JSON.parse(_ct)||[];}catch(e){}
+function allTags(){const set=new Set([...DEFAULT_TAGS,...CUSTOM_TAGS]);Object.values(PLAYER_META).forEach(m=>((m&&m.tags)||[]).forEach(t=>set.add(t)));return[...set];}
+let MXR=RAND_SETTINGS.maxRerolls||3;
 let PW=null,selPr=null,devMode=false;
 // Unified drag & drop mode (always on)
 const draftMode=true;
@@ -1458,6 +1513,18 @@ let draggedPlayer=null;
 // =====================================================================
 // INIT
 // =====================================================================
+// ── BRAKUJĄCE HELPERY (przywrócone) ──────────────────────────────
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+let _toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  if(!el){console.log('[toast]',msg);return;}
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+}
+
 function init(){
   lsLoad();
   // Load persisted imported match data
@@ -1564,7 +1631,7 @@ function renderPL(){
       </div>
       <div style="flex:1;min-width:0">
         <div class="pname">${n}${gn!==n?` <span style='color:var(--teal);font-size:12px'>(${gn})</span>`:''}</div>
-        <div class="psub" style="color:${calcMMR(n).color}">${calcMMR(n).rank} · ${g}G</div>
+        <div class="psub" style="color:${playerRankInfo(n).color}">${playerRankInfo(n).full} · ${g}G</div>
       </div>
       ${inBlue?`<span style="font-size:12px;color:#5DADE2;font-weight:700;flex-shrink:0">LEWA</span>`:''}
       ${inRed?`<span style="font-size:12px;color:#E84855;font-weight:700;flex-shrink:0">PRAWA</span>`:''}
@@ -2344,120 +2411,107 @@ function genDrops(){
 // =====================================================================
 // RANDOMIZE
 // =====================================================================
-function toggleMMRBalance(){
-  mmrBalanceOn=!mmrBalanceOn;
-  const btn=document.getElementById('mmrBalanceBtn');
-  if(btn){
-    btn.style.borderColor=mmrBalanceOn?'var(--teal)':'rgba(200,170,110,0.35)';
-    btn.style.color=mmrBalanceOn?'var(--teal)':'var(--silver)';
-    btn.style.background=mmrBalanceOn?'rgba(11,196,227,0.1)':'';
-    btn.textContent=mmrBalanceOn?'⚖ MMR On':'⚖ MMR Balance';
-  }
-  if(mmrBalanceOn){
-    toast('MMR Balance włączony — następne losowanie będzie zbalansowane');
-  } else {
-    toast('MMR Balance wyłączony');
-  }
+// ── USTAWIENIA LOSOWANIA — modal + balans ──────────────────────
+function openRandSettings(){
+  document.getElementById('randModeSel').value=RAND_SETTINGS.balanceMode;
+  document.getElementById('randRerolls').value=RAND_SETTINGS.maxRerolls;
+  document.getElementById('randSettingsModal').style.display='flex';
+}
+function closeRandSettings(){document.getElementById('randSettingsModal').style.display='none';}
+function saveRandSettings(){
+  RAND_SETTINGS.balanceMode=document.getElementById('randModeSel').value;
+  RAND_SETTINGS.maxRerolls=Math.max(0,Math.min(9,parseInt(document.getElementById('randRerolls').value)||3));
+  MXR=RAND_SETTINGS.maxRerolls;
+  try{localStorage.setItem('rd_randset',JSON.stringify(RAND_SETTINGS));}catch(e){}
+  closeRandSettings();
+  const lbl={random:'czysto losowo',role:'wg preferencji ról',rank:'wg Rangi Live',wr:'wg WR'}[RAND_SETTINGS.balanceMode];
+  toast('Ustawienia zapisane — balans: '+lbl);
+  updateRandBtn();updateDraftCounts();
+}
+function updateRandBtn(){
+  const btn=document.getElementById('randSettingsBtn');if(!btn)return;
+  const on=RAND_SETTINGS.balanceMode!=='random';
+  btn.style.borderColor=on?'var(--teal)':'rgba(200,170,110,0.35)';
+  btn.style.color=on?'var(--teal)':'var(--silver)';
+  btn.style.background=on?'rgba(11,196,227,0.08)':'transparent';
 }
 
-// Find the most balanced split of players into two teams of 5
-// Uses brute-force for 10 players (C(10,5)=252 combinations — fast)
-function balanceTeamsByMMR(players){
-  if(players.length!==10) return null;
-
-  // Get MMR for each player
-  const mmrs=players.map(n=>calcMMR(n).mmr);
-  const totalMMR=mmrs.reduce((a,b)=>a+b,0);
-  const targetMMR=totalMMR/2;
-
-  let bestDiff=Infinity;
-  let bestBlue=null;
-
-  // Generate all C(10,5) = 252 combinations
-  function combine(start, chosen){
-    if(chosen.length===5){
-      const blueMMR=chosen.reduce((s,i)=>s+mmrs[i],0);
-      const diff=Math.abs(blueMMR-targetMMR);
-      if(diff<bestDiff){
-        // Also check teammate restrictions
-        const blueNames=chosen.map(i=>players[i]);
-        const redNames=players.filter((_,i)=>!chosen.includes(i));
-        let ok=true;
-        for(const rx of restr){
-          if(rx.type==='teammate'){
-            if((blueNames.includes(rx.playerA)&&blueNames.includes(rx.playerB))||
-               (redNames.includes(rx.playerA)&&redNames.includes(rx.playerB))){ok=false;break;}
-          }
-          if(rx.type==='with'){
-            const bothInPool=players.includes(rx.playerA)&&players.includes(rx.playerB);
-            if(!bothInPool)continue;
-            const sameBlue=blueNames.includes(rx.playerA)&&blueNames.includes(rx.playerB);
-            const sameRed=redNames.includes(rx.playerA)&&redNames.includes(rx.playerB);
-            if(!sameBlue&&!sameRed){ok=false;break;}
-          }
-        }
-        if(ok){bestDiff=diff;bestBlue=[...chosen];}
-      }
-      return;
+// sprawdza ograniczenia (teammate / with) dla danego podziału
+function _splitOK(blue,red,pool){
+  for(const rx of restr){
+    if(rx.type==='teammate'){
+      if((blue.includes(rx.playerA)&&blue.includes(rx.playerB))||(red.includes(rx.playerA)&&red.includes(rx.playerB)))return false;
     }
-    for(let i=start;i<=10-(5-chosen.length);i++){
-      combine(i+1,[...chosen,i]);
+    if(rx.type==='with'){
+      if(!(pool.includes(rx.playerA)&&pool.includes(rx.playerB)))continue;
+      const sB=blue.includes(rx.playerA)&&blue.includes(rx.playerB);
+      const sR=red.includes(rx.playerA)&&red.includes(rx.playerB);
+      if(!sB&&!sR)return false;
     }
   }
-  combine(0,[]);
-
-  if(!bestBlue) return null;
-  const blueNames=bestBlue.map(i=>players[i]);
-  const redNames=players.filter((_,i)=>!bestBlue.includes(i));
-  const blueMMR=bestBlue.reduce((s,i)=>s+mmrs[i],0);
-  const redMMR=totalMMR-blueMMR;
-  return{blue:blueNames,red:redNames,blueMMR,redMMR,diff:Math.abs(blueMMR-redMMR)};
+  return true;
+}
+// wszystkie kombinacje 5 z 10 (indeksy pierwszej drużyny)
+function _combos5(N){
+  const res=[];
+  (function rec(start,chosen){
+    if(chosen.length===5){res.push(chosen.slice());return;}
+    for(let i=start;i<=N-(5-chosen.length);i++){chosen.push(i);rec(i+1,chosen);chosen.pop();}
+  })(0,[]);
+  return res;
+}
+// balans wg metryki liczbowej (ranga / WR) — minimalizuje różnicę sum
+function balanceTeamsByMetric(players,metricFn){
+  if(players.length!==10)return null;
+  const sc=players.map(metricFn);
+  const total=sc.reduce((a,b)=>a+b,0);const target=total/2;
+  let best=null,bestDiff=Infinity;
+  for(const combo of _combos5(10)){
+    const blue=combo.map(i=>players[i]);
+    const red=players.filter((_,i)=>!combo.includes(i));
+    if(!_splitOK(blue,red,players))continue;
+    const bs=combo.reduce((s,i)=>s+sc[i],0);
+    const diff=Math.abs(bs-target);
+    if(diff<bestDiff){bestDiff=diff;best={blue,red,blueScore:Math.round(bs),redScore:Math.round(total-bs)};}
+  }
+  return best;
+}
+function _topRole(n){const s=PS[n];if(!s)return null;let best=null,mx=-1;ROLES.forEach(r=>{if((s.roles[r]||0)>mx){mx=s.roles[r]||0;best=r;}});return mx>0?best:null;}
+// balans wg preferencji ról — maksymalizuje pokrycie ról w obu drużynach
+function balanceTeamsByRole(players){
+  if(players.length!==10)return null;
+  let best=null,bestScore=-1;
+  const cov=t=>new Set(t.map(_topRole).filter(Boolean)).size;
+  for(const combo of _combos5(10)){
+    const blue=combo.map(i=>players[i]);
+    const red=players.filter((_,i)=>!combo.includes(i));
+    if(!_splitOK(blue,red,players))continue;
+    const score=cov(blue)+cov(red);
+    if(score>bestScore){bestScore=score;best={blue,red};}
+  }
+  return best;
 }
 
 function randomizeTeams(){
   const allDrafted=[...draftTeams.blue,...draftTeams.red].map(p=>p.name);
   if(allDrafted.length<2){toast('Przeciągnij najpierw graczy do drużyn!');return;}
   if(allDrafted.length!==10){toast(`Masz ${allDrafted.length}/10 graczy. Uzupełnij skład.`);return;}
-
-  let b, r;
-
-  if(mmrBalanceOn){
-    // Use MMR balancing — find most equal split
-    const result=balanceTeamsByMMR(allDrafted);
-    if(result){
-      b=result.blue; r=result.red;
-      const msg=`MMR: ${result.blueMMR} vs ${result.redMMR} (różnica: ${result.diff})`;
-      toast('⚖ Zbalansowano! '+msg);
-    } else {
-      toast('Nie udało się zbalansować — losowanie losowe');
-      b=allDrafted.slice(0,5); r=allDrafted.slice(5,10);
-    }
+  let b,r;
+  const mode=RAND_SETTINGS.balanceMode;
+  if(mode==='rank'||mode==='wr'){
+    const res=balanceTeamsByMetric(allDrafted,mode==='rank'?rankScore:wrScore);
+    if(res){b=res.blue;r=res.red;toast('⚖ Balans wg '+(mode==='rank'?'Rangi':'WR')+' ('+res.blueScore+' vs '+res.redScore+')');}
+    else{let p=[...allDrafted];shuf(p);b=p.slice(0,5);r=p.slice(5,10);toast('Nie udało się zbalansować — losowo');}
+  } else if(mode==='role'){
+    const res=balanceTeamsByRole(allDrafted);
+    if(res){b=res.blue;r=res.red;toast('Podział wg preferencji ról');}
+    else{let p=[...allDrafted];shuf(p);b=p.slice(0,5);r=p.slice(5,10);toast('Nie udało się — losowo');}
   } else {
-    // Random shuffle, respecting restrictions
-    let pool=[...allDrafted]; shuf(pool);
-    b=pool.slice(0,5); r=pool.slice(5,10);
-    for(let a=0;a<200;a++){
-      let ok=true;
-      for(const rx of restr){
-        if(rx.type==='teammate'){
-          const sameB=b.includes(rx.playerA)&&b.includes(rx.playerB);
-          const sameR=r.includes(rx.playerA)&&r.includes(rx.playerB);
-          if(sameB||sameR){ok=false;break;}
-        }
-        if(rx.type==='with'){
-          const bothInPool=pool.includes(rx.playerA)&&pool.includes(rx.playerB);
-          if(!bothInPool)continue;
-          const sameB=b.includes(rx.playerA)&&b.includes(rx.playerB);
-          const sameR=r.includes(rx.playerA)&&r.includes(rx.playerB);
-          if(!sameB&&!sameR){ok=false;break;}
-        }
-      }
-      if(ok)break; shuf(pool); b=pool.slice(0,5); r=pool.slice(5,10);
-    }
+    let pool=[...allDrafted];shuf(pool);b=pool.slice(0,5);r=pool.slice(5,10);
+    for(let a=0;a<200;a++){ if(_splitOK(b,r,pool))break; shuf(pool);b=pool.slice(0,5);r=pool.slice(5,10); }
     toast('Drużyny przetasowane!');
   }
-
-  const bR=assignR(b); const rR=assignR(r);
+  const bR=assignR(b);const rR=assignR(r);
   draftTeams.blue=b.map((name,i)=>({name,role:bR[i]||ROLES[i]}));
   draftTeams.red=r.map((name,i)=>({name,role:rR[i]||ROLES[i]}));
   CC={blue:[null,null,null,null,null],red:[null,null,null,null,null]};
@@ -2466,7 +2520,7 @@ function randomizeTeams(){
   syncDraftToCT();
   renderDraftTeams('blue');
   setTimeout(()=>renderDraftTeams('red'),80);
-  renderPL(); updateDraftCounts();
+  renderPL();updateDraftCounts();
   recentPlayers=[...draftTeams.blue,...draftTeams.red].map(p=>p.name);
   lsSave();
 }
@@ -3182,7 +3236,7 @@ function renderProfileDropdown(){
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;color:${c};font-size:16px">${n}</div>
-        <div style="font-size:13px;color:var(--silver)">${g}G · ${calcMMR(n).rank}</div>
+        <div style="font-size:13px;color:var(--silver)">${g}G · ${playerRankInfo(n).full}</div>
       </div>
       ${selPr===n?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>':''}
     </div>`;
@@ -3218,63 +3272,15 @@ function selProfile(n){
       :initials;
     sel.innerHTML=`<div style="width:28px;height:28px;border-radius:50%;border:2px solid ${c};background:${c}18;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${c};flex-shrink:0">${avHtml}</div>
     <span style="font-weight:700;color:${c};font-size:17px">${n}</span>
-    <span style="color:var(--silver);font-size:14px">${calcMMR(n).rank}</span>`;
+    <span style="color:var(--silver);font-size:14px">${playerRankInfo(n).full}</span>`;
   }
   renderProfile(n);
 }
 
 // ── MMR / RANK SYSTEM ──────────────────────────────────────────────────
-const MMR_BASE = 320; // Silver IV starting MMR
-const MMR_WIN  = 20;
-const MMR_LOSS = 20;
-
-const RANK_TIERS=[
-  {name:'Iron IV',   mmr:0},  {name:'Iron III',   mmr:40}, {name:'Iron II',   mmr:80}, {name:'Iron I',   mmr:120},
-  {name:'Bronze IV', mmr:160},{name:'Bronze III', mmr:200},{name:'Bronze II', mmr:240},{name:'Bronze I', mmr:280},
-  {name:'Silver IV', mmr:320},{name:'Silver III', mmr:360},{name:'Silver II', mmr:400},{name:'Silver I', mmr:440},
-  {name:'Gold IV',   mmr:480},{name:'Gold III',   mmr:520},{name:'Gold II',   mmr:560},{name:'Gold I',   mmr:600},
-  {name:'Platinum IV',mmr:640},{name:'Platinum III',mmr:680},{name:'Platinum II',mmr:720},{name:'Platinum I',mmr:760},
-  {name:'Emerald IV',mmr:800},{name:'Emerald III',mmr:840},{name:'Emerald II',mmr:880},{name:'Emerald I',mmr:920},
-  {name:'Diamond IV',mmr:960},{name:'Diamond III',mmr:1000},{name:'Diamond II',mmr:1040},{name:'Diamond I',mmr:1080},
-  {name:'Master',    mmr:1120},{name:'Grandmaster', mmr:1200},{name:'Challenger',mmr:1320},
-];
-const RANK_COLORS={Iron:'#8B8B8B',Bronze:'#CD7F32',Silver:'#C0C0C0',Gold:'#FFD700',Platinum:'#00BCD4',Emerald:'#2ECC71',Diamond:'#5DADE2',Master:'#9B59B6',Grandmaster:'#E84855',Challenger:'#00BCD4'};
-
-function calcMMR(n){
-  const matches=MH.filter(m=>Object.values(m.blue).includes(n)||Object.values(m.red).includes(n));
-  let mmr=MMR_BASE;
-  let lastRankIdx=RANK_TIERS.findIndex(t=>t.mmr===MMR_BASE);
-  let justPromoted=false;
-  const sortedMatches=[...matches].sort((a,b)=>Number(a.gid)-Number(b.gid));
-  sortedMatches.forEach(m=>{
-    const inBlue=Object.values(m.blue).includes(n);
-    const won=(inBlue&&m.win==='LEWA')||(!inBlue&&m.win==='PRAWA');
-    if(won){
-      mmr+=MMR_WIN;
-      // Check if we just crossed a rank threshold
-      const newRankIdx=RANK_TIERS.filter(t=>t.mmr<=mmr).length-1;
-      if(newRankIdx>lastRankIdx){justPromoted=true;lastRankIdx=newRankIdx;}
-      else justPromoted=false;
-    } else {
-      if(justPromoted){
-        // Skip first loss after promotion (demotion protection)
-        justPromoted=false;
-      } else {
-        mmr=Math.max(0,mmr-MMR_LOSS);
-      }
-    }
-  });
-  let rankIdx=0;
-  for(let i=0;i<RANK_TIERS.length;i++){if(mmr>=RANK_TIERS[i].mmr)rankIdx=i;else break;}
-  const rank=RANK_TIERS[rankIdx];
-  const nextRank=RANK_TIERS[rankIdx+1]||null;
-  const toNext=nextRank?nextRank.mmr-mmr:0;
-  const tier=rank.name.split(' ')[0];
-  return{mmr,rank:rank.name,color:RANK_COLORS[tier]||'#C8AA6E',tier,toNext,nextRank:nextRank?.name||null};
-}
-
-// ── SOLOQ RANK (ręczne pole w profilu, fallback do MMR) ───────────
+// ── RANGI (ręczne, bez MMR) ─────────────────────────────────────
 const SOLOQ_COLORS={IRON:'#7C7C7C',BRONZE:'#CD7F32',SILVER:'#9FB4C8',GOLD:'#F0C040',PLATINUM:'#3FC7A8',EMERALD:'#2ECC71',DIAMOND:'#5DADE2',MASTER:'#B45BD6',GRANDMASTER:'#E84855',CHALLENGER:'#15C5E8'};
+const RANK_ORDER=['IRON','BRONZE','SILVER','GOLD','PLATINUM','EMERALD','DIAMOND','MASTER','GRANDMASTER','CHALLENGER'];
 function parseSoloRank(str){
   if(!str||!str.trim())return null;
   const s=str.trim().toUpperCase();
@@ -3291,25 +3297,33 @@ function parseSoloRank(str){
   const lpM=s.match(/(\d+)\s*LP/);
   const lp=lpM?parseInt(lpM[1]):null;
   const pretty=tier.charAt(0)+tier.slice(1).toLowerCase();
-  return{tier,color:SOLOQ_COLORS[tier]||'#C8AA6E',
+  const rom={'1':'I','2':'II','3':'III','4':'IV'};const dr=rom[div]||div;
+  return{tier,div,color:SOLOQ_COLORS[tier]||'#C8AA6E',
     short:apex?tier.slice(0,2):tier[0]+div,
-    full:apex?pretty:(pretty+(div?' '+div:'')),lp,apex,source:'soloq'};
+    full:apex?pretty:(pretty+(dr?' '+dr:'')),lp,apex,source:'soloq'};
 }
-// Zwraca rangę gracza: ręczna SoloQ jeśli ustawiona, inaczej wyliczone MMR
+// ranga gracza: tylko ręczna; brak -> Unranked
 function playerRankInfo(n){
   const manual=parseSoloRank((PLAYER_META[n]||{}).soloRank);
   if(manual)return manual;
-  const c=calcMMR(n);
-  const tierU=c.tier.toUpperCase();
-  const apex=['MASTER','GRANDMASTER','CHALLENGER'].includes(tierU);
-  const parts=c.rank.split(' ');
-  const roman={IV:'4',III:'3',II:'2',I:'1'};
-  const div=parts[1]?(roman[parts[1]]||parts[1]):'';
-  return{tier:tierU,color:c.color,short:apex?tierU.slice(0,2):tierU[0]+div,full:c.rank,lp:c.mmr,apex,source:'mmr'};
+  return{tier:'UNRANKED',div:'',color:'#6b7280',short:'U',full:'Unranked',lp:null,apex:false,source:'none'};
+}
+// numeryczny wynik rangi do balansu (Unranked = Silver II baseline)
+function rankScore(n){
+  const r=playerRankInfo(n);
+  if(r.source==='none')return 2*4+2;
+  const idx=RANK_ORDER.indexOf(r.tier); const base=idx<0?2:idx;
+  const dv=r.apex?4:(r.div?(4-Number(r.div)):2);
+  return base*4+dv;
+}
+// winrate do balansu (brak gier = 50)
+function wrScore(n){
+  const s=PS[n]; if(!s)return 50;
+  const g=Object.values(s.roles).reduce((a,b)=>a+b,0);
+  const w=Object.values(s.wins).reduce((a,b)=>a+b,0);
+  return g>0?(w/g*100):50;
 }
 
-// ── DONUT PIE CHART (role distribution) ────────────────────────────────────
-// Rank emblem SVG generator
 function rankEmblem(tier, color, size=56){
   const c=color||'#C8AA6E';
   const s=size;
@@ -3520,38 +3534,6 @@ function renderProfile(n){
   const totalPages=Math.max(1,Math.ceil(detailed.length/PER));
   const pageMatches=detailed.slice(page*PER,page*PER+PER);
 
-  // Settings panel (hidden, toggled by gear) — incl. SoloQ rank + blokady
-  const myR=restr.filter(r=>(r.type==='teammate'&&(r.playerA===n||r.playerB===n))||(r.type==='role'&&r.player===n)||(r.type==='with'&&(r.playerA===n||r.playerB===n)));
-  const settingsHtml=`<div class="pv2-settings" id="profSettingsPanel_${n}">
-    <div style="font-size:13px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">⚙ Ustawienia — ${n}</div>
-    <div class="pv2-settings-grid">
-      <div class="pv2-field"><label>Nick w LoL (Riot ID)</label><input id="ps_gn_${n}" value="${gn!==n?gn:''}" placeholder="NickWGrze#EUW"></div>
-      <div class="pv2-field"><label>Ranga SoloQ <span style="color:var(--teal);text-transform:none">(ręcznie)</span></label><input id="ps_solorank_${n}" value="${meta.soloRank||''}" placeholder="np. Gold 2 30LP / Diamond IV / Master"></div>
-      <div class="pv2-field"><label>Nick na Discordzie</label><input id="ps_discord_${n}" value="${meta.discordNick||''}" placeholder="nick#1234"></div>
-      <div class="pv2-field"><label>Avatar (URL)</label><input id="ps_avatar_${n}" value="${meta.avatarUrl||''}" placeholder="https://..."></div>
-      <div class="pv2-field"><label>Baner (URL)</label><input id="ps_banner_${n}" value="${meta.bannerUrl||''}" placeholder="https://..."></div>
-      <div class="pv2-field"><label>Stwór w tle</label>
-        <select id="ps_monster_${n}"><option value="">— brak —</option>${MONSTER_KEYS.map(k=>`<option value="${k}" ${meta.monsterKey===k?'selected':''}>${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('')}</select>
-      </div>
-      <div class="pv2-field"><label>Kolor gracza</label><input type="color" id="ps_color_${n}" value="${c}" style="height:34px;cursor:pointer"></div>
-    </div>
-    <div style="font-size:11px;color:var(--silver);opacity:0.7;margin-top:8px">Pole „Ranga SoloQ" nadpisuje wyliczone MMR. Zostaw puste, żeby używać auto-MMR. Możesz wpisać też LP, np. <b>Gold 2 30LP</b>.</div>
-    <div style="margin-top:14px;display:flex;gap:8px">
-      <button class="btn primary" onclick="saveProfSettings('${n}')">💾 Zapisz</button>
-      <button class="btn" onclick="toggleProfSettings('${n}')">Zamknij</button>
-    </div>
-    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
-      <div style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Blokady & Gwarancje</div>
-      <div id="profRestrList_${n}">${myR.length?myR.map(r=>{const ri=restr.indexOf(r);return `<div class="fr" style="margin-bottom:6px"><span>${r.type==='teammate'?'🚫':r.type==='with'?'🤝':'⛔'}</span><span style="flex:1;font-size:15px">${r.type==='teammate'?`Nie gra z: <b>${r.playerA===n?r.playerB:r.playerA}</b>`:r.type==='with'?`Gra z: <b>${r.playerA===n?r.playerB:r.playerA}</b>`:`Nie gra na: <b>${RI[r.role]} ${r.role.toUpperCase()}</b>`}</span><span style="cursor:pointer;color:var(--danger)" onclick="removeR(${ri})">×</span></div>`;}).join(''):'<div style="font-size:14px;color:var(--silver);margin-bottom:8px">Brak blokad</div>'}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px">
-        <select id="nft" class="ss" onchange="tfui()" style="font-size:14px"><option value="teammate">Nie gra z graczem</option><option value="with">Gra z graczem</option><option value="role">Nie gra na roli</option></select>
-        <select id="nfta" class="ss" style="font-size:14px">${AP.filter(x=>x!==n).map(x=>`<option>${x}</option>`).join('')}</select>
-        <select id="nfro" class="ss" style="display:none;font-size:14px">${ROLES.map(r=>`<option value="${r}">${RI[r]} ${r.toUpperCase()}</option>`).join('')}</select>
-        <button class="btn" style="padding:5px 12px;font-size:13px" onclick="addF('${n}')">+ Blokada</button>
-      </div>
-    </div>
-  </div>`;
-
   // Rank card
   const wlBarCol=wr>=55?'#1DE9B6':wr>=45?'var(--gold)':'#E84855';
   const rankCard=`<div class="opgg-card">
@@ -3561,7 +3543,7 @@ function renderProfile(n){
         <div class="opgg-rank-emblem">${rankEmblem(rank.tier.charAt(0)+rank.tier.slice(1).toLowerCase(),rank.color,56)}</div>
         <div class="opgg-rank-info">
           <div class="opgg-rank-tier" style="color:${rank.color}">${rank.full}</div>
-          <div class="opgg-rank-lp">${rank.lp!=null?(rank.source==='soloq'?rank.lp+' LP':rank.lp+' MMR'):''}${rank.source==='mmr'?' <span style="opacity:0.6">(auto)</span>':''}</div>
+          <div class="opgg-rank-lp">${rank.source==='soloq'&&rank.lp!=null?rank.lp+' LP':''}</div>
         </div>
       </div>
       <div class="opgg-rank-wr"><span style="color:${wlBarCol}">${wr}% WR</span><span>${w}Z - ${g-w}P</span></div>
@@ -3631,7 +3613,9 @@ function renderProfile(n){
     const cspmTxt=d.cspm?d.cspm+' CS/Min.':'';
     const gpm=d.goldpm?Math.round(d.goldpm)+' GPM':'';
     const ago=d.m.date||'';
-    return `<div class="og-match ${d.won?'win':'loss'}" onclick="showPage('mecze');setTimeout(()=>openMecze('${d.m.lolId||d.m.gid}'),60)">
+    const miniP=(name,isSelf)=>{const ac=PC[name]||'#9FB4C8';const am=PLAYER_META[name]||{};const aic=am.avatarUrl?`<img class="og-mate-ic" src="${am.avatarUrl}" onerror="this.style.display='none'">`:`<span class="og-mate-ic" style="background:${ac}33"></span>`;return `<div class="og-mate" style="color:${ac};${isSelf?'font-weight:800':''}">${aic}${name}</div>`;};
+    const ownTeam=[n,...d.allies];
+    return `<div class="og-match ${d.won?'win':'loss'}" style="grid-template-columns:84px 110px 82px 72px minmax(110px,1fr) 232px" onclick="showPage('mecze');setTimeout(()=>openMecze('${d.m.lolId||d.m.gid}'),60)">
       <div>
         <div class="og-res-title ${d.won?'win':'loss'}">${d.won?'Wygrana':'Porażka'}</div>
         <div class="og-res-sub">${queueLabel}<br>${d.duration||('P'+d.m.patch)}<br>${ago}</div>
@@ -3650,12 +3634,9 @@ function renderProfile(n){
         <div class="og-cs-sub">${d.cs!=null?d.cs+' CS':''}</div>
       </div>
       <div class="og-items">${items.map(it=>`<img class="og-item" src="${iIc(it.id)}" title="${it.name||''}" onerror="this.style.opacity=0">`).join('')}${[...Array(Math.max(0,6-items.length))].map(()=>'<span class="og-item"></span>').join('')}</div>
-      <div>
-        <div class="og-mates">${[...d.allies.slice(0,5)].map(al=>{
-          const ac=PC[al]||'#9FB4C8';const am=PLAYER_META[al]||{};
-          const aic=am.avatarUrl?`<img class="og-mate-ic" src="${am.avatarUrl}" onerror="this.style.display='none'">`:`<span class="og-mate-ic" style="background:${ac}33"></span>`;
-          return `<div class="og-mate" style="color:${ac}">${aic}${al}</div>`;
-        }).join('')}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="og-mates">${ownTeam.slice(0,5).map(x=>miniP(x,x===n)).join('')}</div>
+        <div class="og-mates">${d.enemies.slice(0,5).map(x=>miniP(x,false)).join('')}</div>
       </div>
     </div>`;
   }).join(''):'<div style="color:var(--silver);font-size:14px;padding:30px;text-align:center">Brak gier w historii.</div>';
@@ -3680,11 +3661,10 @@ function renderProfile(n){
       <div class="opgg-av" style="border-color:${c}">${avContent}</div>
       <div class="opgg-namewrap">
         <div class="opgg-name">${n} ${gn!==n?`<span class="tag">${gn}</span>`:''}</div>
-        <div style="margin-top:4px;font-size:15px;color:${rank.color};font-weight:700">${rank.full}${rank.source==='soloq'&&rank.lp!=null?' · '+rank.lp+' LP':''} <span style="color:var(--silver);font-weight:400">· ${g} gier · ${wr}% WR</span></div>
+        <div style="margin-top:4px;font-size:15px;color:${rank.color};font-weight:700">${rank.full}${rank.source==='soloq'&&rank.lp!=null?' · '+rank.lp+' LP':''} <span style="color:var(--silver);font-weight:400">· ${g} gier · ${wr}% WR</span>${(meta.tags&&meta.tags.length)?'<div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">'+meta.tags.map(t=>'<span class=\'opgg-tag\'>'+t+'</span>').join('')+'</div>':''}</div>
       </div>
-      <button class="opgg-settings-btn" onclick="toggleProfSettings('${n}')">⚙ Ustawienia</button>
+      <button class="opgg-settings-btn" onclick="openAddPlayer('${n}')">⚙ Edytuj</button>
     </div>
-    ${settingsHtml}
     <div class="opgg">
       <div>
         ${rankCard}
@@ -3797,215 +3777,8 @@ function getFilteredMatches(){
   return MH;
 }
 
-function renderStats(){
-  const el=document.getElementById('statsContent');
-  if(!el)return;
-  const MHf=getFilteredMatches();
-  const filterType=document.getElementById('statsFilterType')?.value||'all';
-  const filterLabel=filterType==='patch'?(' — Patch '+(document.getElementById('statsPatchSelect')?.value||'')):filterType==='date'?(' — '+((document.getElementById('statsDateFrom')?.value||'?')+' → '+(document.getElementById('statsDateTo')?.value||'?'))):'';
-  if(!MHf.length){el.innerHTML=`<div style="text-align:center;padding:60px;color:var(--silver);opacity:0.5;font-size:15px">Brak danych${filterLabel?(' dla: '+filterLabel):' — załaduj mecze ze Sheets'}</div>`;return;}
+function renderStats(){}
 
-  // ── Core stats ─────────────────────────────────────────
-  const totalG=MHf.length;
-  const blueWins=MHf.filter(m=>m.win==='LEWA').length;
-  const redWins=totalG-blueWins;
-  const blueWR=Math.round(blueWins/totalG*100);
-
-  // Per-player stats
-  const ranked=AP.map(n=>{
-    const s=PS[n];
-    const g=Object.values(s.roles).reduce((a,b)=>a+b,0);
-    const w=Object.values(s.wins).reduce((a,b)=>a+b,0);
-    const mmr=calcMMR(n);
-    return{n,g,w,wr:g>0?Math.round(w/g*100):0,mmr:mmr.mmr,rank:mmr.rank,rankColor:mmr.color};
-  }).filter(p=>p.g>0).sort((a,b)=>b.g-a.g);
-  const maxG=ranked[0]?.g||1;
-  const byWR=[...ranked].filter(p=>p.g>=3).sort((a,b)=>b.wr-a.wr||b.g-a.g);
-  const byMMR=[...ranked].sort((a,b)=>b.mmr-a.mmr);
-
-  // Streaks & recent form
-  const recentMH=[...MHf].reverse().slice(0,20);
-
-  // Synergies
-  const sMap={};
-  MHf.forEach(m=>{
-    const proc=(tm,won)=>{const ns=Object.values(tm).filter(Boolean);for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){const k=[ns[i],ns[j]].sort().join('|');if(!sMap[k])sMap[k]={g:0,w:0};sMap[k].g++;if(won)sMap[k].w++;}};
-    proc(m.blue,m.win==='LEWA');proc(m.red,m.win==='PRAWA');
-  });
-  const synArr=Object.entries(sMap).map(([k,v])=>({pair:k.split('|'),g:v.g,w:v.w,wr:v.g?Math.round(v.w/v.g*100):0})).filter(s=>s.g>=2).sort((a,b)=>b.wr-a.wr||b.g-a.g).slice(0,8);
-
-  // Enemy matchups (head-to-head)
-  const h2h={};
-  MHf.forEach(m=>{
-    const proc=(winners,losers)=>{Object.values(winners).filter(Boolean).forEach(w=>{Object.values(losers).filter(Boolean).forEach(l=>{const k=[w,l].sort().join('|');if(!h2h[k])h2h[k]={a:k.split('|')[0],b:k.split('|')[1],ga:0,gb:0};if(w===h2h[k].a)h2h[k].ga++;else h2h[k].gb++;});});};
-    if(m.win==='LEWA'){proc(m.blue,m.red);}else{proc(m.red,m.blue);}
-  });
-
-  // ── Row helpers ──────────────────────────────────────────────────────────
-
-  // KDA leaderboard data
-  const kdaRows=[];
-  AP.forEach(n=>{
-    Object.entries(PS[n].champs||{}).forEach(([ch,v])=>{
-      if(v.g>=1){
-        const kda=v.d>0?+((v.k+v.a)/v.d).toFixed(2):+(v.k+v.a).toFixed(1);
-        kdaRows.push({player:n,champ:ch,g:v.g,kda,
-          k:v.g>0?+(v.k/v.g).toFixed(1):0,
-          d:v.g>0?+(v.d/v.g).toFixed(1):0,
-          a:v.g>0?+(v.a/v.g).toFixed(1):0});
-      }
-    });
-  });
-  kdaRows.sort((a,b)=>b.kda-a.kda||b.g-a.g);
-  const hasKDA=kdaRows.length>0;
-
-  const wrRow=(p,i)=>{
-    const c=PC[p.n]||'#C8AA6E';
-    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
-    const wrc=p.wr>=60?'var(--success)':p.wr>=45?'var(--gold)':'var(--danger)';
-    const meta=PLAYER_META[p.n]||{};
-    const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">'
-      :'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
-    return `<div class="stats-rank-row">
-      <div class="stats-rank-num ${rc}">${i+1}</div>
-      ${av}
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
-        <div class="stats-bar-wrap"><div class="stats-bar-fill" style="width:${p.wr}%;background:linear-gradient(90deg,${wrc},${wrc}88)"></div></div>
-      </div>
-      <div style="font-size:16px;font-weight:800;color:${wrc};min-width:44px;text-align:right">${p.wr}%</div>
-    </div>`;
-  };
-
-  const mmrRow=(p,i)=>{
-    const c=PC[p.n]||'#C8AA6E';
-    const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
-    const meta=PLAYER_META[p.n]||{};
-    const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">'
-      :'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
-    return `<div class="stats-rank-row">
-      <div class="stats-rank-num ${rc}">${i+1}</div>
-      ${av}
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
-        <div style="font-size:11px;color:${p.rankColor}">${p.rank}</div>
-      </div>
-      <div style="font-size:16px;font-weight:800;color:${p.rankColor};min-width:60px;text-align:right">${p.mmr}</div>
-    </div>`;
-  };
-
-  el.innerHTML=`
-  <div class="stats-hero">
-    <div class="stats-hero-cell">
-      <div class="stats-hero-val" style="color:var(--gold)">${totalG}</div>
-      <div class="stats-hero-lbl">Mecze</div>
-    </div>
-    <div class="stats-hero-cell">
-      <div class="stats-hero-val" style="color:#5DADE2">${blueWins}</div>
-      <div class="stats-hero-lbl">Wygrane Lewa</div>
-    </div>
-    <div class="stats-hero-cell">
-      <div class="stats-hero-val" style="color:#E84855">${redWins}</div>
-      <div class="stats-hero-lbl">Wygrane Prawa</div>
-    </div>
-    <div class="stats-hero-cell">
-      <div class="stats-hero-val" style="color:${blueWR>=50?'var(--success)':'var(--danger)'}">${blueWR}%</div>
-      <div class="stats-hero-lbl">WR Lewa</div>
-    </div>
-    <div class="stats-hero-cell">
-      <div class="stats-hero-val" style="color:var(--teal)">${AP.length}</div>
-      <div class="stats-hero-lbl">Graczy</div>
-    </div>
-    <div class="stats-hero-cell">
-      <div class="stats-hero-val" style="color:var(--silver)">${MHf.filter(m=>m.imgUrl).length}</div>
-      <div class="stats-hero-lbl">Screenshoty</div>
-    </div>
-  </div>
-  <div class="stats-grid">
-    <div class="stats-panel">
-      <div class="stats-section-title">🏆 Ranking MMR</div>
-      ${byMMR.slice(0,8).map((p,i)=>mmrRow(p,i)).join('')}
-    </div>
-    <div class="stats-panel">
-      <div class="stats-section-title">📊 Ranking Winrate <span style="font-size:10px;color:var(--silver)">(min. 3G)</span></div>
-      ${byWR.slice(0,8).map((p,i)=>wrRow(p,i)).join('')}
-    </div>
-  </div>
-  <div class="stats-grid">
-    <div class="stats-panel">
-      <div class="stats-section-title">🎮 Ranking Aktywności</div>
-      ${[...ranked].sort((a,b)=>b.g-a.g).slice(0,8).map((p,i)=>{
-        const c=PC[p.n]||'#C8AA6E';
-        const meta=PLAYER_META[p.n]||{};
-        const av=meta.avatarUrl?'<img src="'+meta.avatarUrl+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid '+c+'" onerror="this.style.display=\'none\'">':'<div class="av av32" style="border-color:'+c+'55;color:'+c+';background:'+c+'15">'+ini(p.n)+'</div>';
-        const rc=i<3?['r1','r2','r3'][i]:'';
-        return `<div class="stats-rank-row">
-          <div class="stats-rank-num ${rc}">${i+1}</div>
-          ${av}
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:700;color:${c}">${p.n}</div>
-            <div class="stats-bar-wrap"><div class="stats-bar-fill" style="width:${Math.round(p.g/maxG*100)}%;background:linear-gradient(90deg,var(--gold-dark),var(--gold))"></div></div>
-          </div>
-          <div style="font-size:16px;font-weight:800;color:var(--gold);min-width:40px;text-align:right">${p.g}G</div>
-        </div>`;
-      }).join('')}
-    </div>
-  </div>
-  <div class="stats-grid">
-    <div class="stats-panel stats-wide" style="grid-column:1/-1">
-      <div class="stats-section-title">🤝 Najlepsza synergia <span style="font-size:10px;color:var(--silver)">(min. 2G razem)</span></div>
-      ${synArr.length?synArr.map(s=>{
-        const c0=PC[s.pair[0]]||'#C8AA6E', c1=PC[s.pair[1]]||'#C8AA6E';
-        const wrc=s.wr>=60?'var(--success)':s.wr>=45?'var(--gold)':'var(--danger)';
-        return `<div class="syn-row">
-          <div class="av av26" style="border-color:${c0}55;color:${c0};background:${c0}15">${ini(s.pair[0])}</div>
-          <span style="font-size:14px;font-weight:700;color:${c0}">${s.pair[0]}</span>
-          <span style="color:var(--gold);font-size:13px;margin:0 4px">+</span>
-          <div class="av av26" style="border-color:${c1}55;color:${c1};background:${c1}15">${ini(s.pair[1])}</div>
-          <span style="font-size:14px;font-weight:700;color:${c1}">${s.pair[1]}</span>
-          <div class="stats-bar-wrap" style="margin-left:8px"><div class="stats-bar-fill" style="width:${s.wr}%;background:${wrc}88"></div></div>
-          <span style="font-size:14px;font-weight:800;color:${wrc};min-width:40px;text-align:right">${s.wr}%</span>
-          <span style="font-size:11px;color:var(--silver);min-width:24px;text-align:right">${s.g}G</span>
-        </div>`;
-      }).join(''):'<div style="color:var(--silver);font-size:14px">Za mało danych</div>'}
-    </div>
-  </div>
-  ${hasKDA?`<div class="stats-panel stats-wide" style="margin-bottom:18px">
-    <div class="stats-section-title">🗡️ Ranking KDA <span style="font-size:10px;color:var(--silver)">(śr. na grę, min. 1G z KDA)</span></div>
-    <table class="kda-tbl">
-      <thead><tr>
-        <th>#</th><th>Gracz</th><th>Postać</th><th>G</th>
-        <th style="color:var(--success)">K</th><th style="color:var(--danger)">D</th><th style="color:#5DADE2">A</th>
-        <th>KDA</th>
-      </tr></thead>
-      <tbody>${kdaRows.slice(0,15).map((r,i)=>{
-        const c=PC[r.player]||'#C8AA6E';
-        const ck=champKey(r.champ);
-        const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
-        const kdaColor=r.kda>=5?'var(--success)':r.kda>=3?'var(--gold)':r.kda>=1?'var(--silver)':'var(--danger)';
-        return `<tr>
-          <td><span class="stats-rank-num ${rc}" style="font-size:14px">${i+1}</span></td>
-          <td><span style="color:${c};font-weight:700">${r.player}</span></td>
-          <td style="display:flex;align-items:center;gap:6px">
-            ${ck?'<img src="'+ddUrl(ck)+'" style="width:22px;height:22px;border-radius:4px;object-fit:cover" loading="lazy">':''}
-            ${r.champ}
-          </td>
-          <td style="color:var(--silver)">${r.g}</td>
-          <td style="color:var(--success);font-weight:600">${r.k}</td>
-          <td style="color:var(--danger);font-weight:600">${r.d}</td>
-          <td style="color:#5DADE2;font-weight:600">${r.a}</td>
-          <td><span style="color:${kdaColor};font-weight:800;font-size:15px">${r.kda}</span></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>
-  </div>`:''}
-
-  `;
-}
-
-// =====================================================================
-// HISTORY
-// =====================================================================
 function renderHist(){
   const q=(document.getElementById('histSearch')?.value||'').toLowerCase().trim();
   const view=document.getElementById('histViewMode')?.value||'compact';
@@ -4322,96 +4095,153 @@ function applyDev(){}
 // =====================================================================
 // ADD PLAYER
 // =====================================================================
-const PRESET_COLORS=['#C8AA6E','#5DADE2','#1DE9B6','#E84855','#9B59B6','#F39C12','#2ECC71','#E67E22','#FF69B4','#00BCD4','#FF6B9D','#A78BFA','#34D399','#FCD34D','#60A5FA','#F87171','#818CF8','#FB923C','#4ADE80','#38BDF8','#E879F9','#FACC15','#A3E635','#FB7185','#67E8F9','#86EFAC','#F472B6','#2DD4BF','#FB923C','#C084FC'];
+const PRESET_COLORS=['#C8AA6E','#5DADE2','#1DE9B6','#E84855','#9B59B6','#F39C12','#2ECC71','#E67E22','#FF69B4','#00BCD4','#FF6B9D','#A78BFA','#34D399','#FCD34D','#60A5FA','#F87171','#818CF8','#FB923C','#4ADE80','#38BDF8','#E879F9','#FACC15','#A3E635','#FB7185','#67E8F9','#86EFAC','#F472B6','#2DD4BF','#C084FC','#FFFFFF'];
 let apPickedColor='#C8AA6E';
-let editingPlayer=null; // null = add mode, string = edit mode
+let editingPlayer=null;
+let apTags=[];
+let apRoleBans=new Set();
+let apKeepWith=new Set();
 
 function openAddPlayer(editName){
   editingPlayer=editName||null;
+  apTags=[]; apRoleBans=new Set(); apKeepWith=new Set();
   const title=document.getElementById('addPlayerTitle');
+  document.getElementById('apDeleteBtn').style.display=editName?'inline-flex':'none';
   if(editName){
-    title.textContent='Edytuj gracza';
+    title.textContent='EDYTUJ GRACZA';
     document.getElementById('apName').value=editName;
     document.getElementById('apName').disabled=true;
     document.getElementById('apGameNick').value=ALIASES[editName]||'';
+    const meta=PLAYER_META[editName]||{};
+    document.getElementById('apAvatar').value=meta.avatarUrl||'';
     apPickedColor=PC[editName]||'#C8AA6E';
+    apTags=[...(meta.tags||[])];
+    const rk=parseSoloRank(meta.soloRank);
+    document.getElementById('apRank').value=rk?(rk.tier.charAt(0)+rk.tier.slice(1).toLowerCase()):'';
+    if(rk&&!rk.apex&&rk.div){const rev={'1':'I','2':'II','3':'III','4':'IV'};document.getElementById('apDiv').value=rev[rk.div]||'I';}
+    else document.getElementById('apDiv').value='I';
+    restr.forEach(r=>{
+      if(r.type==='role'&&r.player===editName)apRoleBans.add(r.role);
+      if(r.type==='with'){if(r.playerA===editName)apKeepWith.add(r.playerB);else if(r.playerB===editName)apKeepWith.add(r.playerA);}
+    });
   } else {
-    title.textContent='Dodaj nowego gracza';
+    title.textContent='DODAJ GRACZA';
     document.getElementById('apName').value='';
     document.getElementById('apName').disabled=false;
     document.getElementById('apGameNick').value='';
+    document.getElementById('apAvatar').value='';
+    document.getElementById('apRank').value='';
+    document.getElementById('apDiv').value='I';
     apPickedColor='#C8AA6E';
   }
+  apRankChanged();
   buildColorPicker();
+  apRenderTags(); apRenderRoles(); apRenderKeep();
   updateAddPreview();
   document.getElementById('addPlayerModal').style.display='flex';
-  if(!editName) setTimeout(()=>document.getElementById('apName').focus(),100);
+  if(!editName)setTimeout(()=>document.getElementById('apName').focus(),80);
 }
+function closeAddPlayer(){document.getElementById('addPlayerModal').style.display='none';editingPlayer=null;}
 
-function closeAddPlayer(){
-  document.getElementById('addPlayerModal').style.display='none';
-  editingPlayer=null;
+function apRankChanged(){
+  const rank=document.getElementById('apRank').value;
+  const apex=['Master','Grandmaster','Challenger'].includes(rank);
+  const divSel=document.getElementById('apDiv');
+  divSel.disabled=apex||!rank;
+  divSel.style.opacity=(apex||!rank)?0.4:1;
 }
-
 function buildColorPicker(){
   const row=document.getElementById('colorPickerRow');
   row.innerHTML=PRESET_COLORS.map(c=>`<div class="color-dot ${c===apPickedColor?'picked':''}" style="background:${c}" onclick="pickColor('${c}')" title="${c}"></div>`).join('');
   document.getElementById('apCustomColor').value=apPickedColor;
 }
-
-function pickColor(c){
-  apPickedColor=c;
-  buildColorPicker();
-  updateAddPreview();
-}
-
-function pickCustomColor(c){
-  apPickedColor=c;
-  buildColorPicker();
-  updateAddPreview();
-}
-
+function pickColor(c){apPickedColor=c;buildColorPicker();updateAddPreview();}
+function pickCustomColor(c){apPickedColor=c;buildColorPicker();updateAddPreview();}
 function updateAddPreview(){
   const name=document.getElementById('apName').value.trim()||'??';
   const av=document.getElementById('apPreviewAv');
-  const nm=document.getElementById('apPreviewName');
-  av.textContent=ini(name);
-  av.style.color=apPickedColor;
-  av.style.borderColor=apPickedColor;
-  av.style.background=apPickedColor+'20';
-  nm.textContent=name;
+  av.textContent=ini(name);av.style.color=apPickedColor;av.style.borderColor=apPickedColor;av.style.background=apPickedColor+'20';
+  const nm=document.getElementById('apPreviewName');nm.textContent=name;nm.style.color=apPickedColor;
 }
+function apRenderTags(){
+  const row=document.getElementById('apTagRow');
+  const tags=allTags();
+  row.innerHTML=tags.length?tags.map(t=>{
+    const on=apTags.includes(t);
+    const safe=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    return `<span class="apl-chip ${on?'on':''}" onclick="apToggleTag(this.dataset.t)" data-t="${safe}">${safe}</span>`;
+  }).join(''):'<span style="font-size:13px;color:var(--silver)">Brak tagów — dodaj poniżej</span>';
+}
+function apToggleTag(t){const i=apTags.indexOf(t);if(i>=0)apTags.splice(i,1);else apTags.push(t);apRenderTags();}
+function apAddTag(){
+  const inp=document.getElementById('apNewTag');const v=inp.value.trim();if(!v)return;
+  if(!DEFAULT_TAGS.includes(v)&&!CUSTOM_TAGS.includes(v)){CUSTOM_TAGS.push(v);try{localStorage.setItem('rd_customtags',JSON.stringify(CUSTOM_TAGS));}catch(e){}}
+  if(!apTags.includes(v))apTags.push(v);
+  inp.value='';apRenderTags();
+}
+function apRenderRoles(){
+  const row=document.getElementById('apRoleRow');
+  const lbl={top:'Top',jng:'Jungla',mid:'Mid',adc:'ADC',supp:'Support'};
+  row.innerHTML=ROLES.map(r=>`<span class="apl-chip role ${apRoleBans.has(r)?'on':''}" onclick="apToggleRole('${r}')">${lbl[r]}</span>`).join('');
+}
+function apToggleRole(r){if(apRoleBans.has(r))apRoleBans.delete(r);else apRoleBans.add(r);apRenderRoles();}
+function apRenderKeep(){
+  const row=document.getElementById('apKeepRow');
+  const me=editingPlayer||document.getElementById('apName').value.trim();
+  const others=AP.filter(x=>x!==me);
+  row.innerHTML=others.length?others.map(x=>{
+    const safe=x.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    return `<span class="apl-chip keep ${apKeepWith.has(x)?'on':''}" onclick="apToggleKeep(this.dataset.p)" data-p="${safe}">${safe}</span>`;
+  }).join(''):'<span style="font-size:13px;color:var(--silver)">Brak innych graczy</span>';
+}
+function apToggleKeep(x){if(apKeepWith.has(x))apKeepWith.delete(x);else apKeepWith.add(x);apRenderKeep();}
 
 function confirmAddPlayer(){
   const name=document.getElementById('apName').value.trim();
   const gameNick=document.getElementById('apGameNick').value.trim();
+  const avatar=document.getElementById('apAvatar').value.trim();
+  const rank=document.getElementById('apRank').value;
+  const div=document.getElementById('apDiv').value;
   if(!name){toast('Wpisz nick gracza!');document.getElementById('apName').focus();return;}
-
+  const apex=['Master','Grandmaster','Challenger'].includes(rank);
+  const soloRank=rank?(apex?rank:rank+' '+div):'';
   if(!editingPlayer){
-    // ADD mode — check duplicate
     if(AP.includes(name)){toast('Gracz o tym nicku już istnieje!');return;}
     PC[name]=apPickedColor;
-    if(gameNick) ALIASES[name]=gameNick;
-    // track as manually-added player
-    if(!EXTRA_PLAYERS.includes(name)) EXTRA_PLAYERS.push(name);
+    if(!EXTRA_PLAYERS.includes(name))EXTRA_PLAYERS.push(name);
     PS[name]={name,roles:{top:0,jng:0,mid:0,adc:0,supp:0},wins:{top:0,jng:0,mid:0,adc:0,supp:0},champs:{},kda:{}};
     AP=Object.keys(PS).sort();
-    toast(`Gracz "${name}" dodany!`);
   } else {
-    // EDIT mode — update color + alias only (name locked)
     PC[editingPlayer]=apPickedColor;
-    if(gameNick) ALIASES[editingPlayer]=gameNick;
-    else delete ALIASES[editingPlayer];
-    toast(`Gracz "${editingPlayer}" zaktualizowany!`);
   }
-
+  const key=editingPlayer||name;
+  if(gameNick&&gameNick!==key)ALIASES[key]=gameNick;else delete ALIASES[key];
+  if(!PLAYER_META[key])PLAYER_META[key]={};
+  PLAYER_META[key].avatarUrl=avatar;
+  PLAYER_META[key].soloRank=soloRank;
+  PLAYER_META[key].tags=[...apTags];
+  for(let i=restr.length-1;i>=0;i--){
+    const r=restr[i];
+    if(r.type==='role'&&r.player===key)restr.splice(i,1);
+    else if(r.type==='with'&&(r.playerA===key||r.playerB===key))restr.splice(i,1);
+  }
+  apRoleBans.forEach(role=>restr.push({type:'role',player:key,role}));
+  apKeepWith.forEach(other=>{
+    const exists=restr.some(r=>r.type==='with'&&((r.playerA===key&&r.playerB===other)||(r.playerA===other&&r.playerB===key)));
+    if(!exists)restr.push({type:'with',playerA:key,playerB:other});
+  });
   closeAddPlayer();
-  renderPL();
-  renderProfileList();
-  renderAliases();
-  renderStats();
+  PS=buildPS();AP=Object.keys(PS).sort();
+  renderPL();renderProfileList();renderRS();
+  if(selPr===key)renderProfile(key);
   lsSave();
+  toast(editingPlayer?`Gracz "${key}" zaktualizowany!`:`Gracz "${name}" dodany!`);
   ghPushData('zmiana graczy');
+}
+function apDeleteFromModal(){
+  const name=editingPlayer;if(!name)return;
+  closeAddPlayer();
+  deletePlayer(name,{stopPropagation(){}});
 }
 
 function deletePlayer(name,e){
@@ -4561,18 +4391,25 @@ function clearDraft(){
 function updateDraftCounts(){
   const bCount=draftTeams.blue.length;
   const rCount=draftTeams.red.length;
-  document.getElementById('blueCount').textContent=bCount+'/5';
-  document.getElementById('redCount').textContent=rCount+'/5';
-  // Show MMR sums if balance mode on and teams are full
-  if(mmrBalanceOn&&bCount===5&&rCount===5){
-    const bMMR=draftTeams.blue.reduce((s,p)=>s+calcMMR(p.name).mmr,0);
-    const rMMR=draftTeams.red.reduce((s,p)=>s+calcMMR(p.name).mmr,0);
-    document.getElementById('blueCount').textContent=bCount+'/5 · ⚖'+bMMR;
-    document.getElementById('redCount').textContent=rCount+'/5 · ⚖'+rMMR;
+  const bEl=document.getElementById('blueCount');
+  const rEl=document.getElementById('redCount');
+  if(bEl)bEl.textContent=bCount+'/5';
+  if(rEl)rEl.textContent=rCount+'/5';
+  if(bCount===5&&rCount===5&&bEl&&rEl){
+    if(RAND_SETTINGS.balanceMode==='rank'){
+      const bs=draftTeams.blue.reduce((s,p)=>s+rankScore(p.name),0);
+      const rs=draftTeams.red.reduce((s,p)=>s+rankScore(p.name),0);
+      bEl.textContent=bCount+'/5 · ⚖'+bs; rEl.textContent=rCount+'/5 · ⚖'+rs;
+    } else if(RAND_SETTINGS.balanceMode==='wr'){
+      const bs=Math.round(draftTeams.blue.reduce((s,p)=>s+wrScore(p.name),0)/5);
+      const rs=Math.round(draftTeams.red.reduce((s,p)=>s+wrScore(p.name),0)/5);
+      bEl.textContent=bCount+'/5 · '+bs+'%'; rEl.textContent=rCount+'/5 · '+rs+'%';
+    }
   }
+  if(typeof updateRandBtn==='function')updateRandBtn();
 }
 
-// Sync draft teams into CT so copyToDiscord / save / etc still work
+
 function syncDraftToCT(){
   if(!draftMode)return;
   CT.blue=draftTeams.blue.map(p=>p.name);
