@@ -30,7 +30,7 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .nav-tab.active{color:var(--gold);border-color:var(--border-bright);background:rgba(200,170,110,0.07)}
 /* OCTOPUS NAV — Skład centered, tabs in tentacles */
 .nav-left-tabs{display:flex;justify-content:flex-end;align-items:center;gap:3px}
-.nav-right-tabs{display:flex;justify-content:flex-start;align-items:center;gap:3px}
+.nav-right-tabs{display:flex;justify-content:flex-end;align-items:center;gap:3px}
 .nav-center-wrap{display:flex;flex-direction:column;align-items:center;position:relative;padding:0 8px}
 /* tentacle curves */
 /* nav tentacles removed */
@@ -736,6 +736,14 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .apl-chip.role.on{background:rgba(232,72,85,0.2);border-color:var(--danger);color:#ff9aa6}
 .apl-chip.keep.on{background:rgba(11,196,227,0.18);border-color:var(--teal);color:#9fe9f5}
 .opgg-tag{display:inline-block;padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700;background:rgba(200,170,110,0.16);border:1px solid var(--border);color:var(--gold-light)}
+.mz-card{background:rgba(10,16,30,0.55);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:filter 0.15s;overflow:hidden;margin-bottom:6px}
+.mz-card:hover{filter:brightness(1.12)}
+.mz-mate{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px;white-space:nowrap;overflow:hidden}
+.mz-mate img,.mz-mate .ph{width:18px;height:18px;border-radius:4px;flex-shrink:0;object-fit:cover}
+.mz-mate .ph{background:rgba(255,255,255,0.06)}
+.mz-mate .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.mz-mate .kda{margin-left:auto;font-size:11px;flex-shrink:0;padding-left:6px}
+
 </style>
 </head>
 <!-- Hidden Apps Script code template -->
@@ -856,6 +864,36 @@ function handleAction(action, body) {
     }
     saveParticipantDetails(detailSheet, body.lolId, body.gid||body.lolId, body.participants);
     return corsOutput({ status:'ok' });
+  }
+
+  if (action === 'savePlayers') {
+    var ps = getOrCreateSheet('Gracze');
+    ps.clear();
+    ps.appendRow(['Nick','NickWGrze','Ranga','Kolor','Avatar','Tagi']);
+    var pl = body.players || [];
+    for (var pi = 0; pi < pl.length; pi++) {
+      var pp = pl[pi];
+      ps.appendRow([pp.nick||'', pp.gameNick||'', pp.rank||'', pp.color||'', pp.avatar||'', (pp.tags||[]).join(', ')]);
+    }
+    return corsOutput({ status:'ok', count: pl.length });
+  }
+
+  if (action === 'getPlayers') {
+    var gp = getOrCreateSheet('Gracze');
+    var grows = gp.getDataRange().getValues();
+    var out = [];
+    for (var gi = 1; gi < grows.length; gi++) {
+      if (!grows[gi][0]) continue;
+      out.push({
+        nick: String(grows[gi][0]),
+        gameNick: String(grows[gi][1]||''),
+        rank: String(grows[gi][2]||''),
+        color: String(grows[gi][3]||''),
+        avatar: String(grows[gi][4]||''),
+        tags: String(grows[gi][5]||'').split(',').map(function(s){return s.trim();}).filter(function(s){return s;})
+      });
+    }
+    return corsOutput({ status:'ok', players: out });
   }
 
   return corsOutput({ status:'error', error:'nieznana akcja: ' + action });
@@ -1541,6 +1579,7 @@ function init(){
   updateDraftCounts();
   // Fetch complete champion roster from Data Dragon
   fetchAllChamps();
+  gsLoadPlayers();
   // Delay Sheets fetch slightly so page renders first, then fetch data
   showSheetsLoading(true);
   setTimeout(async ()=>{
@@ -3613,8 +3652,13 @@ function renderProfile(n){
     const cspmTxt=d.cspm?d.cspm+' CS/Min.':'';
     const gpm=d.goldpm?Math.round(d.goldpm)+' GPM':'';
     const ago=d.m.date||'';
-    const miniP=(name,isSelf)=>{const ac=PC[name]||'#9FB4C8';const am=PLAYER_META[name]||{};const aic=am.avatarUrl?`<img class="og-mate-ic" src="${am.avatarUrl}" onerror="this.style.display='none'">`:`<span class="og-mate-ic" style="background:${ac}33"></span>`;return `<div class="og-mate" style="color:${ac};${isSelf?'font-weight:800':''}">${aic}${name}</div>`;};
-    const ownTeam=[n,...d.allies];
+    const miniP=(name,champ,isSelf)=>{const ac=PC[name]||'#9FB4C8';const am=PLAYER_META[name]||{};const cu=champ?champImgUrl(champ):'';const ic=cu?`<img class="og-mate-ic" src="${cu}" onerror="this.style.display='none'">`:(am.avatarUrl?`<img class="og-mate-ic" src="${am.avatarUrl}" onerror="this.style.display='none'">`:`<span class="og-mate-ic" style="background:${ac}33"></span>`);return `<div class="og-mate" style="color:${ac};${isSelf?'font-weight:800':''}">${ic}${name}</div>`;};
+    const _tMap=d.inB?d.m.blue:d.m.red,_tCh=d.inB?d.m.blueChamps:d.m.redChamps;
+    const _eMap=d.inB?d.m.red:d.m.blue,_eCh=d.inB?d.m.redChamps:d.m.blueChamps;
+    let ownList=ROLES.map(r=>({name:_tMap&&_tMap[r],champ:(_tCh&&_tCh[r])||''})).filter(x=>x.name);
+    if(!ownList.length)ownList=[n,...(d.allies||[])].filter(Boolean).map(name=>({name,champ:''}));
+    let enList=ROLES.map(r=>({name:_eMap&&_eMap[r],champ:(_eCh&&_eCh[r])||''})).filter(x=>x.name);
+    if(!enList.length)enList=(d.enemies||[]).map(name=>({name,champ:''}));
     return `<div class="og-match ${d.won?'win':'loss'}" style="grid-template-columns:84px 110px 82px 72px minmax(110px,1fr) 232px" onclick="showPage('mecze');setTimeout(()=>openMecze('${d.m.lolId||d.m.gid}'),60)">
       <div>
         <div class="og-res-title ${d.won?'win':'loss'}">${d.won?'Wygrana':'Porażka'}</div>
@@ -3635,8 +3679,8 @@ function renderProfile(n){
       </div>
       <div class="og-items">${items.map(it=>`<img class="og-item" src="${iIc(it.id)}" title="${it.name||''}" onerror="this.style.opacity=0">`).join('')}${[...Array(Math.max(0,6-items.length))].map(()=>'<span class="og-item"></span>').join('')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="og-mates">${ownTeam.slice(0,5).map(x=>miniP(x,x===n)).join('')}</div>
-        <div class="og-mates">${d.enemies.slice(0,5).map(x=>miniP(x,false)).join('')}</div>
+        <div class="og-mates">${ownList.slice(0,5).map(x=>miniP(x.name,x.champ,x.name===n)).join('')}</div>
+        <div class="og-mates">${enList.slice(0,5).map(x=>miniP(x.name,x.champ,false)).join('')}</div>
       </div>
     </div>`;
   }).join(''):'<div style="color:var(--silver);font-size:14px;padding:30px;text-align:center">Brak gier w historii.</div>';
@@ -4236,6 +4280,7 @@ function confirmAddPlayer(){
   if(selPr===key)renderProfile(key);
   lsSave();
   toast(editingPlayer?`Gracz "${key}" zaktualizowany!`:`Gracz "${name}" dodany!`);
+  gsSavePlayers();
   ghPushData('zmiana graczy');
 }
 function apDeleteFromModal(){
@@ -4254,11 +4299,11 @@ function deletePlayer(name,e){
   delete PC[name];delete ALIASES[name];
   for(let i=restr.length-1;i>=0;i--){
     const r=restr[i];
-    if((r.type==='teammate'&&(r.playerA===name||r.playerB===name))||(r.type==='role'&&r.player===name)) restr.splice(i,1);
+    if((r.type==='teammate'&&(r.playerA===name||r.playerB===name))||(r.type==='with'&&(r.playerA===name||r.playerB===name))||(r.type==='role'&&r.player===name)) restr.splice(i,1);
   }
   if(selPr===name){selPr=null;document.getElementById('profileContent').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:380px;color:var(--silver);font-size:15px;letter-spacing:3px;text-transform:uppercase;opacity:0.45">Wybierz gracza z listy</div>';}
   renderPL();renderProfileList();renderAliases();renderRS();renderStats();
-  toast(`Gracz "${name}" usunięty.`);lsSave();
+  toast(`Gracz "${name}" usunięty.`);lsSave();gsSavePlayers();
   ghPushData('usunięcie gracza '+name);
 }
 
@@ -5073,43 +5118,41 @@ function renderMeczeList(){
       const c=PC[p.name]||PC[p.rawName]||'#C8AA6E';
       const ck=meczeChampKey(p.champ||'');
       const icon=ck?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${ck}.png`:'';
-      const ri={top:'🛡',jng:'🌿',mid:'⚡',adc:'🏹',supp:'💫'};
       const hasKDA=p.k!==undefined&&p.d!==undefined;
       const kdaStr=hasKDA?`${p.k}/${p.d}/${p.a}`:'';
-      const kda=hasKDA&&p.d>0?((p.k+p.a)/p.d).toFixed(1):hasKDA?(p.k+p.a).toString():'';
-      const kdaC=Number(kda)>=5?'#1DE9B6':Number(kda)>=3?'var(--gold)':'rgba(160,180,200,0.55)';
-      return`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;min-width:0">
-        <span style="font-size:10px;color:rgba(160,180,200,0.35);width:14px;text-align:center;flex-shrink:0">${ri[p.role]||''}</span>
-        ${icon?`<img src="${icon}" style="width:22px;height:22px;border-radius:4px;flex-shrink:0" onerror="this.style.display='none'">`:'<div style="width:22px;height:22px;background:rgba(255,255,255,0.05);border-radius:4px;flex-shrink:0"></div>'}
-        <span style="font-size:13px;font-weight:700;color:${c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${p.name}</span>
-        ${kdaStr?`<span style="font-size:11px;color:${kdaC};flex-shrink:0;white-space:nowrap">${kdaStr}</span>`:''}
+      const kdaN=hasKDA&&p.d>0?((p.k+p.a)/p.d):hasKDA?(p.k+p.a):null;
+      const kdaC=kdaN!=null?(kdaN>=5?'#1DE9B6':kdaN>=3?'var(--gold)':'rgba(160,180,200,0.55)'):'rgba(160,180,200,0.4)';
+      return`<div class="mz-mate">
+        ${icon?`<img src="${icon}" onerror="this.style.display='none'">`:'<span class="ph"></span>'}
+        <span class="nm" style="color:${c};max-width:96px">${p.name}</span>
+        ${kdaStr?`<span class="kda" style="color:${kdaC}">${kdaStr}</span>`:''}
       </div>`;
     }
-    const cardHtml=`<div id="mcard_${lolId_}" onclick="openMecze('${lolId_}')" style="background:var(--panel);border:1px solid ${isActive?'rgba(200,170,110,0.5)':'var(--border)'};border-left:5px solid ${winColor};border-radius:8px;cursor:pointer;transition:border-color 0.15s">
-      <div style="display:grid;grid-template-columns:90px 1fr 36px 1fr 68px;align-items:stretch">
-        <div style="padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px;border-right:1px solid var(--border)">
-          ${gid?`<div style="font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:rgba(200,170,110,0.9);line-height:1">#${gid}</div>`:'<div style="font-size:11px;color:#F39C12;font-weight:700">— nie zapisano</div>'}
-          <div style="font-size:15px;font-weight:700;color:${winColor}">${win}</div>
+    const cardHtml=`<div id="mcard_${lolId_}" class="mz-card ${blueWin?'win':'loss'}" onclick="openMecze('${lolId_}')" style="border-left:5px solid ${winColor}${isActive?';border-color:rgba(200,170,110,0.6)':''}">
+      <div style="display:grid;grid-template-columns:96px 1fr 28px 1fr 58px;align-items:stretch">
+        <div style="padding:9px 11px;display:flex;flex-direction:column;justify-content:center;gap:2px;border-right:1px solid var(--border)">
+          ${gid?`<div style="font-family:'Cinzel',serif;font-size:21px;font-weight:700;color:rgba(200,170,110,0.9);line-height:1">#${gid}</div>`:'<div style="font-size:11px;color:#F39C12;font-weight:700">— nie zapisano</div>'}
+          <div style="font-size:14px;font-weight:700;color:${winColor}">${win}</div>
           <div style="font-size:12px;color:var(--silver)">${date.slice(5)||date}</div>
           <div style="font-size:11px;color:rgba(160,180,200,0.4)">${duration||('P'+patch)}</div>
-          <div style="font-size:9px;color:rgba(160,180,200,0.3);font-family:monospace;margin-top:2px">${lolId_.slice(-8)}</div>
         </div>
-        <div style="padding:6px 10px;background:${blueWin?'rgba(93,173,226,0.12)':'rgba(10,16,30,0.5)'}">
-          <div style="font-size:10px;font-weight:700;color:${blueWin?'#5DADE2':'rgba(93,173,226,0.3)'};letter-spacing:1px;margin-bottom:4px">LEWA ${blueWin?'✓':''}</div>
+        <div style="padding:8px 11px;background:${blueWin?'rgba(93,173,226,0.07)':'transparent'}">
+          <div style="font-size:10px;font-weight:700;color:${blueWin?'#5DADE2':'rgba(93,173,226,0.35)'};letter-spacing:1px;margin-bottom:3px">LEWA ${blueWin?'✓':''}</div>
           ${blue.map(mp).join('')}
         </div>
-        <div style="display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(160,180,200,0.2);font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border)">VS</div>
-        <div style="padding:6px 10px;background:${!blueWin?'rgba(232,72,85,0.12)':'rgba(10,16,30,0.5)'}">
-          <div style="font-size:10px;font-weight:700;color:${!blueWin?'#E84855':'rgba(232,72,85,0.3)'};letter-spacing:1px;margin-bottom:4px">PRAWA ${!blueWin?'✓':''}</div>
+        <div style="display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(160,180,200,0.2);font-weight:700">VS</div>
+        <div style="padding:8px 11px;background:${!blueWin?'rgba(232,72,85,0.07)':'transparent'}">
+          <div style="font-size:10px;font-weight:700;color:${!blueWin?'#E84855':'rgba(232,72,85,0.35)'};letter-spacing:1px;margin-bottom:3px">PRAWA ${!blueWin?'✓':''}</div>
           ${red.map(mp).join('')}
         </div>
-        <div style="padding:6px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-left:1px solid var(--border)">
-          ${hist?.imgUrl?`<img src="${hist.imgUrl}" style="width:52px;height:34px;border-radius:4px;object-fit:cover;cursor:zoom-in" onclick="event.stopPropagation();window.open('${hist.imgUrl}','_blank')" title="Screenshot">`:'<div style="font-size:20px;color:rgba(160,180,200,0.15)">📷</div>'}
-          ${rich?'<div style="font-size:9px;font-weight:700;color:var(--teal);letter-spacing:0.5px">JSON</div>':''}
+        <div style="padding:6px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-left:1px solid var(--border)">
+          ${hist?.imgUrl?`<img src="${hist.imgUrl}" style="width:48px;height:32px;border-radius:4px;object-fit:cover;cursor:zoom-in" onclick="event.stopPropagation();window.open('${hist.imgUrl}','_blank')" title="Screenshot">`:'<div style="font-size:18px;color:rgba(160,180,200,0.15)">📷</div>'}
+          ${rich?'<div style="font-size:9px;font-weight:700;color:var(--teal)">JSON</div>':''}
           <div style="font-size:9px;color:rgba(160,180,200,0.3)">#${seqNum}</div>
         </div>
       </div>
     </div>`;
+
     const analyzerHtml=isActive?`<div id="mecze-analyzer" style="margin-top:2px;margin-bottom:4px"></div>`:'';
     return cardHtml+analyzerHtml;
   }).join('');
@@ -5392,6 +5435,51 @@ function chunkParticipants(parts, chunkSize=5){
   const chunks=[];
   for(let i=0;i<parts.length;i+=chunkSize) chunks.push(parts.slice(i,i+chunkSize));
   return chunks;
+}
+
+// ── GRACZE → Google Sheets (arkusz "Gracze", dostęp z zewnątrz) ──
+async function gsSavePlayers(){
+  const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
+  if(!scriptUrl)return false;
+  const names=Array.from(new Set([...Object.keys(PC),...Object.keys(PLAYER_META),...AP].filter(Boolean)));
+  const players=names.map(n=>({
+    nick:n,
+    gameNick:ALIASES[n]||'',
+    rank:(PLAYER_META[n]||{}).soloRank||'',
+    color:PC[n]||'',
+    avatar:(PLAYER_META[n]||{}).avatarUrl||'',
+    tags:(PLAYER_META[n]||{}).tags||[]
+  }));
+  try{
+    await fetch(scriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'savePlayers',players})});
+    gsLog('✓ Gracze zapisani w Sheets ('+players.length+')','var(--success)');
+    return true;
+  }catch(e){gsLog('✗ Zapis graczy: '+e.message,'var(--danger)');return false;}
+}
+async function gsLoadPlayers(){
+  const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
+  if(!scriptUrl)return;
+  try{
+    const r=await fetch(scriptUrl+'?action=getPlayers');
+    const res=await r.json();
+    if(res&&res.status==='ok'&&Array.isArray(res.players)&&res.players.length){
+      res.players.forEach(p=>{
+        if(!p.nick)return;
+        if(p.color)PC[p.nick]=p.color;
+        if(p.gameNick)ALIASES[p.nick]=p.gameNick;
+        if(!PLAYER_META[p.nick])PLAYER_META[p.nick]={};
+        if(p.avatar)PLAYER_META[p.nick].avatarUrl=p.avatar;
+        if(p.rank)PLAYER_META[p.nick].soloRank=p.rank;
+        if(Array.isArray(p.tags)&&p.tags.length)PLAYER_META[p.nick].tags=p.tags;
+        if(!EXTRA_PLAYERS.includes(p.nick))EXTRA_PLAYERS.push(p.nick);
+      });
+      PS=buildPS();AP=Object.keys(PS).sort();
+      renderPL();renderProfileList();
+      lsSave();
+      gsLog('✓ Wczytano graczy z Sheets ('+res.players.length+')','var(--success)');
+    }
+  }catch(e){/* cicho: brak arkusza Gracze / brak sieci */}
 }
 
 async function gsWrite(matchData){
