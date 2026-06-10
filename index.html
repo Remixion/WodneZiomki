@@ -768,8 +768,58 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .apl-chip.role.on{background:rgba(232,72,85,0.2);border-color:var(--danger);color:#ff9aa6}
 .apl-chip.keep.on{background:rgba(11,196,227,0.18);border-color:var(--teal);color:#9fe9f5}
 .opgg-tag{display:inline-block;padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700;background:rgba(200,170,110,0.16);border:1px solid var(--border);color:var(--gold-light)}
-.mz-card{background:rgba(10,16,30,0.55);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:filter 0.15s;overflow:hidden;margin-bottom:6px}
-.mz-card:hover{filter:brightness(1.12)}
+/* ── Mecze list card — portrait tile layout ─────────────────── */
+.mz-card{
+  border-radius:10px;cursor:pointer;
+  transition:transform 0.15s,filter 0.15s;
+  overflow:hidden;margin-bottom:8px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.mz-card:hover{transform:translateY(-2px);filter:brightness(1.1)}
+
+/* meta strip at top */
+.mz-meta{display:flex;align-items:center;gap:10px;padding:7px 12px;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.07)}
+.mz-meta-gid{font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:rgba(200,170,110,0.9)}
+.mz-meta-win{font-size:13px;font-weight:900;letter-spacing:1px}
+.mz-meta-win.blue{color:#5DADE2}.mz-meta-win.red{color:#E84855}
+.mz-meta-date{font-size:11px;color:var(--silver)}
+.mz-meta-dur{font-size:11px;color:rgba(160,180,200,0.4);margin-left:auto}
+
+/* teams row */
+.mz-teams{display:flex;align-items:stretch}
+.mz-tgroup{display:flex;flex:1;gap:2px;padding:4px}
+.mz-sep{width:46px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.mz-sep-vs{font-size:10px;font-weight:800;color:rgba(160,180,200,0.25);letter-spacing:1px}
+.mz-sep-gid{font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:rgba(200,170,110,0.65);writing-mode:vertical-rl;letter-spacing:1px}
+
+/* single player column */
+.mz-pcol{flex:1;display:flex;flex-direction:column;min-width:0}
+.mz-pcol-hdr{display:flex;flex-direction:column;align-items:center;padding:2px 2px 3px;gap:1px}
+.mz-pcol-nick{font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+.mz-pcol-champ{font-size:9px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+.mz-pcol-kda{font-size:9px;font-weight:700;color:rgba(200,210,220,0.75);text-align:center;padding:3px 1px 2px}
+
+/* portrait image tile */
+.mz-tile{position:relative;aspect-ratio:3/4;overflow:hidden;border-radius:5px;width:100%}
+.mz-tile-bg{position:absolute;inset:0;background-size:cover;background-position:center top}
+.mz-tile-bg-blur{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(10px) saturate(1.8);transform:scale(1.2)}
+.mz-tile-tint{position:absolute;inset:0;opacity:0.22}
+.mz-tile-av{
+  position:absolute;bottom:4px;left:4px;
+  width:20px;height:20px;border-radius:5px;
+  overflow:hidden;border:2px solid #E84855;
+  background:rgba(0,0,0,0.6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:800;color:#fff;
+}
+.mz-tile-av img{width:100%;height:100%;object-fit:cover}
+.mz-tile-rank{
+  position:absolute;top:3px;right:3px;
+  width:18px;height:18px;
+  opacity:0.95;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.9));
+}
+
+/* keep old mz-mate for any leftover references */
 .mz-mate{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px;white-space:nowrap;overflow:hidden}
 .mz-mate img,.mz-mate .ph{width:18px;height:18px;border-radius:4px;flex-shrink:0;object-fit:cover}
 .mz-mate .ph{background:rgba(255,255,255,0.06)}
@@ -5177,6 +5227,7 @@ function renderMeczeList(){
     const win=rich?.win||hist?.win||'?';
     const blueWin=win==='LEWA';
     const winColor=blueWin?'#5DADE2':'#E84855';
+    const loseColor=blueWin?'#E84855':'#5DADE2';
     const date=(hist?.date||rich?.date||'');
     const patch=hist?.patch||rich?.patch||'';
     const duration=rich?.duration||hist?.duration||'';
@@ -5188,42 +5239,79 @@ function renderMeczeList(){
     const redRaw=rich?.red||parts.filter(p=>p.side==='red');
     const blue=blueRaw.length?blueRaw:Object.entries(hist?.blue||{}).map(([role,name])=>({name,role,champ:(hist?.blueChamps||{})[role]||'',k:hist?.scanResult?.[name]?.k,d:hist?.scanResult?.[name]?.d,a:hist?.scanResult?.[name]?.a})).filter(x=>x.name);
     const red=redRaw.length?redRaw:Object.entries(hist?.red||{}).map(([role,name])=>({name,role,champ:(hist?.redChamps||{})[role]||'',k:hist?.scanResult?.[name]?.k,d:hist?.scanResult?.[name]?.d,a:hist?.scanResult?.[name]?.a})).filter(x=>x.name);
-    function mp(p){
-      const c=PC[p.name]||PC[p.rawName]||'#C8AA6E';
+
+    function mzCol(p, tintColor, isWinner){
+      const name=p.name||p.rawName||'?';
+      const c=PC[name]||'#C8AA6E';
       const ck=meczeChampKey(p.champ||'');
-      const icon=ck?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${ck}.png`:'';
+      const splashUrl=ck?`https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${ck}_0.jpg`:'';
+      const avatarUrl=(PLAYER_META[name]||{}).avatarUrl||'';
       const hasKDA=p.k!==undefined&&p.d!==undefined;
-      const kdaStr=hasKDA?`${p.k}/${p.d}/${p.a}`:'';
-      const kdaN=hasKDA&&p.d>0?((p.k+p.a)/p.d):hasKDA?(p.k+p.a):null;
-      const kdaC=kdaN!=null?(kdaN>=5?'#1DE9B6':kdaN>=3?'var(--gold)':'rgba(160,180,200,0.55)'):'rgba(160,180,200,0.4)';
-      return`<div class="mz-mate">
-        ${icon?`<img src="${icon}" onerror="this.style.display='none'">`:'<span class="ph"></span>'}
-        <span class="nm" style="color:${c};max-width:96px">${p.name}</span>
-        ${kdaStr?`<span class="kda" style="color:${kdaC}">${kdaStr}</span>`:''}
+      const kdaStr=hasKDA?`${p.k}/${p.d}/${p.a}`:'0/0/0';
+      const rank=playerRankInfo(name);
+      const rankSvg=rankEmblem(rank.tier,rank.color,18);
+      const opacity=isWinner?'1':'0.5';
+
+      let bgLayers='';
+      if(splashUrl){
+        bgLayers=`<div class="mz-tile-bg" style="background-image:url('${splashUrl}')"></div>`;
+      } else if(avatarUrl){
+        bgLayers=`<div class="mz-tile-bg-blur" style="background-image:url('${avatarUrl}');background-color:${c}33"></div>`;
+      } else {
+        bgLayers=`<div class="mz-tile-bg" style="background:${c}33"></div>`;
+      }
+      const avHtml=avatarUrl
+        ?`<img src="${avatarUrl}" onerror="this.style.display='none'">`
+        :`<span>${ini(name)}</span>`;
+
+      return `<div class="mz-pcol" style="opacity:${opacity}">
+        <div class="mz-pcol-hdr">
+          <div class="mz-pcol-nick" style="color:${c}">${name}</div>
+          ${p.champ?`<div class="mz-pcol-champ">${p.champ}</div>`:''}
+        </div>
+        <div class="mz-tile">
+          ${bgLayers}
+          <div class="mz-tile-tint" style="background:${tintColor}"></div>
+          <div class="mz-tile-av">${avHtml}</div>
+          <div class="mz-tile-rank">${rankSvg}</div>
+        </div>
+        <div class="mz-pcol-kda">${kdaStr}</div>
       </div>`;
     }
-    const cardHtml=`<div id="mcard_${lolId_}" class="mz-card ${blueWin?'win':'loss'}" onclick="openMecze('${lolId_}')" style="border-left:5px solid ${winColor}${isActive?';border-color:rgba(200,170,110,0.6)':''}">
-      <div style="display:grid;grid-template-columns:96px 1fr 28px 1fr 58px;align-items:stretch">
-        <div style="padding:9px 11px;display:flex;flex-direction:column;justify-content:center;gap:2px;border-right:1px solid var(--border)">
-          ${gid?`<div style="font-family:'Cinzel',serif;font-size:21px;font-weight:700;color:rgba(200,170,110,0.9);line-height:1">#${gid}</div>`:'<div style="font-size:11px;color:#F39C12;font-weight:700">— nie zapisano</div>'}
-          <div style="font-size:14px;font-weight:700;color:${winColor}">${win}</div>
-          <div style="font-size:12px;color:var(--silver)">${date.slice(5)||date}</div>
-          <div style="font-size:11px;color:rgba(160,180,200,0.4)">${duration||('P'+patch)}</div>
+
+    // pad teams to 5
+    const bluePad=[...blue,...Array(Math.max(0,5-blue.length)).fill(null)].slice(0,5);
+    const redPad=[...red,...Array(Math.max(0,5-red.length)).fill(null)].slice(0,5);
+    const blueCols=bluePad.map(p=>p
+      ?mzCol(p,blueWin?winColor:loseColor,blueWin)
+      :`<div class="mz-pcol" style="opacity:0.1"><div class="mz-pcol-hdr"></div><div class="mz-tile" style="background:rgba(255,255,255,0.03)"></div><div class="mz-pcol-kda"></div></div>`
+    ).join('');
+    const redCols=redPad.map(p=>p
+      ?mzCol(p,blueWin?loseColor:winColor,!blueWin)
+      :`<div class="mz-pcol" style="opacity:0.1"><div class="mz-pcol-hdr"></div><div class="mz-tile" style="background:rgba(255,255,255,0.03)"></div><div class="mz-pcol-kda"></div></div>`
+    ).join('');
+
+    const imgThumb=hist?.imgUrl
+      ?`<img src="${hist.imgUrl}" style="width:36px;height:22px;border-radius:3px;object-fit:cover;border:1px solid var(--border);cursor:zoom-in;flex-shrink:0" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation();window.open('${hist.imgUrl}','_blank')">`
+      :'';
+
+    const cardHtml=`<div id="mcard_${lolId_}" class="mz-card" onclick="openMecze('${lolId_}')"
+      style="background:${blueWin?'rgba(93,173,226,0.07)':'rgba(232,72,85,0.07)'};border-color:${isActive?'rgba(200,170,110,0.6)':winColor+'55'}">
+      <div class="mz-meta">
+        <div class="mz-meta-win ${blueWin?'blue':'red'}">${win} WIN</div>
+        ${gid?`<div class="mz-meta-gid">#${gid}</div>`:''}
+        <div class="mz-meta-date">${date.slice(5)||date}</div>
+        <div class="mz-meta-dur">${duration||('P'+patch)}</div>
+        ${imgThumb}
+        ${rich?`<div style="font-size:9px;font-weight:700;color:var(--teal);flex-shrink:0">JSON</div>`:''}
+      </div>
+      <div class="mz-teams">
+        <div class="mz-tgroup">${blueCols}</div>
+        <div class="mz-sep">
+          <div class="mz-sep-vs">VS</div>
+          ${gid?`<div class="mz-sep-gid">#${gid}</div>`:''}
         </div>
-        <div style="padding:8px 11px;background:${blueWin?'rgba(93,173,226,0.07)':'transparent'}">
-          <div style="font-size:10px;font-weight:700;color:${blueWin?'#5DADE2':'rgba(93,173,226,0.35)'};letter-spacing:1px;margin-bottom:3px">LEWA ${blueWin?'✓':''}</div>
-          ${blue.map(mp).join('')}
-        </div>
-        <div style="display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(160,180,200,0.2);font-weight:700">VS</div>
-        <div style="padding:8px 11px;background:${!blueWin?'rgba(232,72,85,0.07)':'transparent'}">
-          <div style="font-size:10px;font-weight:700;color:${!blueWin?'#E84855':'rgba(232,72,85,0.35)'};letter-spacing:1px;margin-bottom:3px">PRAWA ${!blueWin?'✓':''}</div>
-          ${red.map(mp).join('')}
-        </div>
-        <div style="padding:6px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-left:1px solid var(--border)">
-          ${hist?.imgUrl?`<img src="${hist.imgUrl}" style="width:48px;height:32px;border-radius:4px;object-fit:cover;cursor:zoom-in" onclick="event.stopPropagation();window.open('${hist.imgUrl}','_blank')" title="Screenshot">`:'<div style="font-size:18px;color:rgba(160,180,200,0.15)">📷</div>'}
-          ${rich?'<div style="font-size:9px;font-weight:700;color:var(--teal)">JSON</div>':''}
-          <div style="font-size:9px;color:rgba(160,180,200,0.3)">#${seqNum}</div>
-        </div>
+        <div class="mz-tgroup">${redCols}</div>
       </div>
     </div>`;
 
