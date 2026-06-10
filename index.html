@@ -803,16 +803,12 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .mz-tile{position:relative;aspect-ratio:3/4;overflow:hidden;border-radius:5px;width:100%}
 .mz-tile-bg{position:absolute;inset:0;background-size:cover;background-position:center top}
 .mz-tile-bg-blur{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(10px) saturate(1.8);transform:scale(1.2)}
-.mz-tile-tint{position:absolute;inset:0;opacity:0.22}
 .mz-tile-av{
-  position:absolute;bottom:4px;left:4px;
-  width:20px;height:20px;border-radius:5px;
-  overflow:hidden;border:2px solid #E84855;
-  background:rgba(0,0,0,0.6);
+  position:absolute;inset:0;
+  overflow:hidden;
   display:flex;align-items:center;justify-content:center;
-  font-size:8px;font-weight:800;color:#fff;
 }
-.mz-tile-av img{width:100%;height:100%;object-fit:cover}
+.mz-tile-av img{width:100%;height:100%;object-fit:cover;filter:blur(0)}
 .mz-tile-rank{
   position:absolute;top:3px;right:3px;
   width:18px;height:18px;
@@ -5252,29 +5248,28 @@ function renderMeczeList(){
       const rankSvg=rankEmblem(rank.tier,rank.color,18);
       const opacity=isWinner?'1':'0.5';
 
-      let bgLayers='';
+      let tileContent='';
       if(splashUrl){
-        bgLayers=`<div class="mz-tile-bg" style="background-image:url('${splashUrl}')"></div>`;
+        // champion known — splashart, no avatar
+        tileContent=`<div class="mz-tile-bg" style="background-image:url('${splashUrl}')"></div>
+          <div class="mz-tile-rank">${rankSvg}</div>`;
       } else if(avatarUrl){
-        bgLayers=`<div class="mz-tile-bg-blur" style="background-image:url('${avatarUrl}');background-color:${c}33"></div>`;
+        // no champion — large blurred avatar fills the tile
+        tileContent=`<div class="mz-tile-bg-blur" style="background-image:url('${avatarUrl}');background-color:${c}22"></div>
+          <div class="mz-tile-av"><img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;filter:none" onerror="this.style.display='none'"></div>
+          <div class="mz-tile-rank">${rankSvg}</div>`;
       } else {
-        bgLayers=`<div class="mz-tile-bg" style="background:${c}33"></div>`;
+        // no champion, no avatar — solid colour
+        tileContent=`<div class="mz-tile-bg" style="background:${c}22"></div>
+          <div class="mz-tile-rank">${rankSvg}</div>`;
       }
-      const avHtml=avatarUrl
-        ?`<img src="${avatarUrl}" onerror="this.style.display='none'">`
-        :`<span>${ini(name)}</span>`;
 
       return `<div class="mz-pcol" style="opacity:${opacity}">
         <div class="mz-pcol-hdr">
           <div class="mz-pcol-nick" style="color:${c}">${name}</div>
           ${p.champ?`<div class="mz-pcol-champ">${p.champ}</div>`:''}
         </div>
-        <div class="mz-tile">
-          ${bgLayers}
-          <div class="mz-tile-tint" style="background:${tintColor}"></div>
-          <div class="mz-tile-av">${avHtml}</div>
-          <div class="mz-tile-rank">${rankSvg}</div>
-        </div>
+        <div class="mz-tile">${tileContent}</div>
         <div class="mz-pcol-kda">${kdaStr}</div>
       </div>`;
     }
@@ -5306,12 +5301,12 @@ function renderMeczeList(){
         ${rich?`<div style="font-size:9px;font-weight:700;color:var(--teal);flex-shrink:0">JSON</div>`:''}
       </div>
       <div class="mz-teams">
-        <div class="mz-tgroup">${blueCols}</div>
+        <div class="mz-tgroup" style="background:${blueWin?winColor+'22':loseColor+'0a'}">${blueCols}</div>
         <div class="mz-sep">
           <div class="mz-sep-vs">VS</div>
           ${gid?`<div class="mz-sep-gid">#${gid}</div>`:''}
         </div>
-        <div class="mz-tgroup">${redCols}</div>
+        <div class="mz-tgroup" style="background:${blueWin?loseColor+'0a':winColor+'22'}">${redCols}</div>
       </div>
     </div>`;
 
