@@ -912,11 +912,18 @@ function handleAction(action, body) {
     if (!body.lolId || !body.participants || !body.participants.length) {
       return corsOutput({ status:'error', error:'brak lolId lub participants' });
     }
-    // Only delete existing rows if this is the first chunk (chunk index 0 or not specified)
-    if (!body.chunkIndex || body.chunkIndex === 0) {
-      deleteParticipantDetails(detailSheet, body.lolId);
+    // Lock so concurrent chunk requests can't interleave delete+append
+    var lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+      // Only delete existing rows if this is the first chunk (chunk index 0 or not specified)
+      if (!body.chunkIndex || body.chunkIndex === 0) {
+        deleteParticipantDetails(detailSheet, body.lolId);
+      }
+      saveParticipantDetails(detailSheet, body.lolId, body.gid||body.lolId, body.participants);
+    } finally {
+      lock.releaseLock();
     }
-    saveParticipantDetails(detailSheet, body.lolId, body.gid||body.lolId, body.participants);
     return corsOutput({ status:'ok' });
   }
 
@@ -5792,10 +5799,14 @@ async function gsWrite(matchData){
       const parts=trimParticipants(matchData.participants||[]);
       if(parts.length){
         const chunks=chunkParticipants(parts);
+        // MUST be sequential: chunk 0 deletes existing rows server-side, so if a
+        // later chunk lands first its rows get wiped → missing players in sheet
         let ci=0;
         for(const chunk of chunks){
-          fetch(scriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-            body:JSON.stringify({action:'saveDetails',lolId:lolIdParam,gid:matchData.gid||'',chunkIndex:ci,participants:chunk})}).catch(()=>{});
+          try{
+            await fetch(scriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+              body:JSON.stringify({action:'saveDetails',lolId:lolIdParam,gid:matchData.gid||'',chunkIndex:ci,participants:chunk})});
+          }catch(e){gsLog('✗ saveDetails chunk '+ci+': '+e.message,'var(--danger)');}
           ci++;
         }
       }
@@ -5844,10 +5855,13 @@ async function gsUpdate(matchData){
       const parts=trimP(matchData.participants||[]);
       if(parts.length){
         const chunks=chunkParticipants(parts);
+        // sequential — see gsWrite: chunk 0 deletes rows, parallel order is not guaranteed
         let ci=0;
         for(const chunk of chunks){
-          fetch(scriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-            body:JSON.stringify({action:'saveDetails',lolId:matchData.lolId||matchData.gid,gid:matchData.gid,chunkIndex:ci,participants:chunk})}).catch(()=>{});
+          try{
+            await fetch(scriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+              body:JSON.stringify({action:'saveDetails',lolId:matchData.lolId||matchData.gid,gid:matchData.gid,chunkIndex:ci,participants:chunk})});
+          }catch(e){toast('✗ saveDetails chunk '+ci+': '+e.message);}
           ci++;
         }
       }
