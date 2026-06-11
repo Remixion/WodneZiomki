@@ -788,8 +788,8 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
   width:24px;height:24px;
   opacity:0.95;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.95));
 }
-/* green border for winners — outline renders above child elements */
-.mz-tile-win{outline:3px solid #1DE9B6;outline-offset:-3px}
+/* green border for winners — ::after overlay paints above splash img */
+.mz-tile-win::after{content:'';position:absolute;inset:0;border:3px solid #1DE9B6;border-radius:6px;z-index:6;pointer-events:none}
 
 /* keep old mz-mate for any leftover references */
 .mz-mate{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px;white-space:nowrap;overflow:hidden}
@@ -3445,6 +3445,8 @@ function wrScore(n){
 }
 
 function rankEmblem(tier, color, size=56){
+  // normalize: accept 'GOLD', 'gold', 'Gold' — comparisons below use Title case
+  tier=tier?String(tier).charAt(0).toUpperCase()+String(tier).slice(1).toLowerCase():'';
   const c=color||'#C8AA6E';
   const s=size;
   const h=s/2;
@@ -5192,8 +5194,18 @@ function renderMeczeList(){
     const parts=rich?.participants||hist?.participants||[];
     const blueRaw=rich?.blue||parts.filter(p=>p.side==='blue');
     const redRaw=rich?.red||parts.filter(p=>p.side==='red');
-    const blue=blueRaw.length?blueRaw:Object.entries(hist?.blue||{}).map(([role,name])=>({name,role,champ:(hist?.blueChamps||{})[role]||'',k:hist?.scanResult?.[name]?.k,d:hist?.scanResult?.[name]?.d,a:hist?.scanResult?.[name]?.a})).filter(x=>x.name);
-    const red=redRaw.length?redRaw:Object.entries(hist?.red||{}).map(([role,name])=>({name,role,champ:(hist?.redChamps||{})[role]||'',k:hist?.scanResult?.[name]?.k,d:hist?.scanResult?.[name]?.d,a:hist?.scanResult?.[name]?.a})).filter(x=>x.name);
+    const blue=blueRaw.length?[...blueRaw]:Object.entries(hist?.blue||{}).map(([role,name])=>({name,role,champ:(hist?.blueChamps||{})[role]||'',k:hist?.scanResult?.[name]?.k,d:hist?.scanResult?.[name]?.d,a:hist?.scanResult?.[name]?.a})).filter(x=>x.name);
+    const red=redRaw.length?[...redRaw]:Object.entries(hist?.red||{}).map(([role,name])=>({name,role,champ:(hist?.redChamps||{})[role]||'',k:hist?.scanResult?.[name]?.k,d:hist?.scanResult?.[name]?.d,a:hist?.scanResult?.[name]?.a})).filter(x=>x.name);
+    // merge: jeśli CSV/participants nie pokrywa pełnego rosteru, dociągnij brakujących z map ról
+    const addMissing=(arr,roleMap,champMap)=>{
+      Object.entries(roleMap||{}).forEach(([role,name])=>{
+        if(!name)return;
+        const lo=String(name).toLowerCase();
+        if(arr.some(x=>String(x.name||'').toLowerCase()===lo||String(x.rawName||'').toLowerCase()===lo))return;
+        arr.push({name,role,champ:(champMap||{})[role]||'',k:hist?.scanResult?.[name]?.k,d:hist?.scanResult?.[name]?.d,a:hist?.scanResult?.[name]?.a});
+      });
+    };
+    if(hist){addMissing(blue,hist.blue,hist.blueChamps);addMissing(red,hist.red,hist.redChamps);}
 
     function mzCol(p, isWinner){
       const name=p.name||p.rawName||'?';
@@ -5573,7 +5585,7 @@ async function gsLoadPlayers(){
         const rows=csv.trim().split('\n').slice(1);
         let count=0;
         rows.forEach(line=>{
-          const c=line.split(',');
+          const c=_parseCSVLine(line);
           const nick=String(c[0]||'').trim();
           if(!nick)return;
           if(c[3])PC[nick]=c[3].trim();
@@ -5655,19 +5667,20 @@ async function gsLoadDetails(){
           const lid=String(cols[0]||'').trim();
           const gid_=String(cols[1]||'').trim();
           if(!lid)return;
+          const winRaw=(cols[7]||'').toLowerCase();
           const row={
             lolId:lid, gid:gid_, side:(cols[2]||'').toLowerCase(),
             role:(cols[3]||'').toLowerCase(), name:cols[4], champ:cols[5],
-            win:(cols[7]||'').toLowerCase()==='true'||cols[7]==='1',
+            win:winRaw==='win'||winRaw==='true'||winRaw==='1'||winRaw==='tak',
             k:+cols[8]||0, d:+cols[9]||0, a:+cols[10]||0,
-            kda:+cols[11]||0, kp:+cols[12]||0,
+            kda:+cols[11]||0, kp:parseFloat(String(cols[12]||'').replace('%',''))||0,
             cs:+cols[13]||0, cspm:+cols[14]||0,
             gold:+cols[16]||0, goldpm:+cols[17]||0,
             dmg:+cols[19]||0, vision:+cols[28]||0,
-            // CSV order: ..., Spell1, Spell2, Keystone, RunePath, Items
-            spell1:cols[cols.length-5], spell2:cols[cols.length-4],
-            keystone:cols[cols.length-3], runePath:cols[cols.length-2],
-            items:(cols[cols.length-1]||'').split(',').map(x=>parseInt(x,10)).filter(x=>x>0)
+            // fixed sheet columns: 45=Spell1, 46=Spell2, 47=Keystone, 48=RunePath, 49=Items
+            spell1:cols[45]||'', spell2:cols[46]||'',
+            keystone:cols[47]||'', runePath:cols[48]||'',
+            items:(cols[49]||'').split(',').map(x=>parseInt(x,10)).filter(x=>x>0)
           };
           // key by both lolId and GID so _applyDetails can find by either
           if(!details[lid])details[lid]=[];
