@@ -762,8 +762,8 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .mz-pcol{flex:1;display:flex;flex-direction:column;min-width:0}
 .mz-pcol-hdr{display:flex;flex-direction:column;align-items:center;padding:4px 2px 5px;gap:2px}
 .mz-pcol-nick{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
-.mz-pcol-champ{font-size:11px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
-.mz-pcol-kda{font-size:11px;font-weight:700;color:rgba(200,210,220,0.85);text-align:center;padding:4px 1px 4px}
+.mz-pcol-champ{font-size:11px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;padding-top:3px}
+.mz-pcol-kda{font-size:11px;font-weight:700;color:rgba(200,210,220,0.85);text-align:center;padding:2px 1px 4px}
 
 /* portrait image tile */
 .mz-tile{position:relative;aspect-ratio:3/4;overflow:hidden;border-radius:0;width:100%}
@@ -2883,9 +2883,9 @@ function saveGame(){
 
 // Champion ID → Data Dragon key
 const CHAMP_ID_MAP={
-  1:'Annie',2:'Olaf',3:'Galio',4:'TwistedFate',5:'XinZhao',6:'Urgot',7:'LeBlanc',
+  1:'Annie',2:'Olaf',3:'Galio',4:'TwistedFate',5:'XinZhao',6:'Urgot',7:'Leblanc',
   8:'Vladimir',9:'Fiddlesticks',10:'Kayle',11:'MasterYi',12:'Alistar',13:'Ryze',
-  14:'Sion',15:'Sivir',16:'Soraka',17:'Teemo',18:'Tristana',19:'Warwick',20:'NunuWillump',
+  14:'Sion',15:'Sivir',16:'Soraka',17:'Teemo',18:'Tristana',19:'Warwick',20:'Nunu',
   21:'MissFortune',22:'Ashe',23:'Tryndamere',24:'Jax',25:'Morgana',26:'Zilean',
   27:'Singed',28:'Evelynn',29:'Twitch',30:'Karthus',31:'Chogath',32:'Amumu',
   33:'Rammus',34:'Anivia',35:'Shaco',36:'DrMundo',37:'Sona',38:'Kassadin',
@@ -5047,7 +5047,7 @@ let _meczeTab = 'overview';
 var SPELL_NAMES = {4:'Flash',14:'Ignite',12:'Teleport',3:'Exhaust',7:'Heal',21:'Barrier',6:'Ghost',11:'Smite',1:'Cleanse',32:'Mark',13:'Clarity',39:'Hexflash'};
 var ROLE_MAP_RICH = {'TOP':'top','JNG':'jng','JUNGLE':'jng','MID':'mid','MIDDLE':'mid','ADC':'adc','BOT':'adc','BOTTOM':'adc','SUP':'supp','SUPPORT':'supp'};
 
-const _CHAMP_KEY_FIX={'leblanc':'LeBlanc','nunu & willump':'NunuWillump','nunu':'NunuWillump','wukong':'MonkeyKing','renata glasc':'Renata','jarvan iv':'JarvanIV','twisted fate':'TwistedFate','master yi':'MasterYi','miss fortune':'MissFortune','dr. mundo':'DrMundo','dr mundo':'DrMundo','tahm kench':'TahmKench','xin zhao':'XinZhao','lee sin':'LeeSin','cho\'gath':'Chogath','cho\u2019gath':'Chogath','vel\'koz':'Velkoz','vel\u2019koz':'Velkoz','kog\'maw':'KogMaw','kog\u2019maw':'KogMaw','kha\'zix':'Khazix','kha\u2019zix':'Khazix','rek\'sai':'RekSai','rek\u2019sai':'RekSai'};
+const _CHAMP_KEY_FIX={'leblanc':'Leblanc','nunu & willump':'Nunu','nunu':'Nunu','wukong':'MonkeyKing','renata glasc':'Renata','jarvan iv':'JarvanIV','twisted fate':'TwistedFate','master yi':'MasterYi','miss fortune':'MissFortune','dr. mundo':'DrMundo','dr mundo':'DrMundo','tahm kench':'TahmKench','xin zhao':'XinZhao','lee sin':'LeeSin','aurelion sol':'AurelionSol','cho\'gath':'Chogath','cho\u2019gath':'Chogath','vel\'koz':'Velkoz','vel\u2019koz':'Velkoz','kog\'maw':'KogMaw','kog\u2019maw':'KogMaw','kha\'zix':'Khazix','kha\u2019zix':'Khazix','rek\'sai':'RekSai','rek\u2019sai':'RekSai','kai\'sa':'Kaisa','kai\u2019sa':'Kaisa','bel\'veth':'Belveth','bel\u2019veth':'Belveth','k\'sante':'KSante','k\u2019sante':'KSante','fiddlesticks':'Fiddlesticks'};
 function meczeChampKey(champName){
   if(!champName)return'';
   const low=normApos(champName).toLowerCase();
@@ -5274,9 +5274,9 @@ function renderMeczeList(){
       return `<div class="mz-pcol">
         <div class="mz-pcol-hdr">
           <div class="mz-pcol-nick" style="color:${c}">${name}</div>
-          ${p.champ?`<div class="mz-pcol-champ">${p.champ}</div>`:''}
         </div>
         <div class="mz-tile ${tileWinClass}">${tileInner}</div>
+        ${p.champ?`<div class="mz-pcol-champ">${p.champ}</div>`:''}
         <div class="mz-pcol-kda">${kdaStr}</div>
       </div>`;
     }
