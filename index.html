@@ -20,7 +20,7 @@ body{font-family:'Rajdhani',sans-serif;background:var(--blue-deep);color:var(--w
 @keyframes wv{0%{transform:translateX(0) scaleY(1)}50%{transform:translateX(25%) scaleY(1.08)}100%{transform:translateX(50%) scaleY(1)}}
 .hex-bg{position:fixed;inset:0;z-index:0;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpolygon points='30,2 58,17 58,35 30,50 2,35 2,17' fill='none' stroke='%23C8AA6E' stroke-width='1'/%3E%3C/svg%3E");background-size:60px 52px}
 .app{position:relative;z-index:1;min-height:100vh}
-nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padding:10px 24px;background:rgba(3,8,18,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;gap:0}
+nav{display:flex;align-items:center;padding:10px 24px;background:rgba(3,8,18,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;gap:8px}
 .nav-logo{font-family:'Pacifico',cursive;font-size:21px;color:#5DADE2;letter-spacing:1px;display:flex;align-items:center;gap:10px;text-shadow:0 0 20px rgba(93,173,226,0.4);transition:all 0.2s;user-select:none}
 .nav-logo:hover{color:#7ecef4;text-shadow:0 0 28px rgba(93,173,226,0.65)}
 .nav-logo svg{width:32px;height:28px}
@@ -28,10 +28,10 @@ nav{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;padd
 .nav-tab{padding:6px 14px;background:transparent;border:1px solid transparent;color:var(--silver);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:4px;transition:all 0.2s}
 .nav-tab:hover{color:var(--gold);border-color:var(--border)}
 .nav-tab.active{color:var(--gold);border-color:var(--border-bright);background:rgba(200,170,110,0.07)}
-/* OCTOPUS NAV — Skład centered, tabs in tentacles */
-.nav-left-tabs{display:flex;justify-content:flex-end;align-items:center;gap:3px}
-.nav-right-tabs{display:flex;justify-content:flex-end;align-items:center;gap:3px}
-.nav-center-wrap{display:flex;flex-direction:column;align-items:center;position:relative;padding:0 8px}
+/* NAV layout — Skład always centered via absolute */
+.nav-left-tabs{display:flex;align-items:center;gap:3px;flex:1}
+.nav-right-tabs{display:flex;align-items:center;gap:3px;flex:1;justify-content:flex-end}
+.nav-center-wrap{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center}
 /* tentacle curves */
 /* nav tentacles removed */
 .nav-tab-center{
@@ -3600,8 +3600,7 @@ function renderProfile(n){
   const cIc=ch=>{const k=champKey(ch);return k?ddUrl(k):'';};
   const iIc=id=>id?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/item/${id}.png`:'';
   const SPELL_DD={Flash:'SummonerFlash',Ignite:'SummonerDot',Teleport:'SummonerTeleport',Exhaust:'SummonerExhaust',Heal:'SummonerHeal',Barrier:'SummonerBarrier',Ghost:'SummonerHaste',Smite:'SummonerSmite',Cleanse:'SummonerBoost',Mark:'SummonerSnowball',Clarity:'SummonerMana',Hexflash:'SummonerHexFlash'};
-  const spIc=name=>{const k=SPELL_DD[name];return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/spell/${k}.png`:'';};
-
+  const spIc=name=>{if(!name)return'';const k=SPELL_DD[name]||(Object.values(SPELL_DD).includes(name)?name:null);return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/spell/${k}.png`:'';};
   // Per-match detail for this player
   const detailed=[...matches].sort((a,b)=>Number(b.gid)-Number(a.gid)).map(m=>{
     const inB=Object.values(m.blue).includes(n);
@@ -5665,8 +5664,9 @@ async function gsLoadDetails(){
             cs:+cols[13]||0, cspm:+cols[14]||0,
             gold:+cols[16]||0, goldpm:+cols[17]||0,
             dmg:+cols[19]||0, vision:+cols[28]||0,
-            spell1:cols[cols.length-4], spell2:cols[cols.length-3],
-            keystone:cols[cols.length-2],
+            // CSV order: ..., Spell1, Spell2, Keystone, RunePath, Items
+            spell1:cols[cols.length-5], spell2:cols[cols.length-4],
+            keystone:cols[cols.length-3], runePath:cols[cols.length-2],
             items:(cols[cols.length-1]||'').split(',').map(x=>parseInt(x,10)).filter(x=>x>0)
           };
           // key by both lolId and GID so _applyDetails can find by either
@@ -5705,6 +5705,7 @@ function _applyDetails(details){
         k:rw.k,d:rw.d,a:rw.a,kda:rw.kda,kp:rw.kp,cs:rw.cs,cspm:rw.cspm,
         gold:rw.gold,goldpm:rw.goldpm,dmg:rw.dmg,vision:rw.vision,
         spellNames:[rw.spell1,rw.spell2].filter(Boolean),
+        runes:rw.keystone?{keystone:{name:rw.keystone},primaryPath:{name:rw.runePath||''},subPath:{name:''},primaryRunes:[],secondaryRunes:[],allPerks:[{name:rw.keystone}]}:null,
         items:rw.items||[]};
     });
     m.participants=parts;
@@ -6197,8 +6198,7 @@ function renderMeczeScoreboard(el,m){
   const cUrl=ch=>{const k=meczeChampKey(ch);return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${k}.png`:'';};
   const iUrl=id=>`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/item/${id}.png`;
   const SPELL_DD={Flash:'SummonerFlash',Ignite:'SummonerDot',Teleport:'SummonerTeleport',Exhaust:'SummonerExhaust',Heal:'SummonerHeal',Barrier:'SummonerBarrier',Ghost:'SummonerHaste',Smite:'SummonerSmite',Cleanse:'SummonerBoost',Mark:'SummonerSnowball',Clarity:'SummonerMana',Hexflash:'SummonerHexFlash'};
-  const spUrl=name=>{const k=SPELL_DD[name];return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/spell/${k}.png`:'';};
-  const blueWin=m.win==='LEWA';
+  const spUrl=name=>{if(!name)return'';const k=SPELL_DD[name]||(Object.values(SPELL_DD).includes(name)?name:null);return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/spell/${k}.png`:'';};  const blueWin=m.win==='LEWA';
   const allP=[...m.blue,...m.red];
   const maxDmg=Math.max(...allP.map(p=>p.dmg||0),1);
   const sum=(arr,f)=>arr.reduce((s,p)=>s+(p[f]||0),0);
