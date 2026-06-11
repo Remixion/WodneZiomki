@@ -748,7 +748,7 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 /* teams row */
 .mz-teams{display:flex;align-items:stretch}
-.mz-tgroup{display:flex;flex:1;gap:0;padding:0;border-radius:8px;border:2px solid transparent;overflow:hidden}
+.mz-tgroup{display:flex;flex:1;gap:0;padding:0;border-radius:8px;overflow:hidden}
 
 /* center separator */
 .mz-sep{width:58px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px 2px}
@@ -788,9 +788,34 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
   width:24px;height:24px;
   opacity:0.95;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.95));
 }
-/* team group borders (win/lose) */
-.mz-tgroup-win{border-color:rgba(29,233,182,0.45)!important}
-.mz-tgroup-lose{border-color:rgba(232,72,85,0.35)!important}
+/* team group borders removed — tylko tint tła wyróżnia zwycięzców */
+.mz-tgroup-win{}
+.mz-tgroup-lose{}
+
+#page-mecze{max-width:1280px;margin:0 auto}
+
+/* ── Match analyzer v2: toggle + indywidualne staty ── */
+.mza-wrap{max-width:1280px;margin:0 auto}
+.mza-toggle{display:flex;justify-content:center;gap:0;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:rgba(0,0,0,0.15)}
+.mza-toggle button{padding:8px 26px;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;background:transparent;border:1px solid var(--border);color:var(--silver)}
+.mza-toggle button:first-child{border-radius:6px 0 0 6px}
+.mza-toggle button:last-child{border-radius:0 6px 6px 0}
+.mza-toggle button.on{background:rgba(200,170,110,0.15);border-color:var(--gold);color:var(--gold)}
+.mza-genstats{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:10px 16px;font-size:13px;color:var(--silver);background:rgba(0,0,0,0.15)}
+.mza-genstats b{color:var(--gold-light)}
+.sb3-row{display:grid;grid-template-columns:44px 26px minmax(110px,1fr) 150px 86px 70px 70px 70px minmax(140px,1fr);gap:8px;align-items:center;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.sb3-row img.champ{width:38px;height:38px;border-radius:7px;object-fit:cover}
+.sb3-spells{display:flex;flex-direction:column;gap:2px}
+.sb3-spells img{width:19px;height:19px;border-radius:4px;display:block;background:rgba(255,255,255,0.06)}
+.sb3-items{display:flex;gap:2px}
+.sb3-items img,.sb3-items span{width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.05);display:block}
+.sb3-stat{text-align:right;font-size:12px;color:var(--silver)}
+.sb3-stat b{color:var(--text);font-size:13px}
+.sb3-dmg-val{font-size:12px;color:var(--silver);text-align:right}
+.sb3-dmg-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-top:3px}
+.sb3-dmg-bar>div{height:100%;border-radius:3px}
+.sb3-extra{grid-column:1/-1;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:rgba(160,180,200,0.55);padding:0 0 2px 52px}
+@media(max-width:900px){.sb3-row{grid-template-columns:40px 24px minmax(90px,1fr) 130px 70px 60px;overflow-x:auto}}
 
 /* keep old mz-mate for any leftover references */
 .mz-mate{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px;white-space:nowrap;overflow:hidden}
@@ -3457,7 +3482,7 @@ function rankEmblem(tier, color, size=56){
   tier=tier?String(tier).toLowerCase():'';
   const canonical=_RANK_EMBLEM_TIER_MAP[tier]||'';
   if(!canonical)return`<svg width="${size}" height="${size}" viewBox="0 0 56 56"><rect x="8" y="8" width="40" height="40" rx="4" fill="rgba(139,139,139,0.12)" stroke="#8B8B8B" stroke-width="2"/></svg>`;
-  const url=`https://ddragon.leagueoflegends.com/cdn/img/ranked-emblems/Emblem_${canonical}.png`;
+  const url=`https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-${canonical.toLowerCase()}.png`;
   return`<img src="${url}" width="${size}" height="${size}" style="object-fit:contain;display:block" loading="lazy" onerror="this.style.display='none'">`;
 }
 
@@ -5928,7 +5953,7 @@ function openMecze(gameId){
     return;
   }
   _meczeActive=gameId;
-  _meczeTab='scoreboard';
+  _meczeTab='stats';
   renderMeczeList();
   renderMeczeAnalyzer();
 
@@ -5962,62 +5987,57 @@ function renderMeczeAnalyzer(){
   const cUrl=ch=>{const k=meczeChampKey(ch);return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${k}.png`:''};
   const iUrl=id=>`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/item/${id}.png`;
 
+  const sum=(arr,f)=>(arr||[]).reduce((s,p)=>s+(p[f]||0),0);
+  const bGold=bT.totalGold||sum(m.blue,'gold'), rGold=rT.totalGold||sum(m.red,'gold');
+  const bK=bT.totalKills||sum(m.blue,'k'), rK=rT.totalKills||sum(m.red,'k');
+  const bCS=bT.totalCS||sum(m.blue,'cs'), rCS=rT.totalCS||sum(m.red,'cs');
+  const bVS=bT.totalVisionScore||sum(m.blue,'vision'), rVS=rT.totalVisionScore||sum(m.red,'vision');
+  function teamGen(T,kills,gold,cs,vs,won,label,color){
+    return `<div style="padding:10px 16px;background:${won?'rgba(29,233,182,0.06)':'rgba(10,16,30,0.5)'}">
+      <div style="font-size:12px;font-weight:700;color:${won?'#1DE9B6':color+'55'};letter-spacing:1.5px;margin-bottom:6px">${won?'✓ VICTORY':'DEFEAT'} · ${label}</div>
+      <div style="display:flex;gap:13px;font-size:14px;flex-wrap:wrap;align-items:center">
+        ${kills?`<span style="font-weight:700;color:var(--gold)">${kills} Kills</span>`:''}
+        ${gold?`<span style="color:rgba(200,170,110,0.7)">💰 ${(gold/1000).toFixed(1)}k</span>`:''}
+        ${T.towerKills?`<span style="color:var(--silver)">🏰 ${T.towerKills}</span>`:''}
+        ${T.dragonKills?`<span style="color:var(--silver)">🐉 ${T.dragonKills}</span>`:''}
+        ${T.baronKills?`<span style="color:var(--silver)">👑 ${T.baronKills}</span>`:''}
+        ${T.firstBlood?'<span style="color:var(--danger)">🩸 FB</span>':''}
+        ${cs?`<span style="color:var(--silver)">CS ${cs}</span>`:''}
+        ${vs?`<span style="color:var(--silver)">👁 ${vs}</span>`:''}
+      </div>
+    </div>`;
+  }
   el.innerHTML=`
-  <div style="background:var(--panel);border:1px solid var(--border);border-left:5px solid ${blueWin?'#5DADE2':'#E84855'};border-radius:8px;overflow:hidden">
+  <div class="mza-wrap" style="background:var(--panel);border:1px solid var(--border);border-left:5px solid ${blueWin?'#5DADE2':'#E84855'};border-radius:8px;overflow:hidden">
     <!-- Header -->
-    <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(0,0,0,0.25);border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold);font-weight:700">Mecz #${m.gameId}</div>
-        <div style="font-size:11px;color:rgba(200,170,110,0.5);font-family:monospace;margin-top:1px">LoL ID: ${m.gameId}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:2px">
-        <div style="font-size:14px;color:var(--silver)">${m.date}</div>
-        <div style="font-size:13px;color:var(--silver)">${m.duration?'⏱ '+m.duration:''} ${m.patch?'· Patch '+m.patch:''}</div>
-      </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(0,0,0,0.25);border-bottom:1px solid var(--border)">
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);font-weight:700">Mecz #${m.gameId}</div>
+      <div style="font-size:12px;color:var(--silver)">${m.date} ${m.duration?'· ⏱ '+m.duration:''} ${m.patch?'· Patch '+m.patch:''}</div>
       <div style="flex:1"></div>
-      <div style="font-size:18px;font-weight:700;color:${blueWin?'#5DADE2':'#E84855'}">${m.win} wygrywa</div>
-      <button onclick="exportMeczeToSheets('${gameId}')" style="padding:6px 14px;background:rgba(200,170,110,0.12);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:13px">💾 Sheets</button>
-      <button onclick="openMecze('${gameId}')" style="background:none;border:1px solid var(--border);color:var(--silver);cursor:pointer;font-size:15px;padding:4px 10px;border-radius:4px">✕</button>
+      <div style="font-size:15px;font-weight:700;color:${blueWin?'#5DADE2':'#E84855'}">${m.win} wygrywa</div>
+      <span id="mzaGearMenu" style="display:none;gap:6px">
+        <button onclick="setMeczeTab('edit')" style="padding:5px 12px;background:rgba(200,170,110,0.12);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:12px">✏️ Edytuj</button>
+        <button onclick="exportMeczeToSheets('${gameId}')" style="padding:5px 12px;background:rgba(200,170,110,0.12);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:12px">💾 Sheets</button>
+      </span>
+      <button onclick="const g=document.getElementById('mzaGearMenu');g.style.display=g.style.display==='none'?'inline-flex':'none'" style="background:none;border:1px solid var(--border);color:var(--silver);cursor:pointer;font-size:14px;padding:4px 9px;border-radius:4px" title="Menu">⚙</button>
+      <button onclick="openMecze('${gameId}')" style="background:none;border:1px solid var(--border);color:var(--silver);cursor:pointer;font-size:14px;padding:4px 9px;border-radius:4px">✕</button>
     </div>
 
-    <!-- VS bar with winner green/lose dim -->
-    <div style="display:grid;grid-template-columns:1fr 50px 1fr">
-      <div style="padding:12px 16px;background:${blueWin?'rgba(29,233,182,0.07)':'rgba(10,16,30,0.5)'}">
-        <div style="font-size:13px;font-weight:700;color:${blueWin?'#1DE9B6':'rgba(93,173,226,0.35)'};letter-spacing:1.5px;margin-bottom:7px">${blueWin?'✓ VICTORY':'DEFEAT'} · LEWA</div>
-        <div style="display:flex;gap:14px;font-size:15px;flex-wrap:wrap;align-items:center">
-          ${bT.totalKills?`<span style="font-weight:700;color:var(--gold)">${bT.totalKills} Kills</span>`:''}
-          ${bT.towerKills?`<span style="color:var(--silver)">🏰 ${bT.towerKills}</span>`:''}
-          ${bT.dragonKills?`<span style="color:var(--silver)">🐉 ${bT.dragonKills}</span>`:''}
-          ${bT.baronKills?`<span style="color:var(--silver)">👑 ${bT.baronKills}</span>`:''}
-          ${bT.firstBlood?'<span style="color:var(--danger)">🩸 FB</span>':''}
-          ${bT.totalGold?`<span style="color:rgba(200,170,110,0.6);font-size:13px">💰 ${(bT.totalGold/1000).toFixed(1)}k</span>`:''}
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:14px;color:rgba(200,170,110,0.25);border-left:1px solid var(--border);border-right:1px solid var(--border)">VS</div>
-      <div style="padding:12px 16px;background:${!blueWin?'rgba(29,233,182,0.07)':'rgba(10,16,30,0.5)'}">
-        <div style="font-size:13px;font-weight:700;color:${!blueWin?'#1DE9B6':'rgba(232,72,85,0.35)'};letter-spacing:1.5px;margin-bottom:7px">${!blueWin?'✓ VICTORY':'DEFEAT'} · PRAWA</div>
-        <div style="display:flex;gap:14px;font-size:15px;flex-wrap:wrap;align-items:center">
-          ${rT.totalKills?`<span style="font-weight:700;color:var(--gold)">${rT.totalKills} Kills</span>`:''}
-          ${rT.towerKills?`<span style="color:var(--silver)">🏰 ${rT.towerKills}</span>`:''}
-          ${rT.dragonKills?`<span style="color:var(--silver)">🐉 ${rT.dragonKills}</span>`:''}
-          ${rT.baronKills?`<span style="color:var(--silver)">👑 ${rT.baronKills}</span>`:''}
-          ${rT.firstBlood?'<span style="color:var(--danger)">🩸 FB</span>':''}
-          ${rT.totalGold?`<span style="color:rgba(200,170,110,0.6);font-size:13px">💰 ${(rT.totalGold/1000).toFixed(1)}k</span>`:''}
-        </div>
-      </div>
+    <!-- Ogólne statystyki drużyn -->
+    <div style="display:grid;grid-template-columns:1fr 42px 1fr">
+      ${teamGen(bT,bK,bGold,bCS,bVS,blueWin,'LEWA','#5DADE2')}
+      <div style="display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;color:rgba(200,170,110,0.25);border-left:1px solid var(--border);border-right:1px solid var(--border)">VS</div>
+      ${teamGen(rT,rK,rGold,rCS,rVS,!blueWin,'PRAWA','#E84855')}
     </div>
 
-    <!-- Tabs -->
-    <div style="display:flex;border-bottom:1px solid var(--border)">
-      ${['overview','scoreboard','charts','edit'].map(tab=>`
-        <button onclick="setMeczeTab('${tab}')" id="mt_${tab}" style="padding:10px 20px;font-size:14px;cursor:pointer;background:${_meczeTab===tab?'var(--panel)':'transparent'};border:none;border-bottom:2px solid ${_meczeTab===tab?'var(--gold)':'transparent'};color:${_meczeTab===tab?'var(--gold)':'var(--silver)'};transition:all 0.15s;letter-spacing:0.5px">
-          ${{overview:'📋 Przegląd',scoreboard:'📊 Scoreboard',charts:'📈 Wykresy',edit:'✏️ Edytuj'}[tab]}
-        </button>
-      `).join('')}
+    <!-- Toggle: Statystyki / Wykresy -->
+    <div class="mza-toggle">
+      <button id="mt_stats" class="${_meczeTab!=='charts'?'on':''}" onclick="setMeczeTab('stats')">📊 STATYSTYKI</button>
+      <button id="mt_charts" class="${_meczeTab==='charts'?'on':''}" onclick="setMeczeTab('charts')">📈 WYKRESY</button>
     </div>
 
-    <!-- Tab content -->
-    <div id="mecze-tab-content" style="padding:16px 18px"></div>
+    <!-- Treść -->
+    <div id="mecze-tab-content" style="padding:12px 14px"></div>
   </div>`;
 
   renderMeczeTab();
@@ -6025,13 +6045,9 @@ function renderMeczeAnalyzer(){
 
 function setMeczeTab(tab){
   _meczeTab=tab;
-  ['overview','scoreboard','charts','edit'].forEach(t=>{
-    const btn=document.getElementById('mt_'+t);
-    if(!btn)return;
-    btn.style.borderBottom=t===tab?'2px solid var(--gold)':'2px solid transparent';
-    btn.style.color=t===tab?'var(--gold)':'var(--silver)';
-    btn.style.background=t===tab?'var(--panel)':'transparent';
-  });
+  const bs=document.getElementById('mt_stats'), bc=document.getElementById('mt_charts');
+  if(bs)bs.classList.toggle('on',tab!=='charts');
+  if(bc)bc.classList.toggle('on',tab==='charts');
   renderMeczeTab();
 }
 
@@ -6076,10 +6092,9 @@ function renderMeczeTab(){
     };
   })();
 
-  if(_meczeTab==='overview') renderMeczeOverview(el,m);
-  else if(_meczeTab==='scoreboard') renderMeczeScoreboard(el,m);
-  else if(_meczeTab==='charts') renderMeczeCharts(el,m);
+  if(_meczeTab==='charts') renderMeczeCharts(el,m);
   else if(_meczeTab==='edit') renderMeczeEdit(el,m);
+  else renderMeczeStats(el,m);
 }
 
 
@@ -6200,6 +6215,77 @@ function renderMeczeOverview(el,m){
       ${rBans.length?`<div style="display:flex;gap:4px;align-items:center;padding:6px 12px;background:rgba(0,0,0,0.2);flex-wrap:wrap">
         <span style="font-size:10px;color:rgba(160,180,200,0.4);margin-right:4px;letter-spacing:1px">BANY</span>
         ${rBans.map(banChip).join('')}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderMeczeStats(el,m){
+  const ddVer=window._ddVersion||'15.10.1';
+  const cUrl=ch=>{const k=meczeChampKey(ch);return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${k}.png`:'';};
+  const iUrl=id=>`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/item/${id}.png`;
+  const SPELL_DD={Flash:'SummonerFlash',Ignite:'SummonerDot',Teleport:'SummonerTeleport',Exhaust:'SummonerExhaust',Heal:'SummonerHeal',Barrier:'SummonerBarrier',Ghost:'SummonerHaste',Smite:'SummonerSmite',Cleanse:'SummonerBoost',Mark:'SummonerSnowball',Clarity:'SummonerMana',Hexflash:'SummonerHexFlash'};
+  const spUrl=name=>{if(!name)return'';const k=SPELL_DD[name]||(Object.values(SPELL_DD).includes(name)?name:null);return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/spell/${k}.png`:'';};
+  const blueWin=m.win==='LEWA';
+  const allP=[...m.blue,...m.red];
+  const maxDmg=Math.max(...allP.map(p=>p.dmg||0),1);
+  const hasData=allP.some(p=>p.dmg||p.gold||p.cs);
+
+  function pRow(p){
+    const c=PC[p.name]||'#C8AA6E';
+    const known=AP.includes(p.name)||AP.includes((p.rawName||'').split('#')[0]);
+    const nc=known?c:'#F39C12';
+    const rk=playerRankInfo(p.name);
+    const spells=p.spellNames||[SPELL_NAMES[p.spell1],SPELL_NAMES[p.spell2]].filter(Boolean);
+    const items=(p.itemsEnriched?.length?p.itemsEnriched.filter(i=>i&&i.id>0):(p.items||[]).filter(Boolean).map(id=>({id})));
+    const main=items.slice(0,6);while(main.length<6)main.push(null);
+    const ks=p.runes?.keystone?.name||'';
+    const dmgPct=Math.round((p.dmg||0)/maxDmg*100);
+    const barColor=p.side==='blue'?'#5DADE2':'#E84855';
+    const extras=[
+      p.dmgTaken?`🛡 ${(p.dmgTaken/1000).toFixed(1)}k otrzymane`:'',
+      p.selfMit?`🦺 ${(p.selfMit/1000).toFixed(1)}k zmityg.`:'',
+      p.healing?`💚 ${(p.healing/1000).toFixed(1)}k heal`:'',
+      p.cc?`⛓ ${p.cc}s CC`:'',
+      p.wards?`🗺 wardy ${p.wards}/${p.wardsKilled||0}/${p.pinkWards||0}`:'',
+      p.dmgToTurrets?`🏰 ${(p.dmgToTurrets/1000).toFixed(1)}k w wieże`:'',
+      ks?`⭐ ${ks}`:'',
+    ].filter(Boolean);
+    return `<div class="sb3-row" style="background:${p.win?'rgba(29,233,182,0.03)':'transparent'}">
+      ${cUrl(p.champ)?`<img class="champ" src="${cUrl(p.champ)}" onerror="this.style.visibility='hidden'">`:'<span></span>'}
+      <div class="sb3-spells">
+        ${spells.slice(0,2).map(sp=>spUrl(sp)?`<img src="${spUrl(sp)}" title="${sp}" onerror="this.style.display='none'">`:'<img style="visibility:hidden">').join('')}
+      </div>
+      <div style="min-width:0">
+        <div style="font-size:13px;font-weight:700;color:${nc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+        <div style="font-size:10px;color:${rk.color}">${rk.short||''}</div>
+      </div>
+      <div class="sb3-items">
+        ${main.map(it=>it?`<img src="${iUrl(it.id)}" title="${it.name||''}" onerror="this.style.opacity=0">`:'<span></span>').join('')}
+      </div>
+      <div class="sb3-stat">💰 <b>${((p.gold||0)/1000).toFixed(1)}k</b></div>
+      <div class="sb3-stat">CS <b>${p.cs||0}</b></div>
+      <div class="sb3-stat">👁 <b>${p.vision||0}</b></div>
+      <div class="sb3-stat" title="Poziom">Lvl <b>${p.champLevel||'–'}</b></div>
+      <div>
+        <div class="sb3-dmg-val">${(p.dmg||0).toLocaleString('pl')} DMG</div>
+        <div class="sb3-dmg-bar"><div style="width:${dmgPct}%;background:${barColor}"></div></div>
+      </div>
+      ${extras.length?`<div class="sb3-extra">${extras.map(e=>`<span>${e}</span>`).join('')}</div>`:''}
+    </div>`;
+  }
+
+  if(!hasData){
+    el.innerHTML='<div style="color:var(--silver);text-align:center;padding:24px">Brak szczegółowych danych — zaimportuj plik JSON meczu</div>';
+    return;
+  }
+  el.innerHTML=`<div class="sb2">
+    <div class="sb2-team blue">
+      <div class="sb2-thdr"><span class="sb2-tname">DRUŻYNA LEWA ${blueWin?'✓':''}</span></div>
+      <div class="sb2-rows">${m.blue.map(pRow).join('')}</div>
+    </div>
+    <div class="sb2-team red">
+      <div class="sb2-thdr"><span class="sb2-tname">DRUŻYNA PRAWA ${!blueWin?'✓':''}</span></div>
+      <div class="sb2-rows">${m.red.map(pRow).join('')}</div>
     </div>
   </div>`;
 }
