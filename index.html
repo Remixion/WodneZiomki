@@ -740,7 +740,7 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .mz-card{
   border-radius:10px;cursor:pointer;
   transition:transform 0.15s,filter 0.15s;
-  overflow:hidden;margin-bottom:8px;
+  overflow:hidden;margin-bottom:2px;
   border:2px solid rgba(255,255,255,0.08);
 }
 .mz-card:hover{transform:translateY(-2px);filter:brightness(1.1)}
@@ -748,7 +748,7 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 /* teams row */
 .mz-teams{display:flex;align-items:stretch}
-.mz-tgroup{display:flex;flex:1;gap:2px;padding:4px}
+.mz-tgroup{display:flex;flex:1;gap:0;padding:0;border-radius:8px;border:2px solid transparent;overflow:hidden}
 
 /* center separator */
 .mz-sep{width:58px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px 2px}
@@ -766,7 +766,7 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .mz-pcol-kda{font-size:11px;font-weight:700;color:rgba(200,210,220,0.85);text-align:center;padding:4px 1px 4px}
 
 /* portrait image tile */
-.mz-tile{position:relative;aspect-ratio:3/4;overflow:hidden;border-radius:6px;width:100%}
+.mz-tile{position:relative;aspect-ratio:3/4;overflow:hidden;border-radius:0;width:100%}
 .mz-tile-colorbg{position:absolute;inset:0}
 /* loading splash as <img> so onerror works */
 .mz-tile-splash{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top}
@@ -788,8 +788,9 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
   width:24px;height:24px;
   opacity:0.95;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.95));
 }
-/* green border for winners — ::after overlay paints above splash img */
-.mz-tile-win::after{content:'';position:absolute;inset:0;border:3px solid #1DE9B6;border-radius:6px;z-index:6;pointer-events:none}
+/* team group borders (win/lose) */
+.mz-tgroup-win{border-color:rgba(29,233,182,0.45)!important}
+.mz-tgroup-lose{border-color:rgba(232,72,85,0.35)!important}
 
 /* keep old mz-mate for any leftover references */
 .mz-mate{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px;white-space:nowrap;overflow:hidden}
@@ -5046,10 +5047,13 @@ let _meczeTab = 'overview';
 var SPELL_NAMES = {4:'Flash',14:'Ignite',12:'Teleport',3:'Exhaust',7:'Heal',21:'Barrier',6:'Ghost',11:'Smite',1:'Cleanse',32:'Mark',13:'Clarity',39:'Hexflash'};
 var ROLE_MAP_RICH = {'TOP':'top','JNG':'jng','JUNGLE':'jng','MID':'mid','MIDDLE':'mid','ADC':'adc','BOT':'adc','BOTTOM':'adc','SUP':'supp','SUPPORT':'supp'};
 
+const _CHAMP_KEY_FIX={'leblanc':'LeBlanc','nunu & willump':'NunuWillump','nunu':'NunuWillump','wukong':'MonkeyKing','renata glasc':'Renata','jarvan iv':'JarvanIV','twisted fate':'TwistedFate','master yi':'MasterYi','miss fortune':'MissFortune','dr. mundo':'DrMundo','dr mundo':'DrMundo','tahm kench':'TahmKench','xin zhao':'XinZhao','lee sin':'LeeSin','cho\'gath':'Chogath','cho\u2019gath':'Chogath','vel\'koz':'Velkoz','vel\u2019koz':'Velkoz','kog\'maw':'KogMaw','kog\u2019maw':'KogMaw','kha\'zix':'Khazix','kha\u2019zix':'Khazix','rek\'sai':'RekSai','rek\u2019sai':'RekSai'};
 function meczeChampKey(champName){
   if(!champName)return'';
+  const low=normApos(champName).toLowerCase();
+  if(_CHAMP_KEY_FIX[low])return _CHAMP_KEY_FIX[low];
   for(const [k,v] of Object.entries(CHAMP_DISPLAY||{})){
-    if(normApos(v).toLowerCase()===normApos(champName).toLowerCase())return k;
+    if(normApos(v).toLowerCase()===low)return k;
   }
   return champName.replace(/['\u2019\u2018 .\-&]/g,'');
 }
@@ -5233,10 +5237,10 @@ function renderMeczeList(){
       const splashUrl=ck?`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${ck}_0.jpg`:'';
       const avatarUrl=(PLAYER_META[name]||{}).avatarUrl||'';
       const hasKDA=p.k!==undefined&&p.d!==undefined;
-      const kdaStr=hasKDA?`${p.k}/${p.d}/${p.a}`:'0/0/0';
+      const kdaStr=hasKDA?`${p.k}/${p.d}/${p.a}`:'';
       const rank=playerRankInfo(name);
       const rankSvg=rankEmblem(rank.tier,rank.color,24);
-      const tileWinClass=isWinner?'mz-tile-win':'';
+      const tileWinClass='';
       const bgColor=`background:${isWinner?winColor+'44':loseColor+'1a'}`;
 
       // avatar fallback layers (always rendered, hidden when splash is present)
@@ -5285,14 +5289,14 @@ function renderMeczeList(){
     const cardHtml=`<div id="mcard_${lolId_}" class="mz-card${isActive?' active-card':''}" onclick="openMecze('${lolId_}')"
       style="background:${blueWin?'rgba(93,173,226,0.07)':'rgba(232,72,85,0.07)'};border-color:${winColor}44">
       <div class="mz-teams">
-        <div class="mz-tgroup">${blueCols}</div>
+        <div class="mz-tgroup ${blueWin?'mz-tgroup-win':'mz-tgroup-lose'}">${blueCols}</div>
         <div class="mz-sep">
           <div class="mz-sep-vs">VS</div>
           ${gid?`<div class="mz-sep-gid">#${gid}</div>`:''}
           <div class="mz-sep-date">${date.slice(5)||date}<br>${duration||('P'+patch)}</div>
-          ${hist?.imgUrl?`<img class="mz-sep-img" src="${hist.imgUrl}" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation();window.open('${hist.imgUrl}','_blank')">`:''}
+          ${hist?.imgUrl?`<img class="mz-sep-img" src="${hist.imgUrl}" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation();mzShowScreenshot('${hist.imgUrl}')">`:''}
         </div>
-        <div class="mz-tgroup">${redCols}</div>
+        <div class="mz-tgroup ${blueWin?'mz-tgroup-lose':'mz-tgroup-win'}">${redCols}</div>
       </div>
     </div>`;
 
@@ -5946,6 +5950,24 @@ function confirmMeczeImport(indices){
   else toast('⚠ Skonfiguruj Apps Script URL w DEV aby auto-zapisywać do Sheets');
 }
 
+
+function mzShowScreenshot(url){
+  let ov=document.getElementById('mz-screenshot-ov');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='mz-screenshot-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;cursor:zoom-out';
+    ov.onclick=()=>ov.remove();
+    const img=document.createElement('img');
+    img.style.cssText='max-width:92vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.8)';
+    img.src=url;
+    ov.appendChild(img);
+    document.body.appendChild(ov);
+  } else {
+    ov.querySelector('img').src=url;
+    document.body.appendChild(ov);
+  }
+}
 
 function openMecze(gameId){
   if(_meczeActive===gameId){
