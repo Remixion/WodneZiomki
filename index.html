@@ -751,41 +751,45 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .mz-tgroup{display:flex;flex:1;gap:2px;padding:4px}
 
 /* center separator */
-.mz-sep{width:54px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 2px}
-.mz-sep-vs{font-size:11px;font-weight:800;color:rgba(160,180,200,0.3);letter-spacing:2px}
-.mz-sep-gid{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:rgba(200,170,110,0.8)}
-.mz-sep-date{font-size:11px;color:var(--silver);text-align:center;line-height:1.3}
-.mz-sep-dur{font-size:10px;color:rgba(160,180,200,0.4)}
-.mz-sep-img{width:44px;height:28px;border-radius:3px;object-fit:cover;border:1px solid var(--border);cursor:zoom-in;margin-top:2px}
+.mz-sep{width:58px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px 2px}
+.mz-sep-vs{font-size:12px;font-weight:800;color:rgba(160,180,200,0.3);letter-spacing:2px}
+.mz-sep-gid{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:rgba(200,170,110,0.85)}
+.mz-sep-date{font-size:12px;color:var(--silver);text-align:center;line-height:1.4}
+.mz-sep-dur{font-size:11px;color:rgba(160,180,200,0.45)}
+.mz-sep-img{width:46px;height:30px;border-radius:3px;object-fit:cover;border:1px solid var(--border);cursor:zoom-in;margin-top:2px}
 
 /* single player column */
 .mz-pcol{flex:1;display:flex;flex-direction:column;min-width:0}
-.mz-pcol-hdr{display:flex;flex-direction:column;align-items:center;padding:3px 2px 4px;gap:1px}
-.mz-pcol-nick{font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
-.mz-pcol-champ{font-size:10px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
-.mz-pcol-kda{font-size:10px;font-weight:700;color:rgba(200,210,220,0.8);text-align:center;padding:3px 1px 3px}
+.mz-pcol-hdr{display:flex;flex-direction:column;align-items:center;padding:4px 2px 5px;gap:2px}
+.mz-pcol-nick{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+.mz-pcol-champ{font-size:11px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+.mz-pcol-kda{font-size:11px;font-weight:700;color:rgba(200,210,220,0.85);text-align:center;padding:4px 1px 4px}
 
 /* portrait image tile */
-.mz-tile{position:relative;aspect-ratio:3/4;overflow:hidden;border-radius:5px;width:100%}
-.mz-tile-bg{position:absolute;inset:0;background-size:150%;background-position:center top}
+.mz-tile{position:relative;aspect-ratio:3/4;overflow:hidden;border-radius:6px;width:100%}
 .mz-tile-colorbg{position:absolute;inset:0}
+/* loading splash as <img> so onerror works */
+.mz-tile-splash{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top}
+/* avatar fallback: blur bg + sharp centered square */
+.mz-tile-avbg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(12px) saturate(1.6);transform:scale(1.15)}
 .mz-tile-av{
   position:absolute;
   top:50%;left:50%;
   transform:translate(-50%,-50%);
-  width:40px;height:40px;border-radius:6px;
-  overflow:hidden;border:2px solid rgba(255,255,255,0.4);
-  background:rgba(0,0,0,0.5);
+  width:54px;height:54px;border-radius:8px;
+  overflow:hidden;border:2px solid rgba(255,255,255,0.5);
+  background:rgba(0,0,0,0.4);
   display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:800;color:#fff;
+  font-size:16px;font-weight:800;color:#fff;
 }
 .mz-tile-av img{width:100%;height:100%;object-fit:cover}
 .mz-tile-rank{
-  position:absolute;top:4px;right:4px;
-  width:20px;height:20px;
-  opacity:0.95;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.9));
+  position:absolute;top:5px;right:5px;
+  width:24px;height:24px;
+  opacity:0.95;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.95));
 }
-.mz-tile-win{outline:2px solid #1DE9B6;outline-offset:-2px}
+/* green border for winners — inset so it respects border-radius */
+.mz-tile-win{box-shadow:inset 0 0 0 3px #1DE9B6}
 
 /* keep old mz-mate for any leftover references */
 .mz-mate{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px;white-space:nowrap;overflow:hidden}
@@ -5195,32 +5199,37 @@ function renderMeczeList(){
       const name=p.name||p.rawName||'?';
       const c=PC[name]||'#C8AA6E';
       const ck=meczeChampKey(p.champ||'');
-      // centered splash for better framing; fallback to standard splash
-      const splashUrl=ck?`https://ddragon.leagueoflegends.com/cdn/img/champion/centered/${ck}_0.jpg`:'';
+      // loading splash (308×560 portrait) — most reliable ddragon URL
+      const splashUrl=ck?`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${ck}_0.jpg`:'';
       const avatarUrl=(PLAYER_META[name]||{}).avatarUrl||'';
       const hasKDA=p.k!==undefined&&p.d!==undefined;
       const kdaStr=hasKDA?`${p.k}/${p.d}/${p.a}`:'0/0/0';
       const rank=playerRankInfo(name);
-      const rankSvg=rankEmblem(rank.tier,rank.color,20);
+      const rankSvg=rankEmblem(rank.tier,rank.color,24);
       const tileWinClass=isWinner?'mz-tile-win':'';
+      const bgColor=`background:${isWinner?winColor+'44':loseColor+'1a'}`;
 
       let tileInner='';
       if(splashUrl){
-        // champion known — centered splash fills tile, win color as bg base
+        // use <img> so onerror fallback works; color bg beneath
         tileInner=`
-          <div class="mz-tile-colorbg" style="background:${isWinner?winColor+'44':loseColor+'22'}"></div>
-          <div class="mz-tile-bg" style="background-image:url('${splashUrl}')"></div>
+          <div class="mz-tile-colorbg" style="${bgColor}"></div>
+          <img class="mz-tile-splash" src="${splashUrl}" loading="lazy"
+            onerror="this.style.display='none'">
           <div class="mz-tile-rank">${rankSvg}</div>`;
       } else if(avatarUrl){
-        // no champion — win color bg + centered avatar square
+        // no champion — blurred avatar bg + sharp centered square
         tileInner=`
-          <div class="mz-tile-colorbg" style="background:${isWinner?winColor+'55':loseColor+'22'}"></div>
+          <div class="mz-tile-colorbg" style="${bgColor}"></div>
+          <div class="mz-tile-avbg" style="background-image:url('${avatarUrl}')"></div>
           <div class="mz-tile-av"><img src="${avatarUrl}" onerror="this.style.display='none'"></div>
           <div class="mz-tile-rank">${rankSvg}</div>`;
       } else {
         tileInner=`
-          <div class="mz-tile-colorbg" style="background:${isWinner?winColor+'55':loseColor+'22'}"></div>
-          <div class="mz-tile-av"><span style="font-size:13px;font-weight:800;color:${c}">${ini(name)}</span></div>
+          <div class="mz-tile-colorbg" style="${bgColor}"></div>
+          <div class="mz-tile-av" style="background:${c}22;border-color:${c}88">
+            <span style="color:${c}">${ini(name)}</span>
+          </div>
           <div class="mz-tile-rank">${rankSvg}</div>`;
       }
 
