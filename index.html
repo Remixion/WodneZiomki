@@ -5116,6 +5116,17 @@ function parseMeczeJson(data,fileName){
       jungleCS:p.jungleCS||0,
     };
   });
+  // Deduplicate within each side: if alias-mapping caused two players to get the same
+  // app name, revert the second one to their raw summoner name so no one disappears.
+  const sideUsed={blue:new Set(),red:new Set()};
+  participants.forEach(p=>{
+    const used=sideUsed[p.side]||new Set();
+    if(used.has(p.name)&&p.name!==p.rawName){
+      p.name=p.rawName; // collision — fall back to summoner name
+    } else {
+      used.add(p.name);
+    }
+  });
   const blueArr=participants.filter(p=>p.side==='blue');
   const redArr=participants.filter(p=>p.side==='red');
   const blueWins=blueArr.some(p=>p.win);
