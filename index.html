@@ -788,8 +788,8 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
   width:24px;height:24px;
   opacity:0.95;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.95));
 }
-/* green border for winners — inset so it respects border-radius */
-.mz-tile-win{box-shadow:inset 0 0 0 3px #1DE9B6}
+/* green border for winners — outline renders above child elements */
+.mz-tile-win{outline:3px solid #1DE9B6;outline-offset:-3px}
 
 /* keep old mz-mate for any leftover references */
 .mz-mate{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px;white-space:nowrap;overflow:hidden}
@@ -5210,20 +5210,24 @@ function renderMeczeList(){
       const tileWinClass=isWinner?'mz-tile-win':'';
       const bgColor=`background:${isWinner?winColor+'44':loseColor+'1a'}`;
 
+      // avatar fallback layers (always rendered, hidden when splash is present)
+      const avFallback=avatarUrl
+        ?`<div class="mz-tile-avbg" style="background-image:url('${avatarUrl}');display:none"></div>
+          <div class="mz-tile-av" style="display:none"><img src="${avatarUrl}"></div>`
+        :`<div class="mz-tile-av" style="display:none;background:${c}22;border-color:${c}88"><span style="color:${c}">${ini(name)}</span></div>`;
+      const splashErrFn=`this.style.display='none';this.parentElement.querySelectorAll('.mz-tile-avbg,.mz-tile-av').forEach(el=>el.style.display='')`;
       let tileInner='';
       if(splashUrl){
-        // use <img> so onerror fallback works; color bg beneath
         tileInner=`
           <div class="mz-tile-colorbg" style="${bgColor}"></div>
-          <img class="mz-tile-splash" src="${splashUrl}" loading="lazy"
-            onerror="this.style.display='none'">
+          ${avFallback}
+          <img class="mz-tile-splash" src="${splashUrl}" loading="lazy" onerror="${splashErrFn}">
           <div class="mz-tile-rank">${rankSvg}</div>`;
       } else if(avatarUrl){
-        // no champion — blurred avatar bg + sharp centered square
         tileInner=`
           <div class="mz-tile-colorbg" style="${bgColor}"></div>
           <div class="mz-tile-avbg" style="background-image:url('${avatarUrl}')"></div>
-          <div class="mz-tile-av"><img src="${avatarUrl}" onerror="this.style.display='none'"></div>
+          <div class="mz-tile-av"><img src="${avatarUrl}"></div>
           <div class="mz-tile-rank">${rankSvg}</div>`;
       } else {
         tileInner=`
@@ -5617,6 +5621,20 @@ async function gsLoadPlayers(){
   }catch(e){/* cicho: brak arkusza Gracze / brak sieci */}
 }
 
+// Proper CSV line parser — handles quoted fields containing commas
+function _parseCSVLine(line){
+  const cols=[];
+  let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){inQ=!inQ;}
+    else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}
+    else cur+=ch;
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
 // ── MatchDetails → wczytywanie statystyk per-gracz do historii ──
 async function gsLoadDetails(){
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
@@ -5631,15 +5649,15 @@ async function gsLoadDetails(){
         const rows=csv.trim().split('\n').slice(1); // skip header
         const details={};
         rows.forEach(line=>{
-          const cols=line.split(',');
+          const cols=_parseCSVLine(line);
           // Columns: LolId,GID,Side,Role,SummonerName,ChampionName,ChampLevel,Win,
           //          K,D,A,KDA,KP%,CS,CS/min,JungleCS,Gold,Gold/min,GoldSpent,
           //          Dmg,Dmg/min,DmgTaken,...,Spell1,Spell2,Keystone,RunePath,Items
           const lid=String(cols[0]||'').trim();
+          const gid_=String(cols[1]||'').trim();
           if(!lid)return;
-          if(!details[lid])details[lid]=[];
-          details[lid].push({
-            lolId:lid, gid:cols[1], side:(cols[2]||'').toLowerCase(),
+          const row={
+            lolId:lid, gid:gid_, side:(cols[2]||'').toLowerCase(),
             role:(cols[3]||'').toLowerCase(), name:cols[4], champ:cols[5],
             win:(cols[7]||'').toLowerCase()==='true'||cols[7]==='1',
             k:+cols[8]||0, d:+cols[9]||0, a:+cols[10]||0,
@@ -5649,8 +5667,15 @@ async function gsLoadDetails(){
             dmg:+cols[19]||0, vision:+cols[28]||0,
             spell1:cols[cols.length-4], spell2:cols[cols.length-3],
             keystone:cols[cols.length-2],
-            items:String(cols[cols.length-1]||'').replace(/"/g,'').split(',').map(x=>parseInt(x,10)).filter(x=>x>0)
-          });
+            items:(cols[cols.length-1]||'').split(',').map(x=>parseInt(x,10)).filter(x=>x>0)
+          };
+          // key by both lolId and GID so _applyDetails can find by either
+          if(!details[lid])details[lid]=[];
+          details[lid].push(row);
+          if(gid_&&gid_!==lid){
+            if(!details[gid_])details[gid_]=[];
+            details[gid_].push(row);
+          }
         });
         return _applyDetails(details);
       }
