@@ -1535,6 +1535,7 @@ window.PLAYER_META = window.PLAYER_META || {};
 </script>
 <script src="players.js?v=2"></script>
 <script src="data.js?v=6"></script>
+<script src="config.js?v=1"></script>
 <script>
 // Override normApos inline to guarantee correct Unicode handling regardless of file encoding
 window.normApos = function(s){
@@ -5556,7 +5557,43 @@ async function gsSavePlayers(){
   }catch(e){gsLog('✗ Zapis graczy: '+e.message,'var(--danger)');return false;}
 }
 async function gsLoadPlayers(){
+  const playersCsvUrl=localStorage.getItem('wc_players_csv_url')||GS_CONFIG.playersCsvUrl;
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
+
+  // CSV path — works in incognito, no login required
+  // Columns: Nick, GameNick, Rank, Color, Avatar, Tags
+  if(playersCsvUrl&&!playersCsvUrl.includes('WKLEJ_GID')){
+    try{
+      const r=await fetch(playersCsvUrl+'&t='+Date.now());
+      if(r.ok){
+        const csv=await r.text();
+        const rows=csv.trim().split('\n').slice(1);
+        let count=0;
+        rows.forEach(line=>{
+          const c=line.split(',');
+          const nick=String(c[0]||'').trim();
+          if(!nick)return;
+          if(c[3])PC[nick]=c[3].trim();
+          if(c[1])ALIASES[nick]=c[1].trim();
+          if(!PLAYER_META[nick])PLAYER_META[nick]={};
+          if(c[4])PLAYER_META[nick].avatarUrl=c[4].trim();
+          if(c[2])PLAYER_META[nick].soloRank=c[2].trim();
+          if(c[5])PLAYER_META[nick].tags=c[5].replace(/"/g,'').split(',').map(t=>t.trim()).filter(Boolean);
+          if(!EXTRA_PLAYERS.includes(nick))EXTRA_PLAYERS.push(nick);
+          count++;
+        });
+        if(count){
+          PS=buildPS();AP=Object.keys(PS).sort();
+          renderPL();renderProfileList();
+          lsSave();
+          gsLog('✓ Wczytano graczy z Sheets CSV ('+count+')','var(--success)');
+          return;
+        }
+      }
+    }catch(e){/* cicho */}
+  }
+
+  // Fallback: Apps Script
   if(!scriptUrl)return;
   try{
     const r=await fetch(scriptUrl+'?action=getPlayers');
@@ -5583,37 +5620,79 @@ async function gsLoadPlayers(){
 // ── MatchDetails → wczytywanie statystyk per-gracz do historii ──
 async function gsLoadDetails(){
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
+  const detailsCsvUrl=localStorage.getItem('wc_details_csv_url')||GS_CONFIG.detailsCsvUrl;
+
+  // Try CSV path first (works in incognito, no login required)
+  if(detailsCsvUrl){
+    try{
+      const r=await fetch(detailsCsvUrl+'&t='+Date.now());
+      if(r.ok){
+        const csv=await r.text();
+        const rows=csv.trim().split('\n').slice(1); // skip header
+        const details={};
+        rows.forEach(line=>{
+          const cols=line.split(',');
+          // Columns: LolId,GID,Side,Role,SummonerName,ChampionName,ChampLevel,Win,
+          //          K,D,A,KDA,KP%,CS,CS/min,JungleCS,Gold,Gold/min,GoldSpent,
+          //          Dmg,Dmg/min,DmgTaken,...,Spell1,Spell2,Keystone,RunePath,Items
+          const lid=String(cols[0]||'').trim();
+          if(!lid)return;
+          if(!details[lid])details[lid]=[];
+          details[lid].push({
+            lolId:lid, gid:cols[1], side:(cols[2]||'').toLowerCase(),
+            role:(cols[3]||'').toLowerCase(), name:cols[4], champ:cols[5],
+            win:(cols[7]||'').toLowerCase()==='true'||cols[7]==='1',
+            k:+cols[8]||0, d:+cols[9]||0, a:+cols[10]||0,
+            kda:+cols[11]||0, kp:+cols[12]||0,
+            cs:+cols[13]||0, cspm:+cols[14]||0,
+            gold:+cols[16]||0, goldpm:+cols[17]||0,
+            dmg:+cols[19]||0, vision:+cols[28]||0,
+            spell1:cols[cols.length-4], spell2:cols[cols.length-3],
+            keystone:cols[cols.length-2],
+            items:String(cols[cols.length-1]||'').replace(/"/g,'').split(',').map(x=>parseInt(x,10)).filter(x=>x>0)
+          });
+        });
+        return _applyDetails(details);
+      }
+    }catch(e){/* cicho */}
+  }
+
+  // Fallback: Apps Script (wymaga URL w DEV lub data.js)
   if(!scriptUrl)return;
   try{
     const r=await fetch(scriptUrl+'?action=getDetails');
     const res=await r.json();
     if(!(res&&res.status==='ok'&&res.details))return;
-    let filled=0;
-    MH.forEach(m=>{
-      const lid=String(m.lolId||m.gid||'');
-      const rows=res.details[lid]||res.details[String(m.gid)]||null;
-      if(!rows||!rows.length)return;
-      const parts=rows.map(rw=>{
-        const teamMap=rw.side==='blue'?m.blue:(rw.side==='red'?m.red:null);
-        let appNick=(teamMap&&teamMap[rw.role])||(typeof getAppName==='function'?getAppName(rw.name):rw.name)||rw.name;
-        return {name:appNick,rawName:rw.name,side:rw.side,role:rw.role,champ:rw.champ,win:rw.win,
-          k:rw.k,d:rw.d,a:rw.a,kda:rw.kda,kp:rw.kp,cs:rw.cs,cspm:rw.cspm,
-          gold:rw.gold,goldpm:rw.goldpm,
-          spellNames:[rw.spell1,rw.spell2].filter(Boolean),
-          items:String(rw.items||'').split(',').map(x=>parseInt(x,10)).filter(x=>x>0)};
-      });
-      m.participants=parts;
-      m.scanResult=m.scanResult||{};
-      parts.forEach(p=>{m.scanResult[p.name]={k:p.k,d:p.d,a:p.a,champ:p.champ};});
-      filled++;
-    });
-    if(filled){
-      lsSave();
-      if(typeof selPr!=='undefined'&&selPr)renderProfile(selPr);
-      if(typeof renderMeczeList==='function')renderMeczeList();
-      gsLog('✓ Statystyki z MatchDetails ('+filled+' meczy)','var(--success)');
-    }
+    _applyDetails(res.details);
   }catch(e){/* cicho: brak MatchDetails / brak sieci */}
+}
+
+function _applyDetails(details){
+  let filled=0;
+  MH.forEach(m=>{
+    const lid=String(m.lolId||m.gid||'');
+    const rows=details[lid]||details[String(m.gid)]||null;
+    if(!rows||!rows.length)return;
+    const parts=rows.map(rw=>{
+      const teamMap=rw.side==='blue'?m.blue:(rw.side==='red'?m.red:null);
+      let appNick=(teamMap&&teamMap[rw.role])||(typeof getAppName==='function'?getAppName(rw.name):rw.name)||rw.name;
+      return {name:appNick,rawName:rw.name,side:rw.side,role:rw.role,champ:rw.champ,win:rw.win,
+        k:rw.k,d:rw.d,a:rw.a,kda:rw.kda,kp:rw.kp,cs:rw.cs,cspm:rw.cspm,
+        gold:rw.gold,goldpm:rw.goldpm,dmg:rw.dmg,vision:rw.vision,
+        spellNames:[rw.spell1,rw.spell2].filter(Boolean),
+        items:rw.items||[]};
+    });
+    m.participants=parts;
+    m.scanResult=m.scanResult||{};
+    parts.forEach(p=>{m.scanResult[p.name]={k:p.k,d:p.d,a:p.a,champ:p.champ};});
+    filled++;
+  });
+  if(filled){
+    lsSave();
+    if(typeof selPr!=='undefined'&&selPr)renderProfile(selPr);
+    if(typeof renderMeczeList==='function')renderMeczeList();
+    gsLog('✓ Statystyki z MatchDetails ('+filled+' meczy)','var(--success)');
+  }
 }
 
 async function gsWrite(matchData){

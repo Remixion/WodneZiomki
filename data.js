@@ -17,8 +17,10 @@ const LS_GH_TOKEN = 'rd_gh_token';
 // GOOGLE SHEETS CONFIG
 // =====================================================================
 const GS_CONFIG = {
-  // Publiczny CSV (odczyt — bez logowania)
+  // Publiczny CSV arkusza "Mecze" (odczyt — bez logowania)
   csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQjZVf5nAGy-yyxmbu09cfzTZML2HSqKgSM0PLsp4jxvE-2QV-WRLpLiIF5rRru0F7Lw5FfiAzQmEBz/pub?gid=0&single=true&output=csv',
+  detailsCsvUrl: '', // uzupełniane przez config.js
+  playersCsvUrl: '', // uzupełniane przez config.js
   // Apps Script Web App URL (zapis) — uzupełnij po deploymencie skryptu
   scriptUrl: '',
 };
