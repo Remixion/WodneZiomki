@@ -794,6 +794,18 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 #page-mecze{max-width:1280px;margin:0 auto}
 
+/* expanded card: team gen-bar + per-player vertical stats */
+.mz-genbar{display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(0,0,0,0.18)}
+.mz-genbar-side{flex:1;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:8px 10px;font-size:13px;color:var(--silver)}
+.mz-genbar-side b{color:var(--gold-light)}
+.mz-genbar-mid{width:58px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(160,180,200,0.4);text-align:center;line-height:1.4}
+.mz-pstats{display:flex;flex-direction:column;gap:3px;padding:6px 3px 8px;font-size:11px;color:var(--silver);text-align:center;border-top:1px solid rgba(255,255,255,0.05)}
+.mz-pstats b{color:var(--text);font-weight:700}
+.mz-pstats .it{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;padding:2px 0}
+.mz-pstats .it img{width:18px;height:18px;border-radius:3px;background:rgba(255,255,255,0.05)}
+.mz-pstats .dmgbar{height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin:2px 6px}
+.mz-pstats .dmgbar>div{height:100%;border-radius:3px}
+
 /* ── Match analyzer v2: toggle + indywidualne staty ── */
 .mza-wrap{max-width:1280px;margin:0 auto}
 .mza-toggle{display:flex;justify-content:center;gap:0;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:rgba(0,0,0,0.15)}
@@ -5205,6 +5217,27 @@ function renderMeczeList(){
     };
     if(hist){addMissing(blue,hist.blue,hist.blueChamps);addMissing(red,hist.red,hist.redChamps);}
 
+    const iUrl=id=>`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/item/${id}.png`;
+    const maxDmg=Math.max(...[...blue,...red].map(p=>p.dmg||0),1);
+    function mzStats(p,isWinner){
+      const items=(p.itemsEnriched?.length?p.itemsEnriched.filter(i=>i&&i.id>0):(p.items||[]).filter(Boolean).map(id=>({id})));
+      const dmgPct=Math.round((p.dmg||0)/maxDmg*100);
+      const barColor=isWinner?'#1DE9B6':'rgba(232,72,85,0.7)';
+      const rows=[
+        items.length?`<div class="it">${items.slice(0,7).map(it=>`<img src="${iUrl(it.id)}" title="${it.name||''}" loading="lazy" onerror="this.style.display='none'">`).join('')}</div>`:'',
+        p.dmg?`<div>${(p.dmg/1000).toFixed(1)}k <b>DMG</b><div class="dmgbar"><div style="width:${dmgPct}%;background:${barColor}"></div></div></div>`:'',
+        p.gold?`<div>💰 <b>${(p.gold/1000).toFixed(1)}k</b>${p.goldpm?` (${p.goldpm}/m)`:''}</div>`:'',
+        p.cs?`<div>CS <b>${p.cs}</b>${p.cspm?` (${p.cspm}/m)`:''}</div>`:'',
+        p.dmgTaken?`<div>🛡 <b>${(p.dmgTaken/1000).toFixed(1)}k</b></div>`:'',
+        p.vision?`<div>👁 <b>${p.vision}</b>${p.wards?` · ${p.wards}w`:''}</div>`:'',
+        p.healing?`<div>💚 <b>${(p.healing/1000).toFixed(1)}k</b></div>`:'',
+        p.cc?`<div>⛓ <b>${p.cc}s</b> CC</div>`:'',
+        p.kp?`<div>KP <b>${p.kp}%</b></div>`:'',
+        p.champLevel?`<div>Lvl <b>${p.champLevel}</b></div>`:'',
+      ].filter(Boolean);
+      return rows.length?`<div class="mz-pstats">${rows.join('')}</div>`:'';
+    }
+
     function mzCol(p, isWinner){
       const name=p.name||p.rawName||'?';
       const c=PC[name]||'#C8AA6E';
@@ -5254,6 +5287,7 @@ function renderMeczeList(){
         <div class="mz-tile ${tileWinClass}">${tileInner}</div>
         ${p.champ?`<div class="mz-pcol-champ">${p.champ}</div>`:''}
         <div class="mz-pcol-kda">${kdaStr}</div>
+        ${isActive?mzStats(p,isWinner):''}
       </div>`;
     }
 
@@ -5262,8 +5296,37 @@ function renderMeczeList(){
     const blueCols=bluePad.map(p=>p?mzCol(p,blueWin):`<div class="mz-pcol"><div class="mz-pcol-hdr"></div><div class="mz-tile" style="background:rgba(255,255,255,0.03)"></div><div class="mz-pcol-kda"></div></div>`).join('');
     const redCols=redPad.map(p=>p?mzCol(p,!blueWin):`<div class="mz-pcol"><div class="mz-pcol-hdr"></div><div class="mz-tile" style="background:rgba(255,255,255,0.03)"></div><div class="mz-pcol-kda"></div></div>`).join('');
 
+    // gen-bar drużynowy (tylko po rozwinięciu)
+    let genBar='';
+    if(isActive){
+      const sumf=(arr,f)=>arr.reduce((s,p)=>s+(p[f]||0),0);
+      const bT=rich?.teams?.blue||hist?.teamStats?.blue||{};
+      const rT=rich?.teams?.red||hist?.teamStats?.red||{};
+      const side=(arr,T,won)=>{
+        const kills=T.totalKills||sumf(arr,'k'), gold=T.totalGold||sumf(arr,'gold');
+        const cs=T.totalCS||sumf(arr,'cs'), vs=T.totalVisionScore||sumf(arr,'vision');
+        return `<div class="mz-genbar-side" style="background:${won?'rgba(29,233,182,0.05)':'transparent'}">
+          <span style="font-weight:800;letter-spacing:1px;color:${won?'#1DE9B6':'rgba(160,180,200,0.4)'}">${won?'✓ WIN':'LOSS'}</span>
+          ${kills?`<span><b>${kills}</b> Kills</span>`:''}
+          ${gold?`<span>💰 <b>${(gold/1000).toFixed(1)}k</b></span>`:''}
+          ${T.towerKills?`<span>🏰 <b>${T.towerKills}</b></span>`:''}
+          ${T.dragonKills?`<span>🐉 <b>${T.dragonKills}</b></span>`:''}
+          ${T.baronKills?`<span>👑 <b>${T.baronKills}</b></span>`:''}
+          ${T.firstBlood?'<span style="color:var(--danger)">🩸 FB</span>':''}
+          ${cs?`<span>CS <b>${cs}</b></span>`:''}
+          ${vs?`<span>👁 <b>${vs}</b></span>`:''}
+        </div>`;
+      };
+      genBar=`<div class="mz-genbar">
+        ${side(blue,bT,blueWin)}
+        <div class="mz-genbar-mid">${duration?'⏱<br>'+duration:''}</div>
+        ${side(red,rT,!blueWin)}
+      </div>`;
+    }
+
     const cardHtml=`<div id="mcard_${lolId_}" class="mz-card${isActive?' active-card':''}" onclick="openMecze('${lolId_}')"
       style="background:${blueWin?'rgba(93,173,226,0.07)':'rgba(232,72,85,0.07)'};border-color:${winColor}44">
+      ${genBar}
       <div class="mz-teams">
         <div class="mz-tgroup ${blueWin?'mz-tgroup-win':'mz-tgroup-lose'}">${blueCols}</div>
         <div class="mz-sep">
@@ -5274,10 +5337,10 @@ function renderMeczeList(){
         </div>
         <div class="mz-tgroup ${blueWin?'mz-tgroup-lose':'mz-tgroup-win'}">${redCols}</div>
       </div>
+      ${isActive?`<div id="mecze-analyzer" onclick="event.stopPropagation()"></div>`:''}
     </div>`;
 
-    const analyzerHtml=isActive?`<div id="mecze-analyzer" style="margin-top:2px;margin-bottom:4px"></div>`:'';
-    return cardHtml+analyzerHtml;
+    return cardHtml;
   }).join('');
   if(_meczeActive){
     setTimeout(()=>{
@@ -5953,7 +6016,7 @@ function openMecze(gameId){
     return;
   }
   _meczeActive=gameId;
-  _meczeTab='stats';
+  _meczeTab='none';
   renderMeczeList();
   renderMeczeAnalyzer();
 
@@ -5987,67 +6050,24 @@ function renderMeczeAnalyzer(){
   const cUrl=ch=>{const k=meczeChampKey(ch);return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${k}.png`:''};
   const iUrl=id=>`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/item/${id}.png`;
 
-  const sum=(arr,f)=>(arr||[]).reduce((s,p)=>s+(p[f]||0),0);
-  const bGold=bT.totalGold||sum(m.blue,'gold'), rGold=rT.totalGold||sum(m.red,'gold');
-  const bK=bT.totalKills||sum(m.blue,'k'), rK=rT.totalKills||sum(m.red,'k');
-  const bCS=bT.totalCS||sum(m.blue,'cs'), rCS=rT.totalCS||sum(m.red,'cs');
-  const bVS=bT.totalVisionScore||sum(m.blue,'vision'), rVS=rT.totalVisionScore||sum(m.red,'vision');
-  function teamGen(T,kills,gold,cs,vs,won,label,color){
-    return `<div style="padding:10px 16px;background:${won?'rgba(29,233,182,0.06)':'rgba(10,16,30,0.5)'}">
-      <div style="font-size:12px;font-weight:700;color:${won?'#1DE9B6':color+'55'};letter-spacing:1.5px;margin-bottom:6px">${won?'✓ VICTORY':'DEFEAT'} · ${label}</div>
-      <div style="display:flex;gap:13px;font-size:14px;flex-wrap:wrap;align-items:center">
-        ${kills?`<span style="font-weight:700;color:var(--gold)">${kills} Kills</span>`:''}
-        ${gold?`<span style="color:rgba(200,170,110,0.7)">💰 ${(gold/1000).toFixed(1)}k</span>`:''}
-        ${T.towerKills?`<span style="color:var(--silver)">🏰 ${T.towerKills}</span>`:''}
-        ${T.dragonKills?`<span style="color:var(--silver)">🐉 ${T.dragonKills}</span>`:''}
-        ${T.baronKills?`<span style="color:var(--silver)">👑 ${T.baronKills}</span>`:''}
-        ${T.firstBlood?'<span style="color:var(--danger)">🩸 FB</span>':''}
-        ${cs?`<span style="color:var(--silver)">CS ${cs}</span>`:''}
-        ${vs?`<span style="color:var(--silver)">👁 ${vs}</span>`:''}
-      </div>
-    </div>`;
-  }
   el.innerHTML=`
-  <div class="mza-wrap" style="background:var(--panel);border:1px solid var(--border);border-left:5px solid ${blueWin?'#5DADE2':'#E84855'};border-radius:8px;overflow:hidden">
-    <!-- Header -->
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(0,0,0,0.25);border-bottom:1px solid var(--border)">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);font-weight:700">Mecz #${m.gameId}</div>
-      <div style="font-size:12px;color:var(--silver)">${m.date} ${m.duration?'· ⏱ '+m.duration:''} ${m.patch?'· Patch '+m.patch:''}</div>
-      <div style="flex:1"></div>
-      <div style="font-size:15px;font-weight:700;color:${blueWin?'#5DADE2':'#E84855'}">${m.win} wygrywa</div>
-      <span id="mzaGearMenu" style="display:none;gap:6px">
-        <button onclick="setMeczeTab('edit')" style="padding:5px 12px;background:rgba(200,170,110,0.12);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:12px">✏️ Edytuj</button>
-        <button onclick="exportMeczeToSheets('${gameId}')" style="padding:5px 12px;background:rgba(200,170,110,0.12);border:1px solid var(--gold);color:var(--gold);border-radius:5px;cursor:pointer;font-size:12px">💾 Sheets</button>
-      </span>
-      <button onclick="const g=document.getElementById('mzaGearMenu');g.style.display=g.style.display==='none'?'inline-flex':'none'" style="background:none;border:1px solid var(--border);color:var(--silver);cursor:pointer;font-size:14px;padding:4px 9px;border-radius:4px" title="Menu">⚙</button>
-      <button onclick="openMecze('${gameId}')" style="background:none;border:1px solid var(--border);color:var(--silver);cursor:pointer;font-size:14px;padding:4px 9px;border-radius:4px">✕</button>
-    </div>
-
-    <!-- Ogólne statystyki drużyn -->
-    <div style="display:grid;grid-template-columns:1fr 42px 1fr">
-      ${teamGen(bT,bK,bGold,bCS,bVS,blueWin,'LEWA','#5DADE2')}
-      <div style="display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;color:rgba(200,170,110,0.25);border-left:1px solid var(--border);border-right:1px solid var(--border)">VS</div>
-      ${teamGen(rT,rK,rGold,rCS,rVS,!blueWin,'PRAWA','#E84855')}
-    </div>
-
-    <!-- Toggle: Statystyki / Wykresy -->
     <div class="mza-toggle">
-      <button id="mt_stats" class="${_meczeTab!=='charts'?'on':''}" onclick="setMeczeTab('stats')">📊 STATYSTYKI</button>
       <button id="mt_charts" class="${_meczeTab==='charts'?'on':''}" onclick="setMeczeTab('charts')">📈 WYKRESY</button>
+      <button id="mt_edit" class="${_meczeTab==='edit'?'on':''}" onclick="setMeczeTab('edit')">⚙ ✏️ EDYTUJ</button>
+      <button onclick="exportMeczeToSheets('${gameId}')">💾 SHEETS</button>
     </div>
-
-    <!-- Treść -->
-    <div id="mecze-tab-content" style="padding:12px 14px"></div>
-  </div>`;
+    <div id="mecze-tab-content" style="${_meczeTab==='charts'||_meczeTab==='edit'?'padding:12px 14px':''}"></div>`;
 
   renderMeczeTab();
 }
 
 function setMeczeTab(tab){
-  _meczeTab=tab;
-  const bs=document.getElementById('mt_stats'), bc=document.getElementById('mt_charts');
-  if(bs)bs.classList.toggle('on',tab!=='charts');
-  if(bc)bc.classList.toggle('on',tab==='charts');
+  _meczeTab=(_meczeTab===tab)?'none':tab; // drugi klik zwija
+  const bc=document.getElementById('mt_charts'), be=document.getElementById('mt_edit');
+  if(bc)bc.classList.toggle('on',_meczeTab==='charts');
+  if(be)be.classList.toggle('on',_meczeTab==='edit');
+  const cnt=document.getElementById('mecze-tab-content');
+  if(cnt)cnt.style.padding=(_meczeTab==='charts'||_meczeTab==='edit')?'12px 14px':'0';
   renderMeczeTab();
 }
 
@@ -6094,7 +6114,7 @@ function renderMeczeTab(){
 
   if(_meczeTab==='charts') renderMeczeCharts(el,m);
   else if(_meczeTab==='edit') renderMeczeEdit(el,m);
-  else renderMeczeStats(el,m);
+  else el.innerHTML='';
 }
 
 
