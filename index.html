@@ -810,7 +810,12 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 #page-mecze{max-width:1280px;margin:0 auto}
 
 /* expanded card: team gen-bar + per-player vertical stats */
-.mz-genbar{border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(0,0,0,0.18);padding:8px 0}
+.mz-genbar{border-bottom:1px solid rgba(255,255,255,0.07);background:linear-gradient(180deg,rgba(0,0,0,0.32) 0%,rgba(0,0,0,0.15) 100%);padding:0;box-shadow:inset 0 -1px 0 rgba(255,255,255,0.04)}
+.mz-genbar-header{display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,0.08);padding:8px 10px}
+.mz-genbar-side{flex:1;display:flex;align-items:center}
+.mz-genbar-blue{justify-content:flex-end;padding-right:12px}
+.mz-genbar-red{justify-content:flex-start;padding-left:12px}
+.mz-genbar-center{width:78px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
 .mz-genrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;padding:2px 10px;font-size:12px;color:var(--silver)}
 .mz-genrow .lv{text-align:right;font-weight:700;color:var(--text)}
 .mz-genrow .rv{text-align:left;font-weight:700;color:var(--text)}
@@ -3583,7 +3588,7 @@ function rankEmblem(tier, color, size=56){
     return`<svg width="${size}" height="${size}" viewBox="0 0 56 56"><circle cx="28" cy="28" r="22" fill="none" stroke="${c}" stroke-width="3" opacity="0.4"/><circle cx="28" cy="28" r="11" fill="${c}" opacity="0.6"/></svg>`;
   }
   // ranked emblem z Community Dragon (oficjalne grafiki klienta LoL)
-  const url=`https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-${canonical}.png`;
+  const url=`https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/${canonical}.png`;
   return`<img src="${url}" width="${size}" height="${size}" style="object-fit:contain;display:block" loading="lazy" onerror="this.onerror=null;this.style.display='none'">`;
 }
 
@@ -5441,7 +5446,6 @@ function renderMeczeList(){
       const bG=bT.totalGold||sumf(blue,'gold'), rG=rT.totalGold||sumf(red,'gold');
       const bCS=bT.totalCS||sumf(blue,'cs'), rCS=rT.totalCS||sumf(red,'cs');
       const bVS=bT.totalVisionScore||sumf(blue,'vision'), rVS=rT.totalVisionScore||sumf(red,'vision');
-      const bNick=blue[0]?.name||'LEWA', rNick=red[0]?.name||'PRAWA';
       const bWC=blueWin?'#1DE9B6':'rgba(160,180,200,0.35)', rWC=blueWin?'rgba(160,180,200,0.35)':'#1DE9B6';
       const row=(lv,lb,rv,lw,rw)=>`<div class="mz-genrow">
         <span class="lv" style="color:${lw?'var(--text)':'rgba(160,180,200,0.5)'}">${lv}</span>
@@ -5449,7 +5453,6 @@ function renderMeczeList(){
         <span class="rv" style="color:${rw?'var(--text)':'rgba(160,180,200,0.5)'}">${rv}</span>
       </div>`;
       const rows=[
-        row(`<b style="color:${bWC}">${blueWin?'WIN':'LOSS'}</b>`,duration||('P'+patch),`<b style="color:${rWC}">${blueWin?'LOSS':'WIN'}</b>`,true,true),
         bK||rK?row(bK,'Kills',rK,bK>=rK,rK>=bK):'',
         bG||rG?row(`${(bG/1000).toFixed(1)}k`,'Zloto',`${(rG/1000).toFixed(1)}k`,bG>=rG,rG>=bG):'',
         bT.towerKills||rT.towerKills?row(bT.towerKills||0,'Wieze',rT.towerKills||0,(bT.towerKills||0)>=(rT.towerKills||0),(rT.towerKills||0)>=(bT.towerKills||0)):'',
@@ -5459,11 +5462,15 @@ function renderMeczeList(){
         bVS||rVS?row(bVS,'Vision',rVS,bVS>=rVS,rVS>=bVS):'',
         bT.firstBlood!==undefined?row(bT.firstBlood?'TAK':'NIE','First Blood',rT.firstBlood?'TAK':'NIE',!!bT.firstBlood,!!rT.firstBlood):'',
       ].filter(Boolean).join('');
+      const winLabel=(win,wc)=>`<span style="font-size:14px;font-weight:900;letter-spacing:2px;color:${wc};font-family:'Cinzel',serif">${win?'WIN':'LOSS'}</span>`;
       genBar=`<div class="mz-genbar">
-        <div class="mz-genrow-hdr">
-          <span class="lh" style="color:#5DADE2;text-align:right">${bNick}</span>
-          <span class="vh">VS</span>
-          <span class="rh" style="color:#E84855">${rNick}</span>
+        <div class="mz-genbar-header">
+          <div class="mz-genbar-side mz-genbar-blue">${winLabel(blueWin,bWC)}</div>
+          <div class="mz-genbar-center">
+            <span style="font-family:'Cinzel',serif;font-size:11px;color:rgba(160,180,200,0.35);letter-spacing:2px">STATYSTYKI</span>
+            <span style="font-size:12px;color:rgba(160,180,200,0.5)">${duration||('P'+patch)}</span>
+          </div>
+          <div class="mz-genbar-side mz-genbar-red">${winLabel(!blueWin,rWC)}</div>
         </div>
         ${rows}
       </div>`;
