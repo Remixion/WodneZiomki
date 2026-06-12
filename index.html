@@ -799,9 +799,10 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
   width:18px;height:18px;z-index:5;
   opacity:0.9;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.9));
 }
-/* team group borders removed — tylko tint tła wyróżnia zwycięzców */
-.mz-tgroup-win{}
-.mz-tgroup-lose{}
+/* team group borders — ::after overlay paints above splash images */
+.mz-tgroup{position:relative}
+.mz-tgroup-win::after{content:'';position:absolute;inset:0;border:2px solid rgba(29,233,182,0.5);border-radius:8px;z-index:7;pointer-events:none}
+.mz-tgroup-lose::after{content:'';position:absolute;inset:0;border:2px solid rgba(232,72,85,0.4);border-radius:8px;z-index:7;pointer-events:none}
 
 #page-mecze{max-width:1280px;margin:0 auto}
 
@@ -825,7 +826,8 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .mz-pstats .dmgbar>div{height:100%;border-radius:3px}
 /* search + filter bar */
 .mz-searchbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
-.mz-searchbar input,.mz-searchbar select{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-size:13px;font-family:inherit}
+.mz-searchbar input,.mz-searchbar select{background:#0d1626;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-size:13px;font-family:inherit}
+.mz-searchbar select option{background:#0d1626;color:var(--text)}
 .mz-searchbar input{flex:1;min-width:160px}
 .mz-searchbar select{cursor:pointer}
 
@@ -1122,12 +1124,9 @@ function deleteParticipantDetails(sheet, lolId) {
     <button class="nav-tab" onclick="showPage('mecze',this)">Mecze</button>
   </div>
 
-  <!-- CENTER emblem: Skład -->
-  <div class="nav-center-wrap">
-    <button class="nav-tab-center active" onclick="showPage('randomizer',this)">
-      <svg width="14" height="13" viewBox="0 0 36 30" fill="none"><path d="M18 2 C18 2 10 12 10 17 A8 8 0 0 0 26 17 C26 12 18 2 18 2Z" fill="url(#nd2)"/><path d="M2 24 Q7 21 12 24 Q17 27 22 24 Q27 21 34 24" stroke="#5DADE2" stroke-width="1.8" stroke-linecap="round" fill="none"/><defs><linearGradient id="nd2" x1="18" y1="2" x2="18" y2="25" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5DADE2"/><stop offset="100%" stop-color="#0BC4E3"/></linearGradient></defs></svg>
-      Skład
-    </button>
+  <!-- CENTER emblem removed — logo pełni funkcję Skład -->
+  <div class="nav-center-wrap" style="display:none">
+    <button class="nav-tab-center active" onclick="showPage('randomizer',this)" style="display:none"></button>
   </div>
 
   <!-- RIGHT tentacle tabs -->
@@ -3538,11 +3537,9 @@ function rankEmblem(tier, color, size=56){
     const c=color||'#808B96';
     return`<svg width="${size}" height="${size}" viewBox="0 0 56 56"><circle cx="28" cy="28" r="22" fill="none" stroke="${c}" stroke-width="3" opacity="0.4"/><circle cx="28" cy="28" r="11" fill="${c}" opacity="0.6"/></svg>`;
   }
-  const c=color||_RANK_COLORS_FB[canonical]||'#C8AA6E';
-  // primary: community dragon mini-crest; fallback: inline SVG circle with tier color
-  const url=`https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests/${canonical}.png`;
-  const fb=`this.onerror=null;this.style.display='none';this.insertAdjacentHTML('afterend','<svg width="${size}" height="${size}" viewBox="0 0 56 56"><circle cx="28" cy="28" r="22" fill="none" stroke="${c}" stroke-width="3"/><circle cx="28" cy="28" r="11" fill="${c}" opacity="0.85"/></svg>')`;
-  return`<img src="${url}" width="${size}" height="${size}" style="object-fit:contain;display:block" loading="lazy" onerror="${fb}">`;
+  // ranked emblem z Community Dragon (oficjalne grafiki klienta LoL)
+  const url=`https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-${canonical}.png`;
+  return`<img src="${url}" width="${size}" height="${size}" style="object-fit:contain;display:block" loading="lazy" onerror="this.onerror=null;this.style.display='none'">`;
 }
 
 function makeDonut(segments, size=120, innerText='', innerSub='', chartId=''){
@@ -5376,7 +5373,6 @@ function renderMeczeList(){
         <div class="mz-tile">${tileInner}</div>
         ${p.champ?`<div class="mz-pcol-champ">${p.champ}</div>`:''}
         <div class="mz-pcol-kda">${kdaStr}</div>
-        ${isActive?mzStats(p,isWinner):''}
       </div>`;
     }
 
@@ -5423,29 +5419,41 @@ function renderMeczeList(){
       </div>`;
     }
 
+    // indywidualne staty w kolumnach pod splashartami (tylko po rozwinięciu)
+    const statsBand=isActive?`<div class="mz-teams">
+      <div class="mz-tgroup">${bluePad.map(p=>`<div class="mz-pcol">${p?mzStats(p,blueWin):''}</div>`).join('')}</div>
+      <div class="mz-sep"></div>
+      <div class="mz-tgroup">${redPad.map(p=>`<div class="mz-pcol">${p?mzStats(p,!blueWin):''}</div>`).join('')}</div>
+    </div>`:'';
+
     const cardHtml=`<div id="mcard_${lolId_}" class="mz-card${isActive?' active-card':''}" onclick="openMecze('${lolId_}')"
       style="background:${blueWin?'rgba(93,173,226,0.07)':'rgba(232,72,85,0.07)'}">
+      ${genBar}
       <div class="mz-teams">
-        <div class="mz-tgroup" style="border-radius:8px 0 0 8px;overflow:hidden;box-shadow:inset 0 0 0 2px ${blueWin?'rgba(29,233,182,0.4)':'rgba(232,72,85,0.3)'}">${blueCols}</div>
+        <div class="mz-tgroup ${blueWin?'mz-tgroup-win':'mz-tgroup-lose'}">${blueCols}</div>
         <div class="mz-sep">
           <div class="mz-sep-vs">VS</div>
           ${gid?`<div class="mz-sep-gid">#${gid}</div>`:''}
           <div class="mz-sep-date">${date.slice(5)||date}<br>${duration||('P'+patch)}</div>
           ${hist?.imgUrl?`<img class="mz-sep-img" src="${hist.imgUrl}" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation();mzShowScreenshot('${hist.imgUrl}')">`:''}
         </div>
-        <div class="mz-tgroup" style="border-radius:0 8px 8px 0;overflow:hidden;box-shadow:inset 0 0 0 2px ${blueWin?'rgba(232,72,85,0.3)':'rgba(29,233,182,0.4)'}">${redCols}</div>
+        <div class="mz-tgroup ${blueWin?'mz-tgroup-lose':'mz-tgroup-win'}">${redCols}</div>
       </div>
-      ${genBar}
+      ${statsBand}
       ${isActive?`<div id="mecze-analyzer" onclick="event.stopPropagation()"></div>`:''}
     </div>`;
 
     return cardHtml;
   }).join('');
-  // populate patch filter
+  // populate patch filter (rebuild z pełnej listy meczy, zachowując wybór)
   const patchSel=document.getElementById('mzFPatch');
-  if(patchSel&&patchSel.options.length<=1){
-    const patches=[...new Set(allMatches.map(x=>(x.hist?.patch||x.rich?.patch||'')).filter(Boolean))].sort().reverse();
-    patches.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent='Patch '+p;patchSel.appendChild(o);});
+  if(patchSel){
+    const cur=patchSel.value;
+    const patches=[...new Set(allMatches.map(x=>(x.hist?.patch||x.rich?.patch||'')).filter(Boolean))].sort((a,b)=>{
+      const [a1,a2]=a.split('.').map(Number),[b1,b2]=b.split('.').map(Number);
+      return (b1-a1)||(b2-a2);
+    });
+    patchSel.innerHTML='<option value="">Wszystkie patche</option>'+patches.map(p=>`<option value="${p}"${p===cur?' selected':''}>Patch ${p}</option>`).join('');
   }
   if(_meczeActive){
     setTimeout(()=>{
