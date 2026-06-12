@@ -785,7 +785,7 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .mz-tile-av img{width:100%;height:100%;object-fit:cover}
 .mz-tile-rank{
   position:absolute;top:5px;right:5px;
-  width:56px;height:56px;
+  width:34px;height:34px;
   opacity:0.95;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.95));
 }
 /* summoner spells + rune overlay at bottom of splashart */
@@ -811,11 +811,12 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 /* expanded card: team gen-bar + per-player vertical stats */
 .mz-genbar{border-bottom:1px solid rgba(255,255,255,0.07);background:linear-gradient(180deg,rgba(0,0,0,0.32) 0%,rgba(0,0,0,0.15) 100%);padding:0;box-shadow:inset 0 -1px 0 rgba(255,255,255,0.04)}
-.mz-genbar-header{display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,0.08);padding:8px 10px}
-.mz-genbar-side{flex:1;display:flex;align-items:center}
-.mz-genbar-blue{justify-content:flex-end;padding-right:12px}
-.mz-genbar-red{justify-content:flex-start;padding-left:12px}
-.mz-genbar-center{width:78px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.mz-genbar-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.08);padding:7px 14px}
+.mz-genbar-side{display:flex;align-items:center;gap:8px}
+.mz-genbar-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+/* statystyki drużynowe w poziomie — flex-wrap */
+.mz-genrows{display:flex;flex-wrap:wrap;padding:4px 8px 6px;gap:2px 0}
+.mz-genrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;padding:1px 6px;font-size:12px;color:var(--silver);min-width:200px;flex:1}
 .mz-genrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;padding:2px 10px;font-size:12px;color:var(--silver)}
 .mz-genrow .lv{text-align:right;font-weight:700;color:var(--text)}
 .mz-genrow .rv{text-align:left;font-weight:700;color:var(--text)}
@@ -4647,6 +4648,9 @@ function renderDraftTeamGrid(team, animate){
     const c=name?(PC[name]||'#C8AA6E'):'#4A6A8A';
     const ch=CC[team][i]||null;
 
+    const _BANNER_BASE='https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/lobby/banners/';
+    const _BANNER_ROLE={top:'banner-top.png',jng:'banner-jungle.png',mid:'banner-mid.png',adc:'banner-adc.png',supp:'banner-support.png'};
+    const bannerUrl=_BANNER_BASE+(_BANNER_ROLE[role]||'banner-top.png');
     let bgStyle='';let isMonster=false;
     if(name){
       if(ch){
@@ -4657,6 +4661,8 @@ function renderDraftTeamGrid(team, animate){
         bgStyle=`background-image:url('${pickMonsterUrl(mkey)}')`;
         isMonster=true;
       }
+    } else {
+      bgStyle=`background-image:url('${bannerUrl}')`;
     }
 
     // Player color tint overlay for monsters
@@ -5120,12 +5126,13 @@ let _meczeActive = null;
 let _meczeTab = 'overview';
 var SPELL_NAMES = {4:'Flash',14:'Ignite',12:'Teleport',3:'Exhaust',7:'Heal',21:'Barrier',6:'Ghost',11:'Smite',1:'Cleanse',32:'Mark',13:'Clarity',39:'Hexflash'};
 var ROLE_MAP_RICH = {'TOP':'top','JNG':'jng','JUNGLE':'jng','MID':'mid','MIDDLE':'mid','ADC':'adc','BOT':'adc','BOTTOM':'adc','SUP':'supp','SUPPORT':'supp'};
+const _CLASH_POS_BASE='https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/';
 const ROLE_ICON_URL={
-  top:'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-game-data/global/default/assets/ux/positions/icon-position-top.png',
-  jng:'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-game-data/global/default/assets/ux/positions/icon-position-jungle.png',
-  mid:'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-game-data/global/default/assets/ux/positions/icon-position-middle.png',
-  adc:'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-game-data/global/default/assets/ux/positions/icon-position-bottom.png',
-  supp:'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-game-data/global/default/assets/ux/positions/icon-position-utility.png',
+  top:_CLASH_POS_BASE+'icon-position-top.png',
+  jng:_CLASH_POS_BASE+'icon-position-jungle.png',
+  mid:_CLASH_POS_BASE+'icon-position-middle.png',
+  adc:_CLASH_POS_BASE+'icon-position-bottom.png',
+  supp:_CLASH_POS_BASE+'icon-position-utility.png',
 };
 function roleIcon(role,size=16){return`<img src="${ROLE_ICON_URL[role]||''}" width="${size}" height="${size}" style="object-fit:contain;opacity:0.85;flex-shrink:0" loading="lazy" onerror="this.style.display='none'">`}
 
@@ -5378,7 +5385,7 @@ function renderMeczeList(){
       const hasKDA=p.k!==undefined&&p.d!==undefined;
       const kdaStr=hasKDA?`${p.k}/${p.d}/${p.a}`:'';
       const rank=playerRankInfo(name);
-      const rankSvg=rankEmblem(rank.tier,rank.color,56);
+      const rankSvg=rankEmblem(rank.tier,rank.color,32);
       const bgColor=`background:${isWinner?winColor+'44':loseColor+'1a'}`;
       // spells overlay
       const spells=p.spellNames||[SPELL_NAMES[p.spell1],SPELL_NAMES[p.spell2]].filter(Boolean);
@@ -5467,12 +5474,12 @@ function renderMeczeList(){
         <div class="mz-genbar-header">
           <div class="mz-genbar-side mz-genbar-blue">${winLabel(blueWin,bWC)}</div>
           <div class="mz-genbar-center">
-            <span style="font-family:'Cinzel',serif;font-size:11px;color:rgba(160,180,200,0.35);letter-spacing:2px">STATYSTYKI</span>
-            <span style="font-size:12px;color:rgba(160,180,200,0.5)">${duration||('P'+patch)}</span>
+            <span style="font-family:'Cinzel',serif;font-size:10px;color:rgba(160,180,200,0.3);letter-spacing:2px">STATYSTYKI DRUŻYN</span>
+            <span style="font-size:11px;color:rgba(160,180,200,0.45)">${duration||('P'+patch)}</span>
           </div>
-          <div class="mz-genbar-side mz-genbar-red">${winLabel(!blueWin,rWC)}</div>
+          <div class="mz-genbar-side mz-genbar-red" style="justify-content:flex-end">${winLabel(!blueWin,rWC)}</div>
         </div>
-        ${rows}
+        <div class="mz-genrows">${rows}</div>
       </div>`;
     }
 
