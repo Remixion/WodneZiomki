@@ -738,10 +738,11 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .opgg-tag{display:inline-block;padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700;background:rgba(200,170,110,0.16);border:1px solid var(--border);color:var(--gold-light)}
 /* ── Mecze list card — portrait tile layout ─────────────────── */
 .mz-card{
-  border-radius:10px;cursor:pointer;
+  border-radius:12px;cursor:pointer;
   transition:transform 0.15s,filter 0.15s;
-  overflow:hidden;margin-bottom:2px;
-  border:none;
+  overflow:hidden;margin-bottom:10px;
+  background:var(--panel);
+  border:1px solid var(--border);
 }
 .mz-card:hover{filter:brightness(1.08)}
 .mz-card.active-card{}
@@ -814,9 +815,16 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .mz-genbar-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.08);padding:7px 14px}
 .mz-genbar-side{display:flex;align-items:center;gap:8px}
 .mz-genbar-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-/* statystyki drużynowe w poziomie — flex-wrap */
-.mz-genrows{display:flex;flex-wrap:wrap;padding:4px 8px 6px;gap:2px 0}
-.mz-genrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;padding:1px 6px;font-size:12px;color:var(--silver);min-width:200px;flex:1}
+/* statystyki drużynowe — chipy nad konkretną drużyną */
+.mz-genteams{display:flex;align-items:stretch}
+.mz-genteam{flex:1;display:flex;flex-wrap:wrap;gap:4px;padding:8px 10px;justify-content:center;align-content:flex-start}
+.mz-gensep{width:58px;flex-shrink:0}
+.mz-chip{display:flex;flex-direction:column;align-items:center;padding:3px 9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:6px;min-width:46px}
+.mz-chip-val{font-weight:800;font-size:13px;color:var(--text);line-height:1.2}
+.mz-chip-lb{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:rgba(160,180,200,0.5)}
+.mz-chip-best{border-color:rgba(200,170,110,0.4);background:rgba(200,170,110,0.08)}
+.mz-chip-best .mz-chip-val{color:var(--gold-light,#E8D5A8)}
+.mz-genrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;padding:2px 10px;font-size:12px;color:var(--silver)}
 .mz-genrow{display:grid;grid-template-columns:1fr 78px 1fr;align-items:center;padding:2px 10px;font-size:12px;color:var(--silver)}
 .mz-genrow .lv{text-align:right;font-weight:700;color:var(--text)}
 .mz-genrow .rv{text-align:left;font-weight:700;color:var(--text)}
@@ -3243,7 +3251,7 @@ function openImportPreview(added,updated){
       if(!n)return'';
       if(AP.includes(n))return n;
       const jLow=n.toLowerCase();
-      const m=AP.find(a=>(ALIASES[a]||'').toLowerCase()===jLow)||
+      const m=AP.find(a=>(ALIASES[a]||'').split('#')[0].toLowerCase()===jLow.split('#')[0])||
                AP.find(a=>(PLAYER_META[a]||{}).lolNick?.toLowerCase()===jLow)||
                AP.find(a=>a.toLowerCase()===jLow)||
                AP.find(a=>a.toLowerCase().startsWith(jLow.slice(0,4))||jLow.startsWith(a.toLowerCase().slice(0,4)));
@@ -3314,8 +3322,8 @@ function confirmImport(){
       // 1. Direct match in AP
       if(AP.includes(jsonName))return jsonName;
       const jLow=jsonName.toLowerCase();
-      // 2. ALIASES: ALIASES[appName] = lolNick
-      const aliasMatch=AP.find(n=>(ALIASES[n]||'').toLowerCase()===jLow);
+      // 2. ALIASES: ALIASES[appName] = lolNick (może zawierać #tag)
+      const aliasMatch=AP.find(n=>(ALIASES[n]||'').split('#')[0].toLowerCase()===jLow.split('#')[0]);
       if(aliasMatch)return aliasMatch;
       // 3. PLAYER_META lolNick field
       const metaMatch=AP.find(n=>(PLAYER_META[n]||{}).lolNick?.toLowerCase()===jLow);
@@ -5164,7 +5172,8 @@ function meczeMapName(jsonName){
   const base=jsonName.split('#')[0];
   if(AP.includes(base))return base;
   const lo=base.toLowerCase();
-  const aliasMatch=AP.find(n=>(ALIASES[n]||'').toLowerCase()===lo);
+  // alias może zawierać pełny nick#tag — porównuj po odcięciu tagu
+  const aliasMatch=AP.find(n=>(ALIASES[n]||'').split('#')[0].toLowerCase()===lo);
   if(aliasMatch)return aliasMatch;
   const metaMatch=AP.find(n=>(PLAYER_META[n]||{}).lolNick?.toLowerCase()===lo);
   if(metaMatch)return metaMatch;
@@ -5187,6 +5196,8 @@ function parseMeczeJson(data,fileName){
     const role=ROLE_MAP_RICH[rawRole]||'top';
     const rawName=(p.summonerName||p.gameName||'');
     const name=meczeMapName(rawName.split('#')[0]);
+    // zapisz pełny nick#tag jako NickWGrze (alias) dla znanego gracza
+    if(rawName.includes('#')&&AP.includes(name)&&ALIASES[name]!==rawName){ALIASES[name]=rawName;}
     return{
       pid:p.participantId||0, side, role,
       name, rawName,
@@ -5454,21 +5465,20 @@ function renderMeczeList(){
       const bCS=bT.totalCS||sumf(blue,'cs'), rCS=rT.totalCS||sumf(red,'cs');
       const bVS=bT.totalVisionScore||sumf(blue,'vision'), rVS=rT.totalVisionScore||sumf(red,'vision');
       const bWC=blueWin?'#1DE9B6':'rgba(160,180,200,0.35)', rWC=blueWin?'rgba(160,180,200,0.35)':'#1DE9B6';
-      const row=(lv,lb,rv,lw,rw)=>`<div class="mz-genrow">
-        <span class="lv" style="color:${lw?'var(--text)':'rgba(160,180,200,0.5)'}">${lv}</span>
-        <span class="lb">${lb}</span>
-        <span class="rv" style="color:${rw?'var(--text)':'rgba(160,180,200,0.5)'}">${rv}</span>
-      </div>`;
-      const rows=[
-        bK||rK?row(bK,'Kills',rK,bK>=rK,rK>=bK):'',
-        bG||rG?row(`${(bG/1000).toFixed(1)}k`,'Zloto',`${(rG/1000).toFixed(1)}k`,bG>=rG,rG>=bG):'',
-        bT.towerKills||rT.towerKills?row(bT.towerKills||0,'Wieze',rT.towerKills||0,(bT.towerKills||0)>=(rT.towerKills||0),(rT.towerKills||0)>=(bT.towerKills||0)):'',
-        bT.dragonKills||rT.dragonKills?row(bT.dragonKills||0,'Smoki',rT.dragonKills||0,(bT.dragonKills||0)>=(rT.dragonKills||0),(rT.dragonKills||0)>=(bT.dragonKills||0)):'',
-        bT.baronKills||rT.baronKills?row(bT.baronKills||0,'Barony',rT.baronKills||0,(bT.baronKills||0)>=(rT.baronKills||0),(rT.baronKills||0)>=(bT.baronKills||0)):'',
-        bCS||rCS?row(bCS,'CS',rCS,bCS>=rCS,rCS>=bCS):'',
-        bVS||rVS?row(bVS,'Vision',rVS,bVS>=rVS,rVS>=bVS):'',
-        bT.firstBlood!==undefined?row(bT.firstBlood?'TAK':'NIE','First Blood',rT.firstBlood?'TAK':'NIE',!!bT.firstBlood,!!rT.firstBlood):'',
+      // chip = jedna statystyka drużyny, pokazywana nad tą drużyną która ją zdobyła
+      const chip=(lb,val,best)=>val===''||val===undefined||val===null?'':`<div class="mz-chip${best?' mz-chip-best':''}"><span class="mz-chip-val">${val}</span><span class="mz-chip-lb">${lb}</span></div>`;
+      const teamChips=(T,K,G,CS,VS,better)=>[
+        K?chip('Kills',K,better.k):'',
+        G?chip('Złoto',`${(G/1000).toFixed(1)}k`,better.g):'',
+        T.towerKills?chip('Wieże',T.towerKills,better.t):'',
+        T.dragonKills?chip('Smoki',T.dragonKills,better.d):'',
+        T.baronKills?chip('Barony',T.baronKills,better.b):'',
+        CS?chip('CS',CS,better.cs):'',
+        VS?chip('Vision',VS,better.v):'',
+        T.firstBlood?chip('First Blood','✓',true):'',
       ].filter(Boolean).join('');
+      const bBetter={k:bK>=rK,g:bG>=rG,t:(bT.towerKills||0)>=(rT.towerKills||0),d:(bT.dragonKills||0)>=(rT.dragonKills||0),b:(bT.baronKills||0)>=(rT.baronKills||0),cs:bCS>=rCS,v:bVS>=rVS};
+      const rBetter={k:rK>=bK,g:rG>=bG,t:(rT.towerKills||0)>=(bT.towerKills||0),d:(rT.dragonKills||0)>=(bT.dragonKills||0),b:(rT.baronKills||0)>=(bT.baronKills||0),cs:rCS>=bCS,v:rVS>=bVS};
       const winLabel=(win,wc)=>`<span style="font-size:14px;font-weight:900;letter-spacing:2px;color:${wc};font-family:'Cinzel',serif">${win?'WIN':'LOSS'}</span>`;
       genBar=`<div class="mz-genbar">
         <div class="mz-genbar-header">
@@ -5479,7 +5489,11 @@ function renderMeczeList(){
           </div>
           <div class="mz-genbar-side mz-genbar-red" style="justify-content:flex-end">${winLabel(!blueWin,rWC)}</div>
         </div>
-        <div class="mz-genrows">${rows}</div>
+        <div class="mz-genteams">
+          <div class="mz-genteam">${teamChips(bT,bK,bG,bCS,bVS,bBetter)}</div>
+          <div class="mz-gensep"></div>
+          <div class="mz-genteam">${teamChips(rT,rK,rG,rCS,rVS,rBetter)}</div>
+        </div>
       </div>`;
     }
 
@@ -5514,7 +5528,7 @@ function renderMeczeList(){
     }
 
     const cardHtml=`<div id="mcard_${lolId_}" class="mz-card${isActive?' active-card':''}" onclick="openMecze('${lolId_}')"
-      style="background:${blueWin?'rgba(93,173,226,0.07)':'rgba(232,72,85,0.07)'}">
+      style="background:linear-gradient(0deg,${blueWin?'rgba(93,173,226,0.05),rgba(93,173,226,0.05)':'rgba(232,72,85,0.05),rgba(232,72,85,0.05)'}),var(--panel)">
       ${genBar}
       <div class="mz-teams">
         <div class="mz-tgroup ${blueWin?'mz-tgroup-win':'mz-tgroup-lose'}">${blueCols}</div>
@@ -5563,7 +5577,12 @@ function handleMeczeFiles(files){
         if(parsed)pending.push(parsed);
       }catch(err){toast('Błąd parsowania: '+file.name+' — '+err.message);}
       done++;
-      if(done===total)openMeczeImportPreview(pending);
+      if(done===total){
+        openMeczeImportPreview(pending);
+        // aliasy nick#tag zaktualizowane w parseMeczeJson — utrwal je
+        lsSave();
+        if(typeof gsSavePlayers==='function')gsSavePlayers();
+      }
     };
     r.readAsText(file,'utf-8');
   });
