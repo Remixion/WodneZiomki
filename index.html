@@ -820,8 +820,22 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .mz-genrow-hdr .lh,.mz-genrow-hdr .rh{font-size:11px;font-weight:800;letter-spacing:1px}
 .mz-genrow-hdr .vh{text-align:center;font-family:'Cinzel',serif;font-size:13px;color:rgba(160,180,200,0.25)}
 .mz-pstats{display:flex;flex-direction:column;gap:2px;padding:5px 3px 7px;font-size:11px;color:var(--silver);text-align:center;border-top:1px solid rgba(255,255,255,0.05)}
-.mz-pstats .mz-genrow{border-radius:4px;transition:background 0.1s}
-.mz-pstats .mz-genrow:hover{background:rgba(200,170,110,0.12)}
+/* statsband: rzędy indywidualnych statystyk */
+.mz-statsband{border-top:1px solid rgba(255,255,255,0.06)}
+.mz-srow{display:flex;align-items:stretch;cursor:default;transition:background 0.1s}
+.mz-srow:hover{background:rgba(200,170,110,0.1)}
+.mz-srow-team{display:flex;flex:1}
+.mz-scell{flex:1;min-width:0;text-align:center;padding:4px 2px;font-size:11px;color:var(--silver)}
+.mz-srow-lbl{width:78px;flex-shrink:0;text-align:center;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(160,180,200,0.4);display:flex;align-items:center;justify-content:center;padding:2px 0}
+.mz-sval{font-weight:700;color:var(--text);font-size:11px}
+.mz-sval small{font-weight:400;color:var(--silver);font-size:10px}
+.mz-sitems{display:flex;gap:2px;align-items:center;justify-content:center;padding:2px 1px}
+.mz-sitems .mz-items-main{display:grid;grid-template-columns:repeat(3,16px);gap:2px}
+.mz-sitems .mz-items-main img,.mz-sitems .mz-items-main span{width:16px;height:16px;border-radius:2px;background:rgba(255,255,255,0.04);display:block}
+.mz-sitems .mz-items-ward{margin-left:3px}
+.mz-sitems .mz-items-ward img,.mz-sitems .mz-items-ward span{width:16px;height:16px;border-radius:2px;background:rgba(255,255,255,0.04);display:block}
+.mz-sdmgbar{height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;margin-top:2px;width:100%}
+.mz-sdmgbar>div{height:100%;border-radius:2px}
 .mz-pstats b{color:var(--text);font-weight:700}
 .mz-items-grid{display:flex;gap:3px;align-items:center;justify-content:center;padding:2px 0}
 .mz-items-main{display:grid;grid-template-columns:repeat(3,18px);gap:2px}
@@ -5325,32 +5339,28 @@ function renderMeczeList(){
     const spUrlL=name=>{if(!name)return'';const k=SPELL_DD_L[name];return k?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/spell/${k}.png`:''};
     const maxDmg=Math.max(...[...blue,...red].map(p=>p.dmg||0),1);
     function mzStats(p,isWinner){
+      // Zwraca gotowe dane do renderowania rzędami w statsBand
       const allItems=(p.itemsEnriched?.length?p.itemsEnriched.filter(i=>i&&i.id>0):(p.items||[]).filter(Boolean).map(id=>({id})));
-      // trinket (ward) zawsze osobno po prawej, niezależnie od pozycji w liście
       const WARD_IDS=new Set([3340,3363,3364,2055,3330,2052]);
       const wardIdx=allItems.findIndex(i=>WARD_IDS.has(i.id));
       const ward=wardIdx>=0?allItems[wardIdx]:(allItems[6]||null);
-      const nonWard=allItems.filter((i,idx)=>idx!==wardIdx);
+      const nonWard=allItems.filter((_,i)=>i!==wardIdx);
       const mainItems=nonWard.slice(0,6);while(mainItems.length<6)mainItems.push(null);
       const dmgPct=Math.round((p.dmg||0)/maxDmg*100);
       const barColor=isWinner?'#1DE9B6':'rgba(232,72,85,0.7)';
       const hasItems=allItems.length>0;
-      const irow=(lb,val)=>val?`<div class="mz-genrow" style="grid-template-columns:80px 1fr"><span class="lb" style="text-align:left">${lb}</span><span class="lv" style="text-align:left">${val}</span></div>`:'';
-      const rows=[
-        hasItems?`<div class="mz-items-grid" style="justify-content:flex-start;padding:4px 8px 2px">
-          <div class="mz-items-main">${mainItems.map(it=>it?`<img src="${iUrl(it.id)}" title="${it.name||''}" loading="lazy" onerror="this.style.opacity=0">`:'<span style="width:18px;height:18px;display:block;background:rgba(255,255,255,0.04);border-radius:3px"></span>').join('')}</div>
-          <div class="mz-items-ward">${ward?`<img src="${iUrl(ward.id)}" title="${ward.name||''}" loading="lazy" onerror="this.style.opacity=0">`:'<span style="width:18px;height:18px;display:block"></span>'}</div>
-        </div>`:'',
-        p.dmg?`<div class="mz-genrow" style="grid-template-columns:80px 1fr;flex-direction:column"><span class="lb" style="text-align:left">DMG</span><span class="lv" style="text-align:left">${(p.dmg/1000).toFixed(1)}k<div class="dmgbar" style="margin:2px 0 0"><div style="width:${dmgPct}%;background:${barColor}"></div></div></span></div>`:'',
-        irow('ZLOTO', p.gold?`${(p.gold/1000).toFixed(1)}k${p.goldpm?` (${p.goldpm}/m)`:''}`:null),
-        irow('CS', p.cs?`${p.cs}${p.cspm?` (${p.cspm}/m)`:''}`:null),
-        irow('WZIĘTE', p.dmgTaken?`${(p.dmgTaken/1000).toFixed(1)}k`:null),
-        irow('VISION', p.vision?`${p.vision}${p.wards?` (${p.wards}w)`:''}`:null),
-        irow('HEAL', p.healing?`${(p.healing/1000).toFixed(1)}k`:null),
-        irow('CC', p.cc?`${p.cc}s`:null),
-        irow('KP', p.kp?`${p.kp}%`:null),
-      ].filter(Boolean);
-      return rows.length?`<div class="mz-pstats">${rows.join('')}</div>`:'';
+      // Każda komórka = html dla jednego gracza w danym rzędzie statystyk
+      return {
+        items: hasItems?`<div class="mz-sitems"><div class="mz-items-main">${mainItems.map(it=>it?`<img src="${iUrl(it.id)}" title="${it.name||''}" loading="lazy" onerror="this.style.opacity=0">`:'<span></span>').join('')}</div><div class="mz-items-ward">${ward?`<img src="${iUrl(ward.id)}" title="${ward.name||''}" loading="lazy" onerror="this.style.opacity=0">`:'<span></span>'}</div></div>`:'',
+        dmg: p.dmg?`<div class="mz-sval">${(p.dmg/1000).toFixed(1)}k<div class="mz-sdmgbar"><div style="width:${dmgPct}%;background:${barColor}"></div></div></div>`:'',
+        gold: p.gold?`<span class="mz-sval">${(p.gold/1000).toFixed(1)}k${p.goldpm?` <small>(${p.goldpm}/m)</small>`:''}</span>`:'',
+        cs: p.cs?`<span class="mz-sval">${p.cs}${p.cspm?` <small>(${p.cspm})</small>`:''}</span>`:'',
+        vision: p.vision?`<span class="mz-sval">${p.vision}${p.wards?` <small>(${p.wards}w)</small>`:''}</span>`:'',
+        dmgTaken: p.dmgTaken?`<span class="mz-sval">${(p.dmgTaken/1000).toFixed(1)}k</span>`:'',
+        heal: p.healing?`<span class="mz-sval">${(p.healing/1000).toFixed(1)}k</span>`:'',
+        cc: p.cc?`<span class="mz-sval">${p.cc}s</span>`:'',
+        kp: p.kp?`<span class="mz-sval">${p.kp}%</span>`:'',
+      };
     }
 
     function mzCol(p, isWinner){
@@ -5459,12 +5469,35 @@ function renderMeczeList(){
       </div>`;
     }
 
-    // indywidualne staty w kolumnach pod splashartami (tylko po rozwinięciu)
-    const statsBand=isActive?`<div class="mz-teams">
-      <div class="mz-tgroup">${bluePad.map(p=>`<div class="mz-pcol">${p?mzStats(p,blueWin):''}</div>`).join('')}</div>
-      <div class="mz-sep"></div>
-      <div class="mz-tgroup">${redPad.map(p=>`<div class="mz-pcol">${p?mzStats(p,!blueWin):''}</div>`).join('')}</div>
-    </div>`:'';
+    // indywidualne staty jako rzędy (każdy rząd = jedna statystyka dla wszystkich 10 graczy)
+    let statsBand='';
+    if(isActive){
+      const bStats=bluePad.map(p=>p?mzStats(p,blueWin):null);
+      const rStats=redPad.map(p=>p?mzStats(p,!blueWin):null);
+      const cell=(s,field)=>s?s[field]||'':'';
+      const team=(arr,field)=>`<div class="mz-srow-team">${arr.map(s=>`<div class="mz-scell">${cell(s,field)}</div>`).join('')}</div>`;
+      const srow=(field,label)=>{
+        const bCells=bStats.map(s=>cell(s,field)).join('');
+        const rCells=rStats.map(s=>cell(s,field)).join('');
+        if(!bCells&&!rCells)return'';
+        return`<div class="mz-srow">
+          ${team(bStats,field)}
+          <div class="mz-srow-lbl">${label}</div>
+          ${team(rStats,field)}
+        </div>`;
+      };
+      statsBand=`<div class="mz-statsband">
+        ${srow('items','ITEMY')}
+        ${srow('dmg','DMG')}
+        ${srow('gold','ZŁOTO')}
+        ${srow('cs','CS')}
+        ${srow('vision','VISION')}
+        ${srow('dmgTaken','WZIĘTE')}
+        ${srow('heal','HEAL')}
+        ${srow('cc','CC')}
+        ${srow('kp','KP')}
+      </div>`;
+    }
 
     const cardHtml=`<div id="mcard_${lolId_}" class="mz-card${isActive?' active-card':''}" onclick="openMecze('${lolId_}')"
       style="background:${blueWin?'rgba(93,173,226,0.07)':'rgba(232,72,85,0.07)'}">
