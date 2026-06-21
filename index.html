@@ -1898,7 +1898,7 @@ function renderTS(t, animate){
     let isMonster=false;
     if(ch){
       const key=champKey(ch);
-      bgStyle=`background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${key}_0.jpg')`;
+      bgStyle=`background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${key}_0.jpg')`;
     } else if(pid){
       const key=slotMonsters[t][i]||MONSTER_KEYS[0];
       bgStyle=`background-image:url('${pickMonsterUrl(key)}')`;
@@ -4673,7 +4673,7 @@ function renderDraftTeamGrid(team, animate){
     if(name){
       if(ch){
         const key=champKey(ch);
-        bgStyle=`background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${key}_0.jpg')`;
+        bgStyle=`background-image:url('https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${key}_0.jpg')`;
       } else {
         const mkey=slotMonsters[team][i]||MONSTER_KEYS[0];
         bgStyle=`background-image:url('${pickMonsterUrl(mkey)}')`;
