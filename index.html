@@ -1256,6 +1256,7 @@ function deleteParticipantDetails(sheet, lolId) {
 
       <div class="cctrl">
         <div class="vs">VS</div>
+        <div style="font-family:'Cinzel',serif;font-size:13px;color:rgba(200,170,110,0.6);letter-spacing:1px;margin-top:6px;text-align:center">GID <span id="nextGidDisplay" style="color:var(--gold)">—</span></div>
       </div>
 
       <!-- RED TEAM -->
@@ -1606,8 +1607,8 @@ function deleteParticipantDetails(sheet, lolId) {
   <div class="modal-box" style="width:min(640px,95vw);max-height:88vh;overflow-y:auto">
     <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:2px;margin-bottom:16px">💾 Zapisz wynik meczu</div>
 
-    <!-- WINNER + PATCH row -->
-    <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:16px;align-items:end">
+    <!-- WINNER + PATCH + LOL ID row -->
+    <div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-bottom:16px;align-items:end">
       <div>
         <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Kto wygrał?</div>
         <div style="display:flex;gap:7px">
@@ -1618,6 +1619,10 @@ function deleteParticipantDetails(sheet, lolId) {
       <div>
         <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Patch <span style="color:var(--teal);font-size:12px;font-weight:400;letter-spacing:0">(auto)</span></div>
         <input id="pi" class="ss" style="width:90px" value="26.02" title="Wykrywany automatycznie z daty — możesz zmienić ręcznie">
+      </div>
+      <div>
+        <div style="font-size:13px;color:var(--silver);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">LoL Match ID <span style="color:rgba(160,180,200,0.4);font-size:11px;font-weight:400;letter-spacing:0">(opcjonalnie)</span></div>
+        <input id="piLolId" class="ss" style="width:160px" placeholder="np. EUW1_7291234567" title="Wklej ID meczu z klienta LoL lub op.gg">
       </div>
     </div>
 
@@ -2905,6 +2910,7 @@ function openSave(){
   // Auto-detect current patch
   const today=new Date().toISOString().split('T')[0];
   document.getElementById('pi').value=getCurrentPatch(today);
+  document.getElementById('piLolId').value='';
 
   // Build champion input grid
   const grid=document.getElementById('champInputsGrid');
@@ -2974,7 +2980,9 @@ function saveGame(){
   });
 
   const hasChamps=Object.keys(blueChamps).length>0||Object.keys(redChamps).length>0;
-  const match={gid:String(MH.length+1),patch,date,win:PW,blue,red};
+  const rawLolId=(document.getElementById('piLolId')?.value||'').trim();
+  const lolId=rawLolId||String(MH.length+1);
+  const match={gid:String(MH.length+1),lolId,patch,date,win:PW,blue,red};
   if(hasChamps){match.blueChamps=blueChamps;match.redChamps=redChamps;}
 
   MH.push(match);
@@ -4611,6 +4619,8 @@ function updateDraftCounts(){
   const rEl=document.getElementById('redCount');
   if(bEl)bEl.textContent=bCount+'/5';
   if(rEl)rEl.textContent=rCount+'/5';
+  const gidEl=document.getElementById('nextGidDisplay');
+  if(gidEl)gidEl.textContent='#'+(MH.length+1);
   if(bCount===5&&rCount===5&&bEl&&rEl){
     if(RAND_SETTINGS.balanceMode==='rank'){
       const bs=draftTeams.blue.reduce((s,p)=>s+rankScore(p.name),0);
