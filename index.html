@@ -1918,7 +1918,7 @@ function renderTS(t, animate){
         ${animate?genDrops():''}
       </div>
       <div class="ci">
-        <div class="cri" style="color:${c}">${RI[role]}</div>
+        <div class="cri" style="color:${c}">${roleImg(role,28)}</div>
         <div class="cn">${ch||role.toUpperCase()}</div>
         <div class="cp" style="color:${c}">${pid||'—'}</div>
         ${kdaTxt?`<div class="ckda">${kdaTxt}</div>`:''}
@@ -2879,7 +2879,7 @@ function rerollC(t,i,role,e){
 function renderRS(){
   const el=document.getElementById('rside');
   if(!restr.length){el.innerHTML='<div style="font-size:14px;color:var(--silver)">Brak.</div>';return;}
-  el.innerHTML=restr.map((r,i)=>`<div class="rchip"><span>${r.type==='teammate'?'🚫':r.type==='with'?'🤝':'⛔'}</span><span>${r.type==='teammate'?r.playerA+' ≠ '+r.playerB:r.type==='with'?r.playerA+' + '+r.playerB:r.player+': nie '+RI[r.role]+r.role}</span><span class="rx" onclick="removeR(${i})">×</span></div>`).join('');
+  el.innerHTML=restr.map((r,i)=>`<div class="rchip"><span>${r.type==='teammate'?'🚫':r.type==='with'?'🤝':'⛔'}</span><span>${r.type==='teammate'?r.playerA+' ≠ '+r.playerB:r.type==='with'?r.playerA+' + '+r.playerB:r.player+': nie '+roleImg(r.role,14)+r.role}</span><span class="rx" onclick="removeR(${i})">×</span></div>`).join('');
 }
 
 function removeR(i){restr.splice(i,1);renderRS();if(selPr)renderProfile(selPr);lsSave();}
@@ -2921,7 +2921,7 @@ function openSave(){
     html+=`<div style="display:flex;align-items:center;gap:7px">
       <div class="av" style="width:26px;height:26px;font-size:12px;flex-shrink:0;border-color:${c}55;color:${c};background:${c}15">${ini(p.name)}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;color:${c};font-weight:600;margin-bottom:2px">${p.name} <span style="color:var(--silver);font-weight:400">${RI[role]} ${role.toUpperCase()}</span></div>
+        <div style="font-size:13px;color:${c};font-weight:600;margin-bottom:2px">${p.name} <span style="color:var(--silver);font-weight:400">${roleImg(role,14)} ${role.toUpperCase()}</span></div>
         <input id="champ_blue_${role}" class="ss" style="width:100%;font-size:14px;padding:4px 7px" placeholder="postać..." value="${preChamp}" list="champList">
       </div>
     </div>`;
@@ -2938,7 +2938,7 @@ function openSave(){
     html+=`<div style="display:flex;align-items:center;gap:7px">
       <div class="av" style="width:26px;height:26px;font-size:12px;flex-shrink:0;border-color:${c}55;color:${c};background:${c}15">${ini(p.name)}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;color:${c};font-weight:600;margin-bottom:2px">${p.name} <span style="color:var(--silver);font-weight:400">${RI[role]} ${role.toUpperCase()}</span></div>
+        <div style="font-size:13px;color:${c};font-weight:600;margin-bottom:2px">${p.name} <span style="color:var(--silver);font-weight:400">${roleImg(role,14)} ${role.toUpperCase()}</span></div>
         <input id="champ_red_${role}" class="ss" style="width:100%;font-size:14px;padding:4px 7px" placeholder="postać..." value="${preChamp}" list="champList">
       </div>
     </div>`;
@@ -3836,7 +3836,7 @@ function renderProfile(n){
         <div class="og-res-sub">${queueLabel}<br>${d.duration||('P'+d.m.patch)}<br>${ago}</div>
       </div>
       <div class="og-champblock">
-        ${cIc(d.champ)?`<img class="og-champ-ic" src="${cIc(d.champ)}" loading="lazy" onerror="this.style.visibility='hidden'">`:`<div class="og-champ-ic" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--silver)">${RI[d.role]||''}</div>`}
+        ${cIc(d.champ)?`<img class="og-champ-ic" src="${cIc(d.champ)}" loading="lazy" onerror="this.style.visibility='hidden'">`:`<div class="og-champ-ic" style="display:flex;align-items:center;justify-content:center">${roleImg(d.role,18)}</div>`}
         <div class="og-spells">${spells.slice(0,2).map(sp=>spIc(sp)?`<img class="og-spell" src="${spIc(sp)}" title="${sp}" onerror="this.style.display='none'">`:'<span class="og-spell"></span>').join('')}</div>
       </div>
       <div>
@@ -3946,7 +3946,7 @@ function addF(n){
   // Refresh only restriction list inside settings — keep panel open
   const myR=restr.filter(r=>(r.type==='teammate'&&(r.playerA===n||r.playerB===n))||(r.type==='role'&&r.player===n)||(r.type==='with'&&(r.playerA===n||r.playerB===n)));
   const listEl=document.getElementById('profRestrList_'+n);
-  if(listEl) listEl.innerHTML=myR.length?myR.map(r=>{const ri=restr.indexOf(r);return '<div class="fr" style="margin-bottom:6px"><span>'+(r.type==='teammate'?'🚫':r.type==='with'?'🤝':'⛔')+'</span><span style="flex:1;font-size:15px">'+(r.type==='teammate'?'Nie gra z: <b>'+(r.playerA===n?r.playerB:r.playerA)+'</b>':r.type==='with'?'Gra z: <b>'+(r.playerA===n?r.playerB:r.playerA)+'</b>':'Nie gra na: <b>'+RI[r.role]+' '+r.role.toUpperCase()+'</b>')+'</span><span style="cursor:pointer;color:var(--danger)" onclick="removeR('+ri+')">×</span></div>';}).join(''):'<div style="font-size:14px;color:var(--silver);margin-bottom:8px">Brak blokad</div>';
+  if(listEl) listEl.innerHTML=myR.length?myR.map(r=>{const ri=restr.indexOf(r);return '<div class="fr" style="margin-bottom:6px"><span>'+(r.type==='teammate'?'🚫':r.type==='with'?'🤝':'⛔')+'</span><span style="flex:1;font-size:15px">'+(r.type==='teammate'?'Nie gra z: <b>'+(r.playerA===n?r.playerB:r.playerA)+'</b>':r.type==='with'?'Gra z: <b>'+(r.playerA===n?r.playerB:r.playerA)+'</b>':'Nie gra na: <b>'+roleImg(r.role,14)+' '+r.role.toUpperCase()+'</b>')+'</span><span style="cursor:pointer;color:var(--danger)" onclick="removeR('+ri+')">×</span></div>';}).join(''):'<div style="font-size:14px;color:var(--silver);margin-bottom:8px">Brak blokad</div>';
   toast('Zapisano!');lsSave();
 }
 
@@ -4031,7 +4031,7 @@ function renderHistCompact(matches){
     return `<div class="lm-champ-entry">
       ${src
         ?`<img class="lm-champ-icon" src="${src}" loading="lazy" onerror="this.style.background='${c}22';this.src=''">`
-        :`<div class="lm-champ-icon" style="background:${c}20;display:flex;align-items:center;justify-content:center;font-size:12px;color:${c}">${RI[role]}</div>`}
+        :`<div class="lm-champ-icon" style="background:${c}20;display:flex;align-items:center;justify-content:center">${roleImg(role,18)}</div>`}
       <div class="lm-player-info">
         <div class="lm-player-name" style="color:${c}">${name}</div>
         ${champ?`<div class="lm-champ-name">${champ}</div>`:`<div style="font-size:10px;color:rgba(160,180,200,0.35)">${role.toUpperCase()}</div>`}
@@ -4700,8 +4700,8 @@ function renderDraftTeamGrid(team, animate){
         </div>
         <div class="ci-bottom">
           ${name
-            ? `<div class="crole" style="color:${c}">${RI[role]} ${role.toUpperCase()}</div>`
-            : `<div class="crole" style="color:rgba(160,180,200,0.2)">${role.toUpperCase()}</div>`
+            ? `<div class="crole" style="color:${c}">${roleImg(role,20)} ${role.toUpperCase()}</div>`
+            : `<div class="crole" style="color:rgba(160,180,200,0.2)">${roleImg(role,20)} ${role.toUpperCase()}</div>`
           }
           ${ch ? `<div class="cn" style="margin-top:2px">${ch}</div>` : ''}
         </div>
@@ -5143,6 +5143,7 @@ const ROLE_ICON_URL={
   supp:_CLASH_POS_BASE+'icon-position-utility.png',
 };
 function roleIcon(role,size=16){return`<img src="${ROLE_ICON_URL[role]||''}" width="${size}" height="${size}" style="object-fit:contain;opacity:0.85;flex-shrink:0" loading="lazy" onerror="this.style.display='none'">`}
+function roleImg(role,size=22){const u=ROLE_ICON_URL[role]||'';return u?`<img src="${u}" width="${size}" height="${size}" style="object-fit:contain;vertical-align:middle;opacity:0.9;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.9))" loading="lazy" onerror="this.outerHTML=''">`:'';}
 
 const _CHAMP_KEY_FIX={'leblanc':'Leblanc','nunu & willump':'Nunu','nunu':'Nunu','wukong':'MonkeyKing','renata glasc':'Renata','jarvan iv':'JarvanIV','twisted fate':'TwistedFate','master yi':'MasterYi','miss fortune':'MissFortune','dr. mundo':'DrMundo','dr mundo':'DrMundo','tahm kench':'TahmKench','xin zhao':'XinZhao','lee sin':'LeeSin','aurelion sol':'AurelionSol','cho\'gath':'Chogath','cho\u2019gath':'Chogath','vel\'koz':'Velkoz','vel\u2019koz':'Velkoz','kog\'maw':'KogMaw','kog\u2019maw':'KogMaw','kha\'zix':'Khazix','kha\u2019zix':'Khazix','rek\'sai':'RekSai','rek\u2019sai':'RekSai','kai\'sa':'Kaisa','kai\u2019sa':'Kaisa','bel\'veth':'Belveth','bel\u2019veth':'Belveth','k\'sante':'KSante','k\u2019sante':'KSante','fiddlesticks':'Fiddlesticks'};
 function meczeChampKey(champName){
@@ -5597,9 +5598,8 @@ function openMeczeImportPreview(matches){
     const c=known?(PC[p.name]||'#C8AA6E'):'#F39C12';
     const ck=meczeChampKey(p.champ||'');
     const icon=ck?`https://ddragon.leagueoflegends.com/cdn/${ddVer}/img/champion/${ck}.png`:'';
-    const ri={top:'🛡',jng:'🌿',mid:'⚡',adc:'🏹',supp:'💫'};
     return`<div style="display:flex;align-items:center;gap:5px;padding:3px 5px;border-radius:4px;background:${known?'rgba(255,255,255,0.03)':'rgba(243,156,18,0.08)'};${!known?'border:1px solid rgba(243,156,18,0.3)':''}">
-      <span style="font-size:10px;color:rgba(160,180,200,0.35)">${ri[p.role]||''}</span>
+      ${roleImg(p.role,14)}
       ${icon?`<img src="${icon}" style="width:18px;height:18px;border-radius:3px" onerror="this.style.display='none'">`:''}
       <span style="font-size:12px;font-weight:700;color:${c}">${p.name}</span>
       ${!known?'<span style="font-size:9px;color:#F39C12">?</span>':''}
