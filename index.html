@@ -466,6 +466,20 @@ nav{display:flex;align-items:center;padding:10px 24px;background:rgba(3,8,18,0.9
 .ds{background:rgba(232,72,85,0.04);border:1px solid rgba(232,72,85,0.16);border-radius:4px;padding:7px}
 .ds label{font-size:12px;color:var(--silver);display:block;margin-bottom:3px;letter-spacing:1px;text-transform:uppercase}
 .ds select{width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);color:var(--white);padding:3px 5px;font-size:13px;border-radius:3px;font-family:'Rajdhani',sans-serif}
+/* LOL SCOUT */
+.scout-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;transition:background 0.4s}
+.scout-dot.ok{background:#1DE9B6;box-shadow:0 0 6px rgba(29,233,182,0.7)}
+.scout-dot.err{background:#E84855;box-shadow:0 0 6px rgba(232,72,85,0.6)}
+.scout-dot.ping{background:#f0b429}
+.scout-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px}
+.scout-tab{padding:7px 16px;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:rgba(160,180,200,0.5);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.15s,border-color 0.15s}
+.scout-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.scout-match-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;background:rgba(0,0,0,0.2);cursor:default}
+.scout-match-row:hover{background:rgba(29,233,182,0.04);border-color:rgba(29,233,182,0.2)}
+.scout-match-row .smr-mode{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(160,180,200,0.45);width:60px;flex-shrink:0}
+.scout-match-row .smr-id{font-size:12px;color:var(--silver);font-family:monospace;min-width:90px}
+.scout-match-row .smr-date{font-size:12px;color:var(--gold)}
+.scout-match-row .smr-dur{font-size:12px;color:var(--silver);margin-left:auto}
 /* TOAST */
 .toast{position:fixed;bottom:20px;right:20px;z-index:300;background:rgba(11,196,227,0.13);border:1px solid var(--teal);color:var(--teal);padding:9px 16px;border-radius:6px;font-size:17px;font-weight:600;letter-spacing:1px;transform:translateX(130%);transition:transform 0.3s;backdrop-filter:blur(8px)}
 .toast.show{transform:translateX(0)}
@@ -1313,6 +1327,9 @@ function deleteParticipantDetails(sheet, lolId) {
         <input type="file" id="mecze-file-input" accept=".json" multiple style="display:none" onchange="handleMeczeFiles(this.files)">
       </label>
       <button class="btn sbtn" style="font-size:12px;padding:5px 12px" onclick="meczeFetchSheets()">↺ Sheets</button>
+      <button class="btn sbtn" id="scoutBtn" style="font-size:12px;padding:5px 12px;display:flex;align-items:center;gap:5px" onclick="openScoutModal()" title="LoL Scout — import z lokalnej bazy">
+        <span class="scout-dot ping" id="scoutBtnDot" style="width:7px;height:7px"></span>Scout
+      </button>
     </div>
   </div>
 
@@ -1495,6 +1512,58 @@ function deleteParticipantDetails(sheet, lolId) {
     </div>
 
     <div id="gsLog" style="margin-top:12px;max-height:120px;overflow-y:auto;font-size:13px;color:var(--silver);font-family:monospace;line-height:1.6;padding:7px;background:rgba(0,0,0,0.3);border-radius:4px;display:none"></div>
+  </div>
+</div>
+
+<!-- LOL SCOUT MODAL -->
+<div id="scoutModal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="width:min(560px,96vw);max-height:88vh;display:flex;flex-direction:column">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-shrink:0">
+      <div class="scout-dot ping" id="scoutDot"></div>
+      <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--teal);letter-spacing:2px">LoL Scout</div>
+      <div id="scoutStatusTxt" style="font-size:12px;color:rgba(160,180,200,0.55);flex:1">Łączenie...</div>
+      <div id="scoutDbBadge" style="font-size:11px;color:var(--gold);opacity:0;transition:opacity 0.3s"></div>
+      <button class="btn dbtn" style="padding:3px 10px;font-size:13px;flex-shrink:0" onclick="closeScoutModal()">✕</button>
+    </div>
+    <!-- Tabs -->
+    <div class="scout-tabs" style="flex-shrink:0">
+      <div class="scout-tab active" id="stab-db" onclick="scoutTab('db')">Baza meczy</div>
+      <div class="scout-tab" id="stab-ids" onclick="scoutTab('ids')">Import ID</div>
+      <div class="scout-tab" id="stab-rofl" onclick="scoutTab('rofl')">.rofl</div>
+    </div>
+    <!-- Tab: DB -->
+    <div id="scout-panel-db" style="flex:1;overflow-y:auto;min-height:0">
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <input id="scoutSearch" class="ss" placeholder="Szukaj po ID lub trybie..." oninput="scoutFilterMatches()" style="flex:1;font-size:13px">
+        <button class="btn tbtn" style="padding:5px 14px;font-size:13px" onclick="scoutLoadMatches()">↺ Odśwież</button>
+      </div>
+      <div id="scoutMatchList" style="font-size:13px;color:rgba(160,180,200,0.4);text-align:center;padding:30px 0">Ładowanie...</div>
+    </div>
+    <!-- Tab: Import by IDs -->
+    <div id="scout-panel-ids" style="display:none">
+      <div style="font-size:13px;color:var(--silver);margin-bottom:8px;line-height:1.6">
+        Wklej gameId (każde w nowej linii lub po przecinku). Scout pobierze dane z bazy lub z klienta LoL (jeśli połączony).
+      </div>
+      <textarea id="scoutIdsInput" class="ss" rows="7" style="width:100%;resize:vertical;font-family:monospace;font-size:13px" placeholder="7364821003&#10;7364821004&#10;7364821005"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn primary" style="flex:1;justify-content:center" onclick="scoutImportByIds()">⬇ Importuj</button>
+        <div id="scoutIdsLog" style="flex:2;font-size:12px;color:var(--silver);line-height:1.6;padding:2px 6px"></div>
+      </div>
+    </div>
+    <!-- Tab: .rofl -->
+    <div id="scout-panel-rofl" style="display:none">
+      <div style="font-size:13px;color:var(--silver);margin-bottom:10px;line-height:1.6">
+        Wgraj plik replay (.rofl) aby wyciągnąć podstawowe statystyki graczy.
+      </div>
+      <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed rgba(29,233,182,0.25);border-radius:8px;padding:28px 16px;cursor:pointer;color:rgba(160,180,200,0.5);gap:8px;transition:background 0.15s" onmouseover="this.style.background='rgba(29,233,182,0.04)'" onmouseout="this.style.background=''" ondragover="event.preventDefault()" ondrop="scoutRoflDrop(event)">
+        <span style="font-size:28px">🎬</span>
+        <span style="font-size:14px;color:var(--teal)">Kliknij lub przeciągnij plik .rofl</span>
+        <span style="font-size:12px">Scoutuj replay, wyciągaj dane</span>
+        <input type="file" accept=".rofl" style="display:none" onchange="scoutRoflFile(this)">
+      </label>
+      <div id="scoutRoflLog" style="margin-top:10px;font-size:13px;color:var(--silver);line-height:1.7"></div>
+    </div>
   </div>
 </div>
 
@@ -3001,7 +3070,7 @@ function saveGame(){
 // Champion ID → Data Dragon key
 const CHAMP_ID_MAP={
   1:'Annie',2:'Olaf',3:'Galio',4:'TwistedFate',5:'XinZhao',6:'Urgot',7:'Leblanc',
-  8:'Vladimir',9:'Fiddlesticks',10:'Kayle',11:'MasterYi',12:'Alistar',13:'Ryze',
+  8:'Vladimir',9:'FiddleSticks',10:'Kayle',11:'MasterYi',12:'Alistar',13:'Ryze',
   14:'Sion',15:'Sivir',16:'Soraka',17:'Teemo',18:'Tristana',19:'Warwick',20:'Nunu',
   21:'MissFortune',22:'Ashe',23:'Tryndamere',24:'Jax',25:'Morgana',26:'Zilean',
   27:'Singed',28:'Evelynn',29:'Twitch',30:'Karthus',31:'Chogath',32:'Amumu',
@@ -5155,7 +5224,7 @@ const ROLE_ICON_URL={
 function roleIcon(role,size=16){return`<img src="${ROLE_ICON_URL[role]||''}" width="${size}" height="${size}" style="object-fit:contain;opacity:0.85;flex-shrink:0" loading="lazy" onerror="this.style.display='none'">`}
 function roleImg(role,size=22){const u=ROLE_ICON_URL[role]||'';return u?`<img src="${u}" width="${size}" height="${size}" style="object-fit:contain;vertical-align:middle;opacity:0.9;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.9))" loading="lazy" onerror="this.outerHTML=''">`:'';}
 
-const _CHAMP_KEY_FIX={'leblanc':'Leblanc','nunu & willump':'Nunu','nunu':'Nunu','wukong':'MonkeyKing','renata glasc':'Renata','jarvan iv':'JarvanIV','twisted fate':'TwistedFate','master yi':'MasterYi','miss fortune':'MissFortune','dr. mundo':'DrMundo','dr mundo':'DrMundo','tahm kench':'TahmKench','xin zhao':'XinZhao','lee sin':'LeeSin','aurelion sol':'AurelionSol','cho\'gath':'Chogath','cho\u2019gath':'Chogath','vel\'koz':'Velkoz','vel\u2019koz':'Velkoz','kog\'maw':'KogMaw','kog\u2019maw':'KogMaw','kha\'zix':'Khazix','kha\u2019zix':'Khazix','rek\'sai':'RekSai','rek\u2019sai':'RekSai','kai\'sa':'Kaisa','kai\u2019sa':'Kaisa','bel\'veth':'Belveth','bel\u2019veth':'Belveth','k\'sante':'KSante','k\u2019sante':'KSante','fiddlesticks':'Fiddlesticks'};
+const _CHAMP_KEY_FIX={'leblanc':'Leblanc','nunu & willump':'Nunu','nunu':'Nunu','wukong':'MonkeyKing','renata glasc':'Renata','jarvan iv':'JarvanIV','twisted fate':'TwistedFate','master yi':'MasterYi','miss fortune':'MissFortune','dr. mundo':'DrMundo','dr mundo':'DrMundo','tahm kench':'TahmKench','xin zhao':'XinZhao','lee sin':'LeeSin','aurelion sol':'AurelionSol','cho\'gath':'Chogath','cho\u2019gath':'Chogath','vel\'koz':'Velkoz','vel\u2019koz':'Velkoz','kog\'maw':'KogMaw','kog\u2019maw':'KogMaw','kha\'zix':'Khazix','kha\u2019zix':'Khazix','rek\'sai':'RekSai','rek\u2019sai':'RekSai','kai\'sa':'Kaisa','kai\u2019sa':'Kaisa','bel\'veth':'Belveth','bel\u2019veth':'Belveth','k\'sante':'KSante','k\u2019sante':'KSante','fiddlesticks':'FiddleSticks'};
 function meczeChampKey(champName){
   if(!champName)return'';
   const low=normApos(champName).toLowerCase();
@@ -6853,6 +6922,295 @@ function exportMeczeToHistory(gameId){
   exportMeczeToSheets(gameId);
 }
 
+
+// ── LOL SCOUT ──────────────────────────────────────────────────────────────
+const SCOUT_URL = 'http://localhost:3420';
+let _scoutStatus = null;        // last status response
+let _scoutAllMatches = [];      // cached match list from DB
+let _scoutPollTimer = null;
+
+function openScoutModal() {
+  document.getElementById('scoutModal').style.display = 'flex';
+  scoutTab('db');
+  scoutPoll();
+  scoutLoadMatches();
+}
+function closeScoutModal() {
+  document.getElementById('scoutModal').style.display = 'none';
+  clearTimeout(_scoutPollTimer);
+}
+
+function scoutTab(name) {
+  ['db','ids','rofl'].forEach(t => {
+    document.getElementById('scout-panel-'+t).style.display = t===name ? '' : 'none';
+    document.getElementById('stab-'+t).classList.toggle('active', t===name);
+  });
+}
+
+async function scoutPoll() {
+  clearTimeout(_scoutPollTimer);
+  const dot = document.getElementById('scoutDot');
+  const btnDot = document.getElementById('scoutBtnDot');
+  const txt = document.getElementById('scoutStatusTxt');
+  const badge = document.getElementById('scoutDbBadge');
+  try {
+    const r = await fetch(SCOUT_URL+'/proxy/status', {signal: AbortSignal.timeout(2500)});
+    const d = await r.json();
+    _scoutStatus = d;
+    const cls = d.connected ? 'ok' : 'err';
+    [dot, btnDot].forEach(el => { if(el){el.className='scout-dot '+cls;} });
+    txt.textContent = d.connected
+      ? `Połączono · port ${d.port}`
+      : (d.error || 'LoL offline');
+    if(d.dbStats) {
+      badge.textContent = `${d.dbStats.total} meczy w DB`;
+      badge.style.opacity = '1';
+    }
+  } catch {
+    _scoutStatus = null;
+    [dot, btnDot].forEach(el => { if(el) el.className='scout-dot err'; });
+    txt.textContent = 'Brak połączenia — uruchom: node proxy/server.js';
+    badge.style.opacity = '0';
+  }
+  if(document.getElementById('scoutModal').style.display !== 'none') {
+    _scoutPollTimer = setTimeout(scoutPoll, 5000);
+  }
+}
+
+// Ping status also on page load to show Scout button state
+async function scoutQuickPing() {
+  const btnDot = document.getElementById('scoutBtnDot');
+  try {
+    const r = await fetch(SCOUT_URL+'/proxy/status', {signal: AbortSignal.timeout(2000)});
+    const d = await r.json();
+    if(btnDot) btnDot.className = 'scout-dot '+(d.connected?'ok':'err');
+  } catch {
+    if(btnDot) btnDot.className = 'scout-dot err';
+  }
+}
+setTimeout(scoutQuickPing, 1500);
+
+async function scoutLoadMatches() {
+  const el = document.getElementById('scoutMatchList');
+  if(!el) return;
+  el.innerHTML = '<div style="color:rgba(160,180,200,0.4);text-align:center;padding:20px">Ładowanie z bazy...</div>';
+  try {
+    const r = await fetch(SCOUT_URL+'/db/matches', {signal: AbortSignal.timeout(8000)});
+    const list = await r.json();
+    _scoutAllMatches = Array.isArray(list) ? list : [];
+    scoutRenderMatches(_scoutAllMatches);
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--warn);text-align:center;padding:20px">Błąd: ${e.message}<br><span style="font-size:12px;opacity:0.6">Sprawdź czy serwer działa na porcie 3420</span></div>`;
+  }
+}
+
+function scoutFilterMatches() {
+  const q = (document.getElementById('scoutSearch')?.value || '').toLowerCase();
+  if(!q) { scoutRenderMatches(_scoutAllMatches); return; }
+  scoutRenderMatches(_scoutAllMatches.filter(m => {
+    const g = m.game || {};
+    return String(g.gameId||'').includes(q) || (g.gameMode||'').toLowerCase().includes(q);
+  }));
+}
+
+function scoutRenderMatches(list) {
+  const el = document.getElementById('scoutMatchList');
+  if(!el) return;
+  if(!list.length) {
+    el.innerHTML = '<div style="color:rgba(160,180,200,0.35);text-align:center;padding:30px">Baza jest pusta lub serwer offline</div>';
+    return;
+  }
+  el.innerHTML = list.map((m, i) => {
+    const g = m.game || {};
+    const dateMs = g.gameCreation || 0;
+    const dateStr = dateMs ? new Date(dateMs).toLocaleDateString('pl-PL', {day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+    const durSec = g.gameDuration || 0;
+    const durStr = durSec ? Math.floor(durSec/60)+'m'+(durSec%60?String(durSec%60).padStart(2,'0')+'s':'') : '—';
+    const mode = (g.gameMode || g.gameType || '').replace('CUSTOM_GAME','CUSTOM').replace('CLASSIC','SUM');
+    const pCount = (g.participants||[]).length;
+    return `<div class="scout-match-row">
+      <span class="smr-mode">${mode||'—'}</span>
+      <span class="smr-id">#${g.gameId||'?'}</span>
+      <span class="smr-date">${dateStr}</span>
+      <span style="font-size:11px;color:rgba(160,180,200,0.4)">${pCount}p</span>
+      <span class="smr-dur">${durStr}</span>
+      <button class="btn tbtn" style="padding:3px 12px;font-size:12px;flex-shrink:0" onclick="scoutImportOne(${i})">Importuj</button>
+    </div>`;
+  }).join('');
+}
+
+function scoutImportOne(idx) {
+  const m = _scoutAllMatches[idx];
+  if(!m) return;
+  const app = lcuToApp(m.game, m.details);
+  if(!app) { toast('⚠ Nie udało się przetworzyć meczu'); return; }
+  const parsed = parseMeczeJson(app, 'scout:'+app.gameId);
+  if(!parsed) { toast('⚠ parseMeczeJson zwrócił null — brak gameId/participants'); return; }
+  _meczeData[String(app.gameId)] = parsed;
+  renderMeczeList();
+  toast('✓ Zaimportowano mecz #'+app.gameId+' z LoL Scout');
+  closeScoutModal();
+}
+
+async function scoutImportByIds() {
+  const raw = document.getElementById('scoutIdsInput')?.value || '';
+  const ids = raw.split(/[\n,\s]+/).map(s=>s.trim()).filter(Boolean).map(Number).filter(Boolean);
+  if(!ids.length) { toast('Wpisz przynajmniej jeden gameId'); return; }
+  const logEl = document.getElementById('scoutIdsLog');
+  if(logEl) logEl.textContent = 'Importuję '+ids.length+' meczy...';
+  try {
+    const r = await fetch(SCOUT_URL+'/db/import-by-ids', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({gameIds: ids}),
+      signal: AbortSignal.timeout(30000),
+    });
+    const data = await r.json();
+    let ok=0, fail=0;
+    (data.results||[]).forEach(res => {
+      if(res.game) {
+        const app = lcuToApp(res.game, res.details);
+        if(app) {
+          const parsed = parseMeczeJson(app, 'scout:'+res.gameId);
+          if(parsed) { _meczeData[String(res.gameId)] = parsed; ok++; return; }
+        }
+        fail++;
+      } else { fail++; }
+    });
+    renderMeczeList();
+    if(logEl) logEl.textContent = `✓ ${ok} ok, ${fail} błędów`;
+    toast(`✓ Scout: zaimportowano ${ok} meczy`);
+    if(ok) { scoutLoadMatches(); closeScoutModal(); }
+  } catch(e) {
+    if(logEl) logEl.textContent = 'Błąd: '+e.message;
+    toast('⚠ Błąd importu: '+e.message);
+  }
+}
+
+function scoutRoflDrop(ev) {
+  ev.preventDefault();
+  const file = ev.dataTransfer?.files?.[0];
+  if(file) scoutParseRoflFile(file);
+}
+function scoutRoflFile(input) {
+  const file = input?.files?.[0];
+  if(file) scoutParseRoflFile(file);
+  if(input) input.value='';
+}
+async function scoutParseRoflFile(file) {
+  const logEl = document.getElementById('scoutRoflLog');
+  if(logEl) logEl.innerHTML = `<span style="color:var(--teal)">Parsowanie ${file.name}...</span>`;
+  try {
+    const buf = await file.arrayBuffer();
+    const r = await fetch(SCOUT_URL+'/rofl/parse', {
+      method: 'POST',
+      headers: {'Content-Type':'application/octet-stream'},
+      body: buf,
+      signal: AbortSignal.timeout(15000),
+    });
+    const data = await r.json();
+    if(!data.ok) throw new Error(data.error||'Nieznany błąd');
+    let html = `<div style="color:var(--teal);font-weight:700;margin-bottom:6px">✓ Sparsowano: ${file.name}</div>`;
+    html += `<div style="font-size:12px;line-height:1.8;color:var(--silver)">`;
+    html += `<b>GameID:</b> ${data.gameId||'?'} &nbsp; <b>Tryb:</b> ${data.gameMode||'?'} &nbsp; <b>Czas:</b> ${data.gameLength||'?'}s<br>`;
+    html += `<b>Wersja:</b> ${data.gameVersion||'?'} &nbsp; <b>Graczy:</b> ${data.playerCount||'?'}`;
+    if(data.savedToDb) html += ' &nbsp; <span style="color:#1DE9B6">✓ Zapisano w DB</span>';
+    html += '</div>';
+    if(data.statsJson && Array.isArray(data.statsJson) && data.statsJson.length > 0) {
+      html += `<div style="margin-top:10px;font-size:12px;color:rgba(160,180,200,0.5)">${data.statsJson.length} uczestników w statsJson — po zapisie w DB możesz importować przez "Baza meczy".</div>`;
+    }
+    if(logEl) logEl.innerHTML = html;
+    if(data.savedToDb) scoutLoadMatches();
+  } catch(e) {
+    if(logEl) logEl.innerHTML = `<span style="color:var(--warn)">Błąd: ${e.message}</span>`;
+  }
+}
+
+// Convert LCU {game, details} to parseMeczeJson-compatible format
+function lcuToApp(game, details) {
+  if(!game) return null;
+  const src = details || game;
+  // Build participant identity map (name per participantId)
+  const identMap = {};
+  (src.participantIdentities || []).forEach(pi => {
+    if(pi.participantId) identMap[pi.participantId] = pi.player || {};
+  });
+  // Teams map
+  const teamsMap = {};
+  (src.teams || game.teams || []).forEach(t => { teamsMap[t.teamId] = t; });
+  // Compute team kills for KP
+  const rawPs = src.participants || game.participants || [];
+  const teamKills = {100:0, 200:0};
+  rawPs.forEach(p => {
+    const st = p.stats || p;
+    teamKills[p.teamId] = (teamKills[p.teamId]||0) + (st.kills||0);
+  });
+  const participants = rawPs.map(p => {
+    const st = p.stats || {};   // LCU has nested stats; some formats have flat
+    const ident = identMap[p.participantId] || {};
+    const winTeam = teamsMap[p.teamId];
+    const win = st.win !== undefined ? !!st.win : (p.win !== undefined ? !!p.win : (winTeam?.win === 'Win'));
+    const kills  = st.kills  ?? p.kills  ?? 0;
+    const deaths = st.deaths ?? p.deaths ?? 0;
+    const assists= st.assists?? p.assists?? 0;
+    const cs = (st.totalMinionsKilled??0) + (st.neutralMinionsKilled??0) || p.cs || 0;
+    const tk = teamKills[p.teamId] || 1;
+    const kp = (kills+assists)/tk;
+    const kda = (kills+assists)/Math.max(deaths,1);
+    const items = p.items || [
+      st.item0,st.item1,st.item2,st.item3,st.item4,st.item5,st.item6
+    ].filter(x=>x!=null&&x>0);
+    return {
+      participantId: p.participantId,
+      teamId: p.teamId,
+      championId: p.championId || 0,
+      championName: p.championName || '',
+      summonerName: ident.summonerName || ident.gameName || p.summonerName || p.gameName || '',
+      gameName:     ident.gameName || ident.riotIdGameName || p.gameName || '',
+      puuid:        ident.puuid || p.puuid || '',
+      spell1Id: p.spell1Id || p.summoner1Id || st.spell1Id || 0,
+      spell2Id: p.spell2Id || p.summoner2Id || st.spell2Id || 0,
+      win,
+      kills, deaths, assists,
+      kdaRatio: Math.round(kda*100)/100,
+      killParticipation: kp,  // 0-1 fraction; parseMeczeJson multiplies by 100
+      cs,
+      goldEarned:  st.goldEarned  ?? p.goldEarned  ?? 0,
+      goldSpent:   st.goldSpent   ?? p.goldSpent   ?? 0,
+      visionScore: st.visionScore ?? p.visionScore ?? 0,
+      wardsPlaced: st.wardsPlaced ?? p.wardsPlaced ?? 0,
+      wardsKilled: st.wardsKilled ?? p.wardsKilled ?? 0,
+      detectorWardsPlaced: st.detectorWardsPlaced ?? p.detectorWardsPlaced ?? 0,
+      damageDealt: st.totalDamageDealtToChampions ?? p.totalDamageDealtToChampions ?? p.damageDealt ?? 0,
+      damageTaken: st.totalDamageTaken ?? p.totalDamageTaken ?? p.damageTaken ?? 0,
+      healingDone: st.totalHeal ?? p.totalHeal ?? p.healingDone ?? 0,
+      ccApplied:   st.timeCCingOthers ?? p.timeCCingOthers ?? p.ccApplied ?? 0,
+      doubleKills: st.doubleKills ?? p.doubleKills ?? 0,
+      tripleKills: st.tripleKills ?? p.tripleKills ?? 0,
+      quadraKills: st.quadraKills ?? p.quadraKills ?? 0,
+      pentaKills:  st.pentaKills  ?? p.pentaKills  ?? 0,
+      firstBloodKill: !!(st.firstBloodKill ?? p.firstBloodKill),
+      turretKills:     st.turretKills ?? p.turretKills ?? 0,
+      inhibitorKills:  st.inhibitorKills ?? p.inhibitorKills ?? 0,
+      championLevel:   st.champLevel ?? p.champLevel ?? p.championLevel ?? 0,
+      items,
+      // Role inference
+      inferredRole: p.inferredRole || '',
+      laneRaw: p.teamPosition || p.individualPosition || (p.timeline?.lane) || '',
+    };
+  });
+  const dateMs = game.gameCreation || src.gameCreation || 0;
+  return {
+    gameId: game.gameId || src.gameId,
+    gameCreation: dateMs,
+    gameDuration: game.gameDuration || src.gameDuration || 0,
+    gameVersion:  game.gameVersion || src.gameVersion || '',
+    gameMode:     game.gameMode || src.gameMode || '',
+    date: dateMs ? new Date(dateMs).toISOString().slice(0,10) : '',
+    teams: src.teams || game.teams || [],
+    participants,
+  };
+}
 
 init();
 </script>
