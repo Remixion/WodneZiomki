@@ -658,6 +658,8 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .opgg-namewrap{position:relative;z-index:1;flex:1;min-width:0}
 .opgg-name{font-family:'Cinzel',serif;font-size:26px;color:var(--white);text-shadow:0 2px 8px rgba(0,0,0,0.7);line-height:1.1}
 .opgg-name .tag{color:var(--silver);font-size:18px}
+.opgg-link{display:inline-block;vertical-align:middle;margin-left:10px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.5px;color:#5DADE2;background:rgba(93,173,226,0.12);border:1px solid rgba(93,173,226,0.35);border-radius:6px;padding:3px 9px;text-decoration:none;text-shadow:none;transition:all 0.15s}
+.opgg-link:hover{background:rgba(93,173,226,0.22);border-color:#5DADE2}
 .opgg-settings-btn{position:absolute;top:14px;right:16px;z-index:2;background:rgba(5,14,26,0.7);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--gold);font-size:14px;backdrop-filter:blur(6px);transition:all 0.2s;font-family:'Rajdhani',sans-serif;font-weight:600}
 .opgg-settings-btn:hover{border-color:var(--gold);background:rgba(200,170,110,0.12)}
 .opgg-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px}
@@ -684,7 +686,9 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .og-res-title.win{color:#5DADE2}.og-res-title.loss{color:#E84855}
 .og-res-sub{font-size:11px;color:var(--silver);line-height:1.5}
 .og-champblock{display:flex;align-items:center;gap:5px}
+.og-champ-col{display:flex;flex-direction:column;align-items:center;gap:3px}
 .og-champ-ic{width:46px;height:46px;border-radius:9px;object-fit:cover;background:rgba(255,255,255,0.06);flex-shrink:0}
+.og-champ-role{display:flex;align-items:center;justify-content:center;height:18px}
 .og-spells{display:flex;flex-direction:column;gap:3px}
 .og-spell{width:20px;height:20px;border-radius:4px;background:rgba(255,255,255,0.06)}
 .og-kda-big{font-size:16px;font-weight:700}
@@ -3913,7 +3917,10 @@ function renderProfile(n){
         <div class="og-res-sub">${queueLabel}<br>${d.duration||('P'+d.m.patch)}<br>${ago}</div>
       </div>
       <div class="og-champblock">
-        ${cIc(d.champ)?`<img class="og-champ-ic" src="${cIc(d.champ)}" loading="lazy" onerror="this.style.visibility='hidden'">`:`<div class="og-champ-ic" style="display:flex;align-items:center;justify-content:center">${roleImg(d.role,18)}</div>`}
+        <div class="og-champ-col">
+          ${cIc(d.champ)?`<img class="og-champ-ic" src="${cIc(d.champ)}" loading="lazy" onerror="this.style.visibility='hidden'">`:`<div class="og-champ-ic" style="display:flex;align-items:center;justify-content:center">${roleImg(d.role,18)}</div>`}
+          ${d.role?`<div class="og-champ-role" title="${d.role.toUpperCase()}">${roleImg(d.role,16)}</div>`:''}
+        </div>
         <div class="og-spells">${spells.slice(0,2).map(sp=>spIc(sp)?`<img class="og-spell" src="${spIc(sp)}" title="${sp}" onerror="this.style.display='none'">`:'<span class="og-spell"></span>').join('')}</div>
       </div>
       <div>
@@ -3952,7 +3959,7 @@ function renderProfile(n){
       <div class="opgg-hero-ov"></div>
       <div class="opgg-av" style="border-color:${c}">${avContent}</div>
       <div class="opgg-namewrap">
-        <div class="opgg-name">${n} ${gn!==n?`<span class="tag">${gn}</span>`:''}</div>
+        <div class="opgg-name">${n} ${gn!==n?`<span class="tag">${gn}</span>`:''}${meta.opggUrl?`<a href="${meta.opggUrl}" target="_blank" rel="noopener" class="opgg-link" title="Otwórz profil op.gg" onclick="event.stopPropagation()">op.gg ↗</a>`:''}</div>
         <div style="margin-top:4px;font-size:15px;color:${rank.color};font-weight:700">${rank.full}${rank.source==='soloq'&&rank.lp!=null?' · '+rank.lp+' LP':''} <span style="color:var(--silver);font-weight:400">· ${g} gier · ${wr}% WR</span>${(meta.tags&&meta.tags.length)?'<div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">'+meta.tags.map(t=>'<span class=\'opgg-tag\'>'+t+'</span>').join('')+'</div>':''}</div>
       </div>
       <button class="opgg-settings-btn" onclick="openAddPlayer('${n}')">⚙ Edytuj</button>
@@ -5922,7 +5929,8 @@ async function gsSavePlayers(){
     rank:(PLAYER_META[n]||{}).soloRank||'',
     color:PC[n]||'',
     avatar:(PLAYER_META[n]||{}).avatarUrl||'',
-    tags:(PLAYER_META[n]||{}).tags||[]
+    tags:(PLAYER_META[n]||{}).tags||[],
+    opgg:(PLAYER_META[n]||{}).opggUrl||''
   }));
   try{
     await fetch(scriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
@@ -5936,7 +5944,7 @@ async function gsLoadPlayers(){
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
 
   // CSV path — works in incognito, no login required
-  // Columns: Nick, GameNick, Rank, Color, Avatar, Tags
+  // Columns: A=Nick, B=GameNick, C=Rank, D=Color, E=Avatar, F=Tags, G=op.gg
   if(playersCsvUrl&&!playersCsvUrl.includes('WKLEJ_GID')){
     try{
       const r=await fetch(playersCsvUrl+'&t='+Date.now());
@@ -5954,6 +5962,7 @@ async function gsLoadPlayers(){
           if(c[4])PLAYER_META[nick].avatarUrl=c[4].trim();
           if(c[2])PLAYER_META[nick].soloRank=c[2].trim();
           if(c[5])PLAYER_META[nick].tags=c[5].replace(/"/g,'').split(',').map(t=>t.trim()).filter(Boolean);
+          if(c[6])PLAYER_META[nick].opggUrl=c[6].trim().replace(/"/g,'');
           if(!EXTRA_PLAYERS.includes(nick))EXTRA_PLAYERS.push(nick);
           count++;
         });
@@ -5982,6 +5991,7 @@ async function gsLoadPlayers(){
         if(p.avatar)PLAYER_META[p.nick].avatarUrl=p.avatar;
         if(p.rank)PLAYER_META[p.nick].soloRank=p.rank;
         if(Array.isArray(p.tags)&&p.tags.length)PLAYER_META[p.nick].tags=p.tags;
+        if(p.opgg)PLAYER_META[p.nick].opggUrl=p.opgg;
         if(!EXTRA_PLAYERS.includes(p.nick))EXTRA_PLAYERS.push(p.nick);
       });
       PS=buildPS();AP=Object.keys(PS).sort();
