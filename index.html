@@ -3723,30 +3723,47 @@ function parseOpggPeakRank(html){
   cands.forEach(t=>{const s=_opggRankScore(t);if(s>bestScore){bestScore=s;best=t;}});
   return best?_opggNormalizeRank(best):null;
 }
-// Pobiera HTML op.gg — najpierw przez lokalny serwer Scout (bez CORS), potem publiczne proxy
-async function fetchOpggHtml(url){
-  if(typeof SCOUT_URL!=='undefined'){
+// Lista publicznych proxy CORS (działają po https)
+function _opggProxies(url){
+  const e=encodeURIComponent(url);
+  return [
+    `https://api.codetabs.com/v1/proxy/?quest=${e}`,
+    `https://api.allorigins.win/raw?url=${e}`,
+    `https://api.allorigins.win/get?url=${e}`,
+    `https://corsproxy.io/?url=${e}`,
+    `https://thingproxy.freeboard.io/fetch/${url}`,
+  ];
+}
+async function _opggTimeoutSignal(ms){
+  try{return AbortSignal.timeout(ms);}catch(e){
+    const ac=new AbortController();setTimeout(()=>ac.abort(),ms);return ac.signal;
+  }
+}
+// Pobiera HTML op.gg i wyciąga najwyższą rangę. Próbuje kolejnych źródeł aż któreś zwróci rangę.
+async function fetchOpggPeakRank(url){
+  if(!url)return null;
+  const onHttps=(typeof location!=='undefined'&&location.protocol==='https:');
+  // 1) lokalny serwer Scout — tylko jeśli nie jesteśmy na https (inaczej mixed-content blokuje)
+  if(typeof SCOUT_URL!=='undefined' && !(onHttps && SCOUT_URL.indexOf('http://')===0)){
     try{
-      const r=await fetch(SCOUT_URL+'/proxy/opgg?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(8000)});
-      if(r.ok){const t=await r.text();if(t&&t.length>500)return t;}
+      const r=await fetch(SCOUT_URL+'/proxy/opgg?url='+encodeURIComponent(url),{signal:await _opggTimeoutSignal(8000)});
+      if(r.ok){const t=await r.text();const rk=parseOpggPeakRank(t);if(rk)return rk;}
     }catch(e){}
   }
-  const proxies=[
-    u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    u=>`https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-  ];
-  for(const p of proxies){
+  // 2) publiczne proxy CORS — parsujemy wynik z każdego po kolei
+  for(const purl of _opggProxies(url)){
     try{
-      const r=await fetch(p(url),{signal:AbortSignal.timeout(11000)});
-      if(r.ok){const t=await r.text();if(t&&t.length>500)return t;}
+      const r=await fetch(purl,{signal:await _opggTimeoutSignal(12000)});
+      if(!r.ok)continue;
+      let t=await r.text();
+      // allorigins /get zwraca JSON {contents:"..."}
+      if(t&&t.charAt(0)==='{'&&t.indexOf('"contents"')>=0){try{const j=JSON.parse(t);if(j.contents)t=j.contents;}catch(e){}}
+      if(!t||t.length<500)continue;
+      const rk=parseOpggPeakRank(t);
+      if(rk)return rk;
     }catch(e){}
   }
   return null;
-}
-async function fetchOpggPeakRank(url){
-  if(!url)return null;
-  const html=await fetchOpggHtml(url);
-  return parseOpggPeakRank(html);
 }
 // Ładuje peak rank dla gracza i zapisuje go jako Rangę (kolumna C / soloRank)
 window._peakFetching=window._peakFetching||new Set();
