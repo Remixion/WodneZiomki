@@ -1851,6 +1851,15 @@ function init(){
   renderDraftTeams();
   renderRS();renderStats();renderAliases();buildScanGrid();renderMeczeList();
   updateDraftCounts();
+  // Restore last viewed page after refresh
+  try{
+    const saved=localStorage.getItem('wc_current_page');
+    if(saved&&saved!=='randomizer'&&document.getElementById('page-'+saved)){
+      const navMap={profiles:'.nav-left-tabs .nav-tab:nth-child(1)',mecze:'.nav-left-tabs .nav-tab:nth-child(2)'};
+      const btn=navMap[saved]?document.querySelector(navMap[saved]):null;
+      showPage(saved,btn);
+    }
+  }catch(e){}
   // Fetch complete champion roster from Data Dragon
   fetchAllChamps();
   gsLoadPlayers();
@@ -4386,6 +4395,7 @@ function showPage(n,btn){
   document.querySelectorAll('.nav-tab,.nav-tab-center').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+n)?.classList.add('active');
   if(btn) btn.classList.add('active');
+  try{localStorage.setItem('wc_current_page',n);}catch(e){}
 }
 function toggleDev(){} // DEV panel removed
 function renderDev(){}
