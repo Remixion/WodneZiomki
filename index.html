@@ -674,7 +674,7 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .opgg-peak-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(160,180,200,0.5)}
 .opgg-peak-val{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;margin-left:auto}
 .opgg-peak-val img{vertical-align:middle}
-.opgg-peak-refresh{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--silver);width:22px;height:22px;border-radius:5px;cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.15s}
+.opgg-peak-refresh{margin-left:auto;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--silver);padding:3px 10px;border-radius:5px;cursor:pointer;font-size:12px;line-height:1.3;flex-shrink:0;transition:all 0.15s}
 .opgg-peak-refresh:hover{border-color:var(--teal);color:var(--teal);background:rgba(11,196,227,0.1)}
 .opgg-rank-wr{display:flex;justify-content:space-between;font-size:13px;color:var(--silver);margin-top:8px}
 .opgg-rank-bar{height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin-top:5px}
@@ -1050,11 +1050,11 @@ function handleAction(action, body) {
   if (action === 'savePlayers') {
     var ps = getOrCreateSheet('Gracze');
     ps.clear();
-    ps.appendRow(['Nick','NickWGrze','Ranga','Kolor','Avatar','Tagi']);
+    ps.appendRow(['Nick','NickWGrze','Ranga','Kolor','Avatar','Tagi','OPGG']);
     var pl = body.players || [];
     for (var pi = 0; pi < pl.length; pi++) {
       var pp = pl[pi];
-      ps.appendRow([pp.nick||'', pp.gameNick||'', pp.rank||'', pp.color||'', pp.avatar||'', (pp.tags||[]).join(', ')]);
+      ps.appendRow([pp.nick||'', pp.gameNick||'', pp.rank||'', pp.color||'', pp.avatar||'', (pp.tags||[]).join(', '), pp.opgg||'']);
     }
     return corsOutput({ status:'ok', count: pl.length });
   }
@@ -1071,7 +1071,8 @@ function handleAction(action, body) {
         rank: String(grows[gi][2]||''),
         color: String(grows[gi][3]||''),
         avatar: String(grows[gi][4]||''),
-        tags: String(grows[gi][5]||'').split(',').map(function(s){return s.trim();}).filter(function(s){return s;})
+        tags: String(grows[gi][5]||'').split(',').map(function(s){return s.trim();}).filter(function(s){return s;}),
+        opgg: String(grows[gi][6]||'')
       });
     }
     return corsOutput({ status:'ok', players: out });
@@ -1469,6 +1470,11 @@ function deleteParticipantDetails(sheet, lolId) {
       </button>
       <button class="btn primary" style="flex:1;justify-content:center;min-width:120px" onclick="gsSavePlayers()">
         ↑ Zapisz graczy do Sheets
+      </button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn tbtn" id="refreshRanksBtn" style="flex:1;justify-content:center;min-width:120px" onclick="refreshAllPeakRanks()" title="Pobierz najwyższą rangę Solo/Duo z op.gg dla wszystkich graczy i zapisz do Sheets">
+        ↻ Odśwież rangi z op.gg (wszyscy)
       </button>
     </div>
 
@@ -3683,13 +3689,32 @@ function _opggNormalizeRank(txt){
   if(!apex&&m[2]){const dm={'iv':'IV','iii':'III','ii':'II','i':'I','4':'IV','3':'III','2':'II','1':'I'};div=dm[m[2].toLowerCase()]||'';}
   return apex?tier:(tier+(div?' '+div:''));
 }
-// Parsuje HTML strony op.gg → najwyższa zdobyta ranga (np. "Emerald 3")
+// Znajduje sekcję "Ranked Solo/Duo" (pomija Flex i inne kolejki)
+function _opggSoloSection(doc){
+  const labels=[...doc.querySelectorAll('span,caption,div,strong,h2,h3')].filter(el=>{
+    const t=el.textContent.trim().toLowerCase().replace(/\s+/g,' ');
+    return t==='ranked solo/duo'||t==='ranked solo'||t==='solo/duo'||t==='solo ranked';
+  });
+  for(const lab of labels){
+    const sec=lab.closest('section')||lab.parentElement?.parentElement||lab.parentElement;
+    // upewnij się że to nie wrapper zawierający też Flex
+    if(sec){
+      const txt=sec.textContent.toLowerCase();
+      if(txt.includes('flex')&&txt.indexOf('flex')<txt.indexOf('solo'))continue;
+      return sec;
+    }
+  }
+  return null;
+}
+// Parsuje HTML strony op.gg → najwyższa zdobyta ranga Solo/Duo (np. "Emerald 3")
 function parseOpggPeakRank(html){
   if(!html)return null;
   let doc;
   try{doc=new DOMParser().parseFromString(html,'text/html');}catch(e){return null;}
+  // Ogranicz parsowanie tylko do sekcji Solo/Duo (Flex pomijamy)
+  const root=_opggSoloSection(doc)||doc;
   const cands=[];
-  doc.querySelectorAll('strong,span').forEach(el=>{
+  root.querySelectorAll('strong,span').forEach(el=>{
     const t=el.textContent.trim();
     if(_OPGG_RANK_RE.test(t))cands.push(t);
   });
@@ -3723,7 +3748,7 @@ async function fetchOpggPeakRank(url){
   const html=await fetchOpggHtml(url);
   return parseOpggPeakRank(html);
 }
-// Ładuje peak rank dla gracza (cache w PLAYER_META[n].peakRank)
+// Ładuje peak rank dla gracza i zapisuje go jako Rangę (kolumna C / soloRank)
 window._peakFetching=window._peakFetching||new Set();
 async function loadPeakRank(n,force){
   const meta=PLAYER_META[n]||{};
@@ -3731,19 +3756,46 @@ async function loadPeakRank(n,force){
   if(meta.peakRank&&!force)return;
   if(window._peakFetching.has(n))return;
   window._peakFetching.add(n);
-  if(force&&typeof toast==='function')toast('⟳ Pobieram peak z op.gg…');
+  if(force&&typeof toast==='function')toast('⟳ Pobieram rangę z op.gg…');
   let peak=null;
   try{peak=await fetchOpggPeakRank(meta.opggUrl);}catch(e){}
   window._peakFetching.delete(n);
   if(peak){
     if(!PLAYER_META[n])PLAYER_META[n]={};
     PLAYER_META[n].peakRank=peak;
+    PLAYER_META[n].soloRank=peak;   // zapis do kolumny C "Ranga"
     try{lsSave();}catch(e){}
     if(typeof selPr!=='undefined'&&selPr===n)renderProfile(n);
-    if(force&&typeof toast==='function')toast('✓ Peak: '+peak);
+    if(force&&typeof toast==='function'){toast('✓ Ranga: '+peak);if(typeof gsSavePlayers==='function')gsSavePlayers();}
   }else if(force&&typeof toast==='function'){
     toast('⚠ Nie udało się pobrać rangi z op.gg');
   }
+}
+// Odświeża najwyższą rangę Solo/Duo dla WSZYSTKICH graczy z linkiem op.gg i zapisuje do Sheets
+async function refreshAllPeakRanks(){
+  const players=AP.filter(n=>(PLAYER_META[n]||{}).opggUrl);
+  if(!players.length){toast('Brak graczy z linkiem op.gg (kolumna G arkusza)');return;}
+  const btn=document.getElementById('refreshRanksBtn');
+  const origTxt=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;}
+  let ok=0,fail=0;
+  for(let i=0;i<players.length;i++){
+    const n=players[i];
+    if(btn)btn.textContent=`↻ ${i+1}/${players.length} — ${n}…`;
+    try{
+      const peak=await fetchOpggPeakRank(PLAYER_META[n].opggUrl);
+      if(peak){PLAYER_META[n].peakRank=peak;PLAYER_META[n].soloRank=peak;ok++;}else fail++;
+    }catch(e){fail++;}
+    if(typeof selPr!=='undefined'&&selPr===n)renderProfile(n);
+    await new Promise(r=>setTimeout(r,450)); // throttle — nie spamuj op.gg
+  }
+  try{lsSave();}catch(e){}
+  renderPL();renderProfileList();
+  if(btn){btn.disabled=false;btn.textContent=origTxt;}
+  toast(`✓ Rangi: ${ok} OK, ${fail} błędów — zapisuję do Sheets…`);
+  const saved=await gsSavePlayers();
+  if(saved)toast(`✓ Zapisano ${ok} rang do Sheets`);
+  else toast('⚠ Rangi pobrane, ale zapis do Sheets wymaga Apps Script URL (DEV)');
 }
 
 // keystone rune name → Community Dragon icon path (lookup po nazwie znormalizowanej)
@@ -3931,11 +3983,9 @@ function renderProfile(n){
 
   // Rank card
   const wlBarCol=wr>=55?'#1DE9B6':wr>=45?'var(--gold)':'#E84855';
-  const peak=meta.peakRank?parseSoloRank(meta.peakRank):null;
   const peakLine=meta.opggUrl?`<div class="opgg-rank-peak">
-    <span class="opgg-peak-lbl">Szczyt (op.gg)</span>
-    ${peak?`<span class="opgg-peak-val" style="color:${peak.color}">${rankEmblem(peak.tier,peak.color,18)} ${peak.full}</span>`:`<span class="opgg-peak-val" style="color:rgba(160,180,200,0.45)">—</span>`}
-    <button class="opgg-peak-refresh" title="Pobierz najwyższą rangę z op.gg" onclick="event.stopPropagation();loadPeakRank('${n.replace(/'/g,"\\'")}',true)">↻</button>
+    <span class="opgg-peak-lbl">Najwyższa ranga (op.gg)</span>
+    <button class="opgg-peak-refresh" title="Pobierz najwyższą rangę Solo/Duo z op.gg i zapisz w Randze" onclick="event.stopPropagation();loadPeakRank('${n.replace(/'/g,"\\'")}',true)">↻ Odśwież</button>
   </div>`:'';
   const rankCard=`<div class="opgg-card">
     <div class="opgg-card-h">Ranked Solo</div>
@@ -6058,7 +6108,7 @@ async function gsLoadPlayers(){
   const scriptUrl=localStorage.getItem(LS_GS_SCRIPT)||GS_CONFIG.scriptUrl;
 
   // CSV path — works in incognito, no login required
-  // Columns: A=Nick, B=GameNick, C=Rank, D=Color, E=Avatar, F=Tags, G=op.gg
+  // Columns: A=Nick, B=GameNick, C=Rank (op.gg peak), D=Color, E=Avatar, F=Tags, G=op.gg
   if(playersCsvUrl&&!playersCsvUrl.includes('WKLEJ_GID')){
     try{
       const r=await fetch(playersCsvUrl+'&t='+Date.now());
