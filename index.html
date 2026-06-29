@@ -670,6 +670,12 @@ input.kda-input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .opgg-rank-info{flex:1;min-width:0}
 .opgg-rank-tier{font-family:'Cinzel',serif;font-size:18px;font-weight:700}
 .opgg-rank-lp{font-size:14px;color:var(--silver)}
+.opgg-rank-peak{display:flex;align-items:center;gap:7px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.06)}
+.opgg-peak-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(160,180,200,0.5)}
+.opgg-peak-val{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;margin-left:auto}
+.opgg-peak-val img{vertical-align:middle}
+.opgg-peak-refresh{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--silver);width:22px;height:22px;border-radius:5px;cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;transition:all 0.15s}
+.opgg-peak-refresh:hover{border-color:var(--teal);color:var(--teal);background:rgba(11,196,227,0.1)}
 .opgg-rank-wr{display:flex;justify-content:space-between;font-size:13px;color:var(--silver);margin-top:8px}
 .opgg-rank-bar{height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin-top:5px}
 .opgg-champ{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(200,170,110,0.06)}
@@ -3651,6 +3657,95 @@ function wrScore(n){
   return g>0?(w/g*100):50;
 }
 
+// ── OP.GG PEAK RANK ──────────────────────────────────────────────────────
+// Wyciąga najwyższą zdobytą rangę z sekcji "Ranked Solo/Duo" na op.gg
+const _OPGG_TIER_ORDER={iron:0,bronze:1,silver:2,gold:3,platinum:4,emerald:5,diamond:6,master:7,grandmaster:8,challenger:9};
+const _OPGG_RANK_RE=/^\s*(iron|bronze|silver|gold|platinum|emerald|diamond|master|grandmaster|challenger)(?:\s*([1-4]|iv|iii|ii|i))?\s*$/i;
+function _opggRankScore(txt){
+  const m=String(txt).toLowerCase().match(/(iron|bronze|silver|gold|platinum|emerald|diamond|master|grandmaster|challenger)(?:\s*([1-4]|iv|iii|ii|i))?/);
+  if(!m)return -1;
+  const tier=_OPGG_TIER_ORDER[m[1]];
+  if(tier==null)return -1;
+  const apex=tier>=7;
+  let div=0;
+  if(!apex&&m[2]){
+    const dm={'4':1,'3':2,'2':3,'1':4,'iv':1,'iii':2,'ii':3,'i':4};
+    div=dm[m[2].toLowerCase()]||0;
+  }
+  return tier*10+(apex?9:div);
+}
+function _opggNormalizeRank(txt){
+  const m=String(txt).toLowerCase().match(/(iron|bronze|silver|gold|platinum|emerald|diamond|master|grandmaster|challenger)(?:\s*([1-4]|iv|iii|ii|i))?/);
+  if(!m)return '';
+  const tier=m[1].charAt(0).toUpperCase()+m[1].slice(1);
+  const apex=['master','grandmaster','challenger'].includes(m[1]);
+  let div='';
+  if(!apex&&m[2]){const dm={'iv':'IV','iii':'III','ii':'II','i':'I','4':'IV','3':'III','2':'II','1':'I'};div=dm[m[2].toLowerCase()]||'';}
+  return apex?tier:(tier+(div?' '+div:''));
+}
+// Parsuje HTML strony op.gg → najwyższa zdobyta ranga (np. "Emerald 3")
+function parseOpggPeakRank(html){
+  if(!html)return null;
+  let doc;
+  try{doc=new DOMParser().parseFromString(html,'text/html');}catch(e){return null;}
+  const cands=[];
+  doc.querySelectorAll('strong,span').forEach(el=>{
+    const t=el.textContent.trim();
+    if(_OPGG_RANK_RE.test(t))cands.push(t);
+  });
+  if(!cands.length)return null;
+  let best='',bestScore=-1;
+  cands.forEach(t=>{const s=_opggRankScore(t);if(s>bestScore){bestScore=s;best=t;}});
+  return best?_opggNormalizeRank(best):null;
+}
+// Pobiera HTML op.gg — najpierw przez lokalny serwer Scout (bez CORS), potem publiczne proxy
+async function fetchOpggHtml(url){
+  if(typeof SCOUT_URL!=='undefined'){
+    try{
+      const r=await fetch(SCOUT_URL+'/proxy/opgg?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(8000)});
+      if(r.ok){const t=await r.text();if(t&&t.length>500)return t;}
+    }catch(e){}
+  }
+  const proxies=[
+    u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u=>`https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  ];
+  for(const p of proxies){
+    try{
+      const r=await fetch(p(url),{signal:AbortSignal.timeout(11000)});
+      if(r.ok){const t=await r.text();if(t&&t.length>500)return t;}
+    }catch(e){}
+  }
+  return null;
+}
+async function fetchOpggPeakRank(url){
+  if(!url)return null;
+  const html=await fetchOpggHtml(url);
+  return parseOpggPeakRank(html);
+}
+// Ładuje peak rank dla gracza (cache w PLAYER_META[n].peakRank)
+window._peakFetching=window._peakFetching||new Set();
+async function loadPeakRank(n,force){
+  const meta=PLAYER_META[n]||{};
+  if(!meta.opggUrl)return;
+  if(meta.peakRank&&!force)return;
+  if(window._peakFetching.has(n))return;
+  window._peakFetching.add(n);
+  if(force&&typeof toast==='function')toast('⟳ Pobieram peak z op.gg…');
+  let peak=null;
+  try{peak=await fetchOpggPeakRank(meta.opggUrl);}catch(e){}
+  window._peakFetching.delete(n);
+  if(peak){
+    if(!PLAYER_META[n])PLAYER_META[n]={};
+    PLAYER_META[n].peakRank=peak;
+    try{lsSave();}catch(e){}
+    if(typeof selPr!=='undefined'&&selPr===n)renderProfile(n);
+    if(force&&typeof toast==='function')toast('✓ Peak: '+peak);
+  }else if(force&&typeof toast==='function'){
+    toast('⚠ Nie udało się pobrać rangi z op.gg');
+  }
+}
+
 // keystone rune name → Community Dragon icon path (lookup po nazwie znormalizowanej)
 const _KEYSTONE_ICON_PATHS={
   presstheattack:'styles/precision/presstheattack/presstheattack.png',
@@ -3836,6 +3931,12 @@ function renderProfile(n){
 
   // Rank card
   const wlBarCol=wr>=55?'#1DE9B6':wr>=45?'var(--gold)':'#E84855';
+  const peak=meta.peakRank?parseSoloRank(meta.peakRank):null;
+  const peakLine=meta.opggUrl?`<div class="opgg-rank-peak">
+    <span class="opgg-peak-lbl">Szczyt (op.gg)</span>
+    ${peak?`<span class="opgg-peak-val" style="color:${peak.color}">${rankEmblem(peak.tier,peak.color,18)} ${peak.full}</span>`:`<span class="opgg-peak-val" style="color:rgba(160,180,200,0.45)">—</span>`}
+    <button class="opgg-peak-refresh" title="Pobierz najwyższą rangę z op.gg" onclick="event.stopPropagation();loadPeakRank('${n.replace(/'/g,"\\'")}',true)">↻</button>
+  </div>`:'';
   const rankCard=`<div class="opgg-card">
     <div class="opgg-card-h">Ranked Solo</div>
     <div class="opgg-card-b">
@@ -3846,6 +3947,7 @@ function renderProfile(n){
           <div class="opgg-rank-lp">${rank.source==='soloq'&&rank.lp!=null?rank.lp+' LP':''}</div>
         </div>
       </div>
+      ${peakLine}
       <div class="opgg-rank-wr"><span style="color:${wlBarCol}">${wr}% WR</span><span>${w}Z - ${g-w}P</span></div>
       <div class="opgg-rank-bar"><div style="height:100%;width:${wr}%;background:${wlBarCol};border-radius:3px"></div></div>
     </div>
@@ -3985,6 +4087,8 @@ function renderProfile(n){
         ${pager}
       </div>
     </div>`;
+  // Auto-pobranie najwyższej rangi z op.gg (raz, jeśli mamy link i brak cache)
+  if(meta.opggUrl&&!meta.peakRank)setTimeout(()=>loadPeakRank(n),60);
 }
 
 function toggleProfSettings(n){
